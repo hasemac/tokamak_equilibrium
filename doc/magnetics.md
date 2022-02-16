@@ -1,6 +1,6 @@
 ## Lorentzゲージ表式
 
-$$
+```math
 \begin{align*}
 
 &\boldsymbol{E} = -\frac{\partial \boldsymbol{A_{L}}}{\partial t}-\operatorname{grad} \phi_L\\
@@ -13,7 +13,7 @@ $$
 
 &\operatorname{div}\boldsymbol{A_{L}}+\frac{1}{c^2}\frac{\phi_L}{t}=0
 \end{align*}
-$$
+```
 
 静磁場の計算式では次の２式を用いる。
 
