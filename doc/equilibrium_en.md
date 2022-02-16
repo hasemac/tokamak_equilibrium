@@ -1,24 +1,24 @@
 # Procedure of tokamak equilibrium calculation code
 
-1. Assume $j_{t}(R, z)$.
-1. Calculate the total magnetic flux $ \psi (R, z) $ of the coil current and plasma current.
+1. Assume $`j_{t}(R, z)`$.
+1. Calculate the total magnetic flux $`\psi (R, z)`$ of the coil current and plasma current.
 1. Determines the last closed flux surface (LCFS).
-1. Let $ j_ {t} $ at each point in the LCFS be $ j_ {t0} (i, j) $.
-1. Represent $ j_{t} $ at the corresponding point by a linear combination of the coefficients of $dP/d \psi$ and $ dI^ {2}/d \psi $, which is $ j_{t1} (i, j)$.
+1. Let $`j_ {t}`$ at each point in the LCFS be $`j_{t0} (i, j)`$.
+1. Represent $'j_{t}'$ at the corresponding point by a linear combination of the coefficients of $`dP/d \psi`$ and $`dI^ {2}/d \psi `$, which is $`j_{t1} (i, j)`$.
 1. Find coefficients using the least squares method. The coefficients that minimizes the following values.
 
 ```math
 error = \frac{1}{2}\sum_{(i, j)}(j_{t1}(i, j)-j_{t0}(i, j))^{2}
 ```
-プラズマ電流密度は次の式で与えられる。
+The plasma current density is given by the following equation.
 
 ```math
 j_{\psi} = 2 \pi R \frac{dP(\psi)}{d\psi}+\frac{\mu_{0}}{4 \pi R} \frac{dI^{2}(\psi)}{d\psi}
 ```
 
-ただし
-$P(\psi)$：プラズマ圧力
-$I(\psi)$：ポロイダル電流
+$P(\psi)$：Plasma pressure
+
+$I(\psi)$：Poloidal current
 
 # 磁気面の関数について
 
