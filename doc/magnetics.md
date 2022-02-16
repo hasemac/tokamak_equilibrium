@@ -1,15 +1,5 @@
 ## Lorentzゲージ表式
 
-$$
-\sum_{i=0}
-$$
-
-
-```math
-\beta
-```
-
-
 ```math
 \begin{align*}
 
@@ -99,44 +89,45 @@ R(R-r\cos\theta)
 これらの関係式を用いて線積分を実行する。
 
 ```math
-A_y(\boldsymbol{r})=\frac{\mu_{0}I}{\pi k}\sqrt{\frac{R}{r}}\Bigl((1-\frac{k^{2}}{2})K(k^{2})-E(k^{2})\Bigr)
+A_y(\boldsymbol{r})=\frac{\mu_{0}I}{\pi \sqrt{k}}\sqrt{\frac{R}{r}}\Bigl((1-\frac{k}{2})K(k)-E(k)\Bigr)
 ```
 
 ```math
-B_x(r)=\frac{\mu_{0}I}{4 \pi}\frac{z}{k\sqrt{Rr}}\Bigl(\frac{2(2-k^{2})R E(k^{2})}{d^{2}}-\frac{k^{2}K(k^2)}{r}\Bigr)
+B_x(r)=\frac{\mu_{0}I}{4 \pi}\frac{z}{\sqrt{k}\sqrt{Rr}}\Bigl(\frac{2(2-k)R E(k)}{d^{2}}-\frac{k K(k)}{r}\Bigr)
 
 ```
 
 ```math
-B_{z}(r)=\frac{\mu_{0}I}{4 \pi}\frac{k}{\sqrt{Rr}}\Bigl(K(k^{2})-\frac{(r^{2}-R^{2}+z^2)E(k^2)}{d^{2}}\Bigr)
+B_{z}(r)=\frac{\mu_{0}I}{4 \pi}\frac{\sqrt{k}}{\sqrt{Rr}}\Bigl(K(k)-\frac{(r^{2}-R^{2}+z^2)E(k)}{d^{2}}\Bigr)
 ```
 ただし、
 
 ```math
-k^{2}=\frac{4 r R}{(r+R)^{2}+z^{2}}, d^{2}=(r-R)^{2}+z^{2}
+k=\frac{4 r R}{(r+R)^{2}+z^{2}}, d^{2}=(r-R)^{2}+z^{2}
 ```
 
 他の成分$A_x$、$A_z$、$B_y$はゼロ。
 ここでの系は軸対象なので、円筒座標系での表記に変更して、且つコイルの位置を$Z$とすると下の式になる。
 
 ```math
-A_\theta(\boldsymbol{r})=\frac{\mu_{0}I}{\pi k}\sqrt{\frac{R}{r}}\Bigl((1-\frac{k^{2}}{2})K(k^{2})-E(k^{2})\Bigr)
+A_\theta(\boldsymbol{r})=\frac{\mu_{0}I}{\pi \sqrt{k}}\sqrt{\frac{R}{r}}\Bigl((1-\frac{k}{2})K(k)-E(k)\Bigr)
 
 ```
 
 ```math
-B_r(\boldsymbol{r})=\frac{\mu_{0}I}{4 \pi}\frac{z-Z}{k\sqrt{Rr}}\Bigl(\frac{2(2-k^{2})R E(k^{2})}{d^{2}}-\frac{k^{2}K(k^2)}{r}\Bigr)
+B_r(\boldsymbol{r})=\frac{\mu_{0}I}{4 \pi}\frac{z-Z}{\sqrt{k}\sqrt{Rr}}\Bigl(\frac{2(2-k)R E(k)}{d^{2}}-\frac{k K(k)}{r}\Bigr)
 
 ```
 
 ```math
-B_{z}(\boldsymbol{r})=\frac{\mu_{0}I}{4 \pi}\frac{k}{\sqrt{Rr}}\Bigl(K(k^{2})-\frac{(r^{2}-R^{2}+(z-Z)^2)E(k^2)}{d^{2}}\Bigr)
+B_{z}(\boldsymbol{r})=\frac{\mu_{0}I}{4 \pi}\frac{\sqrt{k}}{\sqrt{Rr}}\Bigl(K(k)-\frac{(r^{2}-R^{2}+(z-Z)^2)E(k)}{d^{2}}\Bigr)
 ```
 ただし、
 
 ```math
-k^{2}=\frac{4 r R}{(r+R)^{2}+(z-Z)^{2}}, d^{2}=(r-R)^{2}+(z-Z)^{2}
+k=\frac{4 r R}{(r+R)^{2}+(z-Z)^{2}}, d^{2}=(r-R)^{2}+(z-Z)^{2}
 ```
+
 
 ## 磁束の式
 ```math
