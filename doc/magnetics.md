@@ -1,5 +1,15 @@
 ## Lorentzゲージ表式
 
+$$
+\sum_{i=0}
+$$
+
+
+```math
+\beta
+```
+
+
 ```math
 \begin{align*}
 
