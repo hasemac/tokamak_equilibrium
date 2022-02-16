@@ -295,6 +295,29 @@ def search_domain(dm_flx, dm_vv):
     
     return res
 
+# 体積平均の算出
+def get_volume_average(dm_val, dm_domain):
+    # dm_val: 例えばプラズマ圧力など
+    rmin, rmax, dr = dm_domain['rmin'], dm_domain['rmax'], dm_domain['dr']
+    zmin, zmax, dz = dm_domain['zmin'], dm_domain['zmax'], dm_domain['dz']
+    nr, nz = int((rmax-rmin)/dr+1), int((zmax-zmin)/dz+1)
+        
+    m = dm_domain['matrix'].reshape(-1)
+    v = dm_val['matrix'].reshape(-1)    
+    ir = np.array([[e for e in range(nr)] for f in range(nz)]).reshape(-1)
+    iz = np.array([[f for e in range(nr)] for f in range(nz)]).reshape(-1)
+
+    # domain内のみ考える。
+    ir = ir[m == 1]
+    iz = iz[m == 1]
+    v = v[m == 1]
+
+    r = rmin + dr*ir
+    vol = np.sum(2*np.pi*r*dr*dz) # plasma volume
+    v = np.sum(2*np.pi*r*dr*dz*v) # vol*val
+    
+    return v/vol
+         
 # 最外殻磁気面形状
 def set_domain_params(dmat):
     rmin, rmax, dr = dmat['rmin'], dmat['rmax'], dmat['dr']

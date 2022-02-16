@@ -16,16 +16,19 @@ The plasma current density is given by the following equation.
 j_{\psi} = 2 \pi R \frac{dP(\psi)}{d\psi}+\frac{\mu_{0}}{4 \pi R} \frac{dI^{2}(\psi)}{d\psi}
 ```
 
-$P(\psi)$：Plasma pressure
+$`P(\psi)`$：Plasma pressure
 
-$I(\psi)$：Poloidal current
+$`I(\psi)`$：Poloidal current
 
-# 磁気面の関数について
+# Functions in the magnetic surface
 
-多項式の変数を$x$として、$0 \leqq x \leqq 1$の範囲にあり、
-$x = (\psi-\psi_{M})/(\psi_B-\psi_{M})$
-の関係にある。
-つまり$x=0$で磁気軸、$x=1$で最外殻磁気面となる。
+Let $`x`$ be the variable of the polynomial, and $`x = (\psi- \psi_ {M}) / (\psi_{B}- \psi_{M})`$.
+
+$`x =0,\quad when\quad\psi = \psi_{M}`$: magnetic axis
+
+$`x =1,\quad when\quad\psi = \psi_{B} `$: boundary
+
+$` 0 \leqq x \leqq 1`$
 
 ```math
 \frac{dP(\psi)}{d \psi}=\sum_{n=0}^{n_p}\alpha_{n}x^{n}- x^{n_{p}+1} \sum_{n=0}^{n_{p}}\alpha_{n}
@@ -35,12 +38,14 @@ $x = (\psi-\psi_{M})/(\psi_B-\psi_{M})$
 \frac{dI^{2}(\psi)}{d \psi}=\sum_{n=0}^{n_I}\alpha_{n}x^{n}- x^{n_{I}+1} \sum_{n=0}^{n_{I}}\alpha_{n}
 ```
 
-という形であり、具体的に$n=2$の時を書き下すと、
-$a_{0}+a_{1} x+a_{2}x^{2} -x^{3}(a_{0}+a_{1}+a{2})$
-という形になり、$x=0$のときに$a_{0}$、$x=1$の時にゼロになる。
-ただし、実際の計算の際は係数ごとにまとめて次のような式が便利だろう。
-$(1-x^{3})a_{0}+(x-x^{3})a_{1}+(x^{2}-x^{3})a_{2}$
-一般化すると$a_{n}$の係数は$x^{n}-x^{p}$で与えられる。
+Specifically, write down when $`n=2`$.
+
+$`a_{0}+a_{1} x+a_{2}x^{2} -x^{3}(a_{0}+a_{1}+a{2})`$
+
+$`=(1-x^{3})a_{0}+(x-x^{3})a_{1}+(x^{2}-x^{3})a_{2}`$
+
+Thus, the coefficient for $`a_{n}`$ is given by $`x^{n}-x^{p}`$.
+
 
 これは$dP/d\psi(=dP/dx)$、$dI^{2}/d\psi$は$\psi$で微分したものであって、実際は圧力の値などを求めたい。この時は積分操作が必要になる。
 各項について積分して、かつx=1でゼロになるようにすると、それぞれの項は次の式になる。
