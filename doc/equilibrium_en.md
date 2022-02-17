@@ -47,19 +47,20 @@ $`=(1-x^{3})a_{0}+(x-x^{3})a_{1}+(x^{2}-x^{3})a_{2}`$
 Thus, the coefficient for $`a_{n}`$ is given by $`x^{n}-x^{p}`$.
 
 
-これは$dP/d\psi(=dP/dx)$、$dI^{2}/d\psi$は$\psi$で微分したものであって、実際は圧力の値などを求めたい。この時は積分操作が必要になる。
-各項について積分して、かつx=1でゼロになるようにすると、それぞれの項は次の式になる。
+This is a differentiated formula and actually needs to be integrated to calculate pressure and the like.
+
+Integrating each term and setting it to zero at x = 1, each term becomes the following equation.
 
 ```math
 \frac{x^{n+t}-1}{n+1} - \frac{x^{p+1}-1}{p+1}
 ```
 
-# 最小二乗法について
+# The least squares method
 
 ```math
 E = \frac{1}{2}\sum_{i}(\sum_{j}a_{ij}x_{j}-b_{i})^{2}
 ```
-を最小にする$x_{j}$を求める。
+Find $`x`$ that minimizes $`E`$.
 
 ```math
 \begin{align}
@@ -69,40 +70,44 @@ E = \frac{1}{2}\sum_{i}(\sum_{j}a_{ij}x_{j}-b_{i})^{2}
 &=0
 \end{align}
 ```
-行列の形で書きあらためると次の式を満たす$x$になる。
-$A^{T}Ax=A^{T}b$
-ここで、$b_{i}$は最初に仮定した$j_{t0}$の各点を想定している。
-$x_{j}$は磁気面関数で表される多項式の係数を想定している。
-従って、$a_{ij}x_{j}$は$i$点における$j_{t1}$を係数の線形結合で表したものになる。
+If you rewrite it in the form of a matrix, it becomes $`x`$ that satisfies the following equation.
+```math
+A^{T}Ax=A^{T}b
+```
 
-# ベータ値の定義
-ポロイダルベータ：
+Here, $`b_{i}`$ assumes each point of $`j_{t0}`$. And, $`x_ {j}`$ assumes the coefficient of the polynomial represented by the magnetic surface function.
+Therefore, $`a_{ij} x_{j}`$ is a linear combination of coefficients of $`j_{t1}`$ at the $`i`$ point.
+
+# Definitions of beta
+poloidal beta：
 
 ```math
 \beta_{p}=\frac{<p>}{B_{\theta}^{2}(a) /2 \mu_{0}}
 ```
 
 
-トロイダルベータ：
+toroidal beta：
 
 ```math
 \beta_{t}=\frac{<p>}{B_{t}^{2}/2 \mu_{0}}
 ```
 
-規格化ベータ：
+normalized beta：
 
 ```math
 \beta_{t}[\%] = \beta_{N} \frac{I_{p}}{a B_{t}} [MA/m.T]
 ```
 
-$B_{t}$: プラズマ中心でのトロイダル磁場
+$B_{t}$: Toroidal magnetic field at the center of the plasma
 
-$<p> $: 体積平均プラズマ圧力
+$<p> $: volume averaged pressure
 
-$a$: プラズマ小半径
+$a$: minor radius
 
 
 # 参考文献
 Lao, L. L.; John, H. S.; Stambaugh, R.; Kellman, A. & Pfeiffer, W.; Reconstruction of current profile parameters and plasma shapes in tokamaks; Nuclear Fusion, 1985, 25, 1611
+
 https://www.jstage.jst.go.jp/article/ieejfms/124/5/124_5_393/_pdf
+
 https://www.jstage.jst.go.jp/article/jspf/79/2/79_2_123/_pdf

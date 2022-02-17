@@ -24,6 +24,10 @@ $P(\psi)$：Plasma pressure
 
 $I(\psi)$：Poloidal current
 
+[Equations of magnetics](doc/magnetics.md)
+[Procedure of equilibrium calculation](doc/equilibrium_en.md)
+
+
 ## Getting started
 
 To make it easy for you to get started with GitLab, here's a list of recommended next steps.
