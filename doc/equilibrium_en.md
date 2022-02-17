@@ -104,6 +104,41 @@ $<p> $: volume averaged pressure
 
 $a$: minor radius
 
+# Safty factor
+
+```math
+q = \frac{d\phi}{d\psi}
+```
+$`\phi`$: toroidal flux , $`\psi`$: poloidal flux
+
+The toroidal flux can be given by the following equation.
+```math
+\phi=\int B_{\phi}dS=\int dS\frac{\mu_{0}I}{2 \pi R }
+```
+```math
+2 \pi R B_{\phi}=\mu_{0}I
+```
+Thus, 
+
+```math
+\begin{align}
+q = \frac{d\phi}{d\psi}
+&=\frac{\mu_{0}}{2 \pi} \int dS \frac{1}{R} \frac{dI}{d\psi}\\
+&=\frac{\mu_{0}}{4 \pi} \int dS \frac{1}{IR} \frac{dI^{2}}{d\psi}
+\end{align}
+```
+Because, 
+```math
+\frac{dI}{d\psi}=\frac{1}{2 I}\frac{dI^{2}}{d\psi}
+```
+
+$`d\psi = (\psi_{B}- \psi_{M}) dx`$ from $`x = (\psi- \psi_ {M}) / (\psi_{B}- \psi_{M})`$.
+
+Finally, 
+
+```math
+q =\frac{1}{\psi_{B}- \psi_{M}}\frac{\mu_{0}}{4 \pi} \int dS \frac{1}{IR} \frac{dI^{2}}{d\psi}
+```
 
 # 参考文献
 Lao, L. L.; John, H. S.; Stambaugh, R.; Kellman, A. & Pfeiffer, W.; Reconstruction of current profile parameters and plasma shapes in tokamaks; Nuclear Fusion, 1985, 25, 1611
