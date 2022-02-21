@@ -20,11 +20,12 @@ The plasma current density is given by the following equation.
 j_{\psi} = 2 \pi R \frac{dP(\psi)}{d\psi}+\frac{\mu_{0}}{4 \pi R} \frac{dI^{2}(\psi)}{d\psi}
 ```
 
-$P(\psi)$：Plasma pressure
+$`P(\psi)`$：Plasma pressure
 
-$I(\psi)$：Poloidal current
+$`I(\psi)`$：Poloidal current
 
 [Equations of magnetics](doc/magnetics.md)
+
 [Procedure of equilibrium calculation](doc/equilibrium_en.md)
 
 

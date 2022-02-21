@@ -18,3 +18,8 @@ def get_coil_flux(dmat, coil_currents):
     dm_f = gl.get_dmat_fine()
     dm_f['matrix'] = np.array(fl)
     return sb.resampling(dmat, dm_f)
+
+def get_flux_of_coil(cond):
+    dmat = cond['resolution'].copy()
+    coil_currents = cond['cur_pf']
+    return get_coil_flux(dmat, coil_currents)

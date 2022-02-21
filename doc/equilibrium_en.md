@@ -4,7 +4,7 @@
 1. Calculate the total magnetic flux $`\psi (R, z)`$ of the coil current and plasma current.
 1. Determines the last closed flux surface (LCFS).
 1. Let $`j_ {t}`$ at each point in the LCFS be $`j_{t0} (i, j)`$.
-1. Represent $'j_{t}'$ at the corresponding point by a linear combination of the coefficients of $`dP/d \psi`$ and $`dI^ {2}/d \psi `$, which is $`j_{t1} (i, j)`$.
+1. Represent $`j_{t}`$ at the corresponding point by a linear combination of the coefficients of $`dP/d \psi`$ and $`dI^ {2}/d \psi `$, which is $`j_{t1} (i, j)`$.
 1. Find coefficients using the least squares method. The coefficients that minimizes the following values.
 
 ```math
@@ -18,7 +18,7 @@ j_{\psi} = 2 \pi R \frac{dP(\psi)}{d\psi}+\frac{\mu_{0}}{4 \pi R} \frac{dI^{2}(\
 
 $`P(\psi)`$：Plasma pressure
 
-$`I(\psi)`$：Poloidal current
+$`I(\psi)`$：Poloidal current, **including toroidal coil current**.
 
 # Functions in the magnetic surface
 
@@ -137,10 +137,10 @@ $`d\psi = (\psi_{B}- \psi_{M}) dx`$ from $`x = (\psi- \psi_ {M}) / (\psi_{B}- \p
 Finally, 
 
 ```math
-q =\frac{1}{\psi_{B}- \psi_{M}}\frac{\mu_{0}}{4 \pi} \int dS \frac{1}{IR} \frac{dI^{2}}{d\psi}
+q =\frac{1}{\psi_{B}- \psi_{M}}\frac{\mu_{0}}{4 \pi} \int dS \frac{1}{IR} \frac{dI^{2}}{dx}
 ```
 
-# 参考文献
+# Reference
 Lao, L. L.; John, H. S.; Stambaugh, R.; Kellman, A. & Pfeiffer, W.; Reconstruction of current profile parameters and plasma shapes in tokamaks; Nuclear Fusion, 1985, 25, 1611
 
 https://www.jstage.jst.go.jp/article/ieejfms/124/5/124_5_393/_pdf

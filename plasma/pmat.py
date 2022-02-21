@@ -38,11 +38,9 @@ def cflux(pl_mat):
 
 # プラズマ電流分布が作るフラックスのマトリックス
 def cal_plasma_flux(dmat):
+    
     # 粗いメッシュにする。
-    dm = {
-        'rmin':gl.cr_min, 'rmax':gl.cr_max, 'dr':gl.cdel_r, 
-        'zmin':gl.cz_min, 'zmax':gl.cz_max, 'dz':gl.cdel_z,
-        }
+    dm = gl.get_dmat_coarse()
     dm = sb.resampling(dm, dmat)
     dm['matrix'] = cflux(dm['matrix'])
     r = sb.get_dmat_dim(dmat)

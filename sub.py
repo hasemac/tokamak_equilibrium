@@ -6,6 +6,18 @@ import plasma.pmat as pmat
 from global_variables import gparam
 gl = gparam()
 
+class dm_array:
+    
+    def __init__(self, dmat):
+        self.rmin, self.rmax, self.dr = dmat['rmin'], dmat['rmax'], dmat['dr']
+        self.zmin, self.zmax, self.dz = dmat['zmin'], dmat['zmax'], dmat['dz']
+        self.nr, self.nz = int((self.rmax-self.rmin)/self.dr+1), int((self.zmax-self.zmin)/self.dz+1)  
+
+        self.ir = np.array([[e for e in range(self.nr)] for f in range(self.nz)]).reshape(-1)
+        self.iz = np.array([[f for e in range(self.nr)] for f in range(self.nz)]).reshape(-1)    
+        self.r = self.rmin + self.ir*self.dr
+        self.z = self.zmin + self.iz*self.dz                
+    
 # 同じ構造のdmatを取得
 def get_dmat_dim(dmat):
     rmin, rmax, dr = dmat['rmin'], dmat['rmax'], dmat['dr']
@@ -111,6 +123,7 @@ def dm_add(dmat0, dmat1):
     dmat2['matrix'] = mat
     return dmat2
 
+# 正規化フラックスの計算
 def get_normalized_flux(dm_flux, dm_domain):
     # dm_flux: total flux (coil + plasma)
     # dm_domain: domain
@@ -125,67 +138,104 @@ def get_normalized_flux(dm_flux, dm_domain):
     res['matrix'] = f
     return res
 
-def get_pressure_polcurrent(dm_flux, dm_domain, param_press, param_polcur):
-    # params_press: プラズマ圧力の多項式の係数
-    # param_polcur: ポロイダルカレントI^2の係数
-    
-    rmin, rmax, dr = dm_domain['rmin'], dm_domain['rmax'], dm_domain['dr']
-    zmin, zmax, dz = dm_domain['zmin'], dm_domain['zmax'], dm_domain['dz']
-    nr, nz = int((rmax-rmin)/dr+1), int((zmax-zmin)/dz+1)  
+# 圧力の微分dP/dxと、圧力Pの計算
+def get_dpress_press(dm_normalizedflux, dm_domain, param_press):
+    g = dm_array(dm_domain)
+    nr, nz = g.nr, g.nz
 
-    ir = np.array([[e for e in range(nr)] for f in range(nz)]).reshape(-1)
-    iz = np.array([[f for e in range(nr)] for f in range(nz)]).reshape(-1)    
-    r = rmin + ir*dr        
-
-    dm_nf = get_normalized_flux(dm_flux, dm_domain)
-    f = dm_nf['matrix'].reshape(-1)
-    d = dm_domain['matrix'].reshape(-1)   
+    f = dm_normalizedflux['matrix'].reshape(-1)
+    d = dm_domain['matrix'].reshape(-1)  
         
-    # 最外殻磁気面の内部のみ取り出す。
-    ir = ir[d == 1]
-    iz = iz[d == 1]
-    r = r[d == 1]
+    # 最外殻磁気面の内部のみ取り出す
+    ir = g.ir[d == 1]
+    iz = g.iz[d == 1]
+    r = g.r[d == 1]
     f = f[d == 1]
     
     npr = len(param_press)
-    ncu = len(param_polcur)
-    
+    # 圧力の微分に関する行列
+    p0 = np.array([(f**i-f**npr) for i in range(npr)])
+    p0 = p0.transpose()
+    p0 = np.dot(p0, param_press)    
+    m_dp = np.zeros((nz, nr))
+    for v, i, j in zip(p0, ir, iz):
+        m_dp[j, i] = v
+        
     # 多項式の各項, n, p
     # an: x^n-x^p, これを積分すると次の式
     # an: x^(n+1)/(n+1)-x^(p+1)/(p+1), 1/(n+1)-1/(p+1) if x = 1
     # 例えば最外殻磁気面(x=1)ではプラズマ圧力がゼロとするならオフセットを各項に足す必要ある。つまり、
     # an: (x^(n+1)-1)/(n+1)-(x^(p+1)-1)/(p+1)
     
-    # 圧力に関する行列作成
-    p0 = np.array([((f**(i+1)-1)/(i+1)-(f**(npr+1)-1)/(npr+1)) for i in range(npr)])    
-    p0 = p0.transpose()
-    p0 = np.dot(p0, param_press)
-    m_pre = np.zeros((nz, nr))
-    for v, i, j in zip(p0, ir, iz):
-        m_pre[j, i] = v
-        
-    # I^2に関する行列作成
-    p1 = np.array([((f**(i+1)-1)/(i+1)-(f**(npr+1)-1)/(npr+1)) for i in range(ncu)])
+    # 圧力に関する行列
+    p1 = np.array([((f**(i+1)-1)/(i+1)-(f**(npr+1)-1)/(npr+1)) for i in range(npr)])    
     p1 = p1.transpose()
-    p1 = np.dot(p1, param_polcur)
-    m_pol = np.zeros((nz, nr))
-    for vi, i, j in zip(p1, ir, iz):
-        m_pol[j, i] = v
-        
-    dm_press  = get_dmat_dim(dm_flux)
-    dm_polcur = get_dmat_dim(dm_flux)
+    p1 = np.dot(p1, param_press)
+    m_pr = np.zeros((nz, nr))
+    for v, i, j in zip(p1, ir, iz):
+        m_pr[j, i] = v
+            
+    # 圧力に関してはx=1でp=0になるようにしてある。
+    dm_dp  = get_dmat_dim(dm_domain)
+    dm_pr = get_dmat_dim(dm_domain)
 
-    dm_press['matrix'] = m_pre
-    dm_polcur['matrix'] = m_pol
+    dm_dp['matrix'] = m_dp
+    dm_pr['matrix'] = m_pr
     
-    return dm_press, dm_polcur
+    return dm_dp, dm_pr    
+
+# ポロイダルカレントの微分dI^2/dxとポロイダルカレントの計算
+def get_di2_i(dm_normalizedflux, dm_domain, param_i2):
+    g = dm_array(dm_domain)
+    nr, nz = g.nr, g.nz
+
+    f = dm_normalizedflux['matrix'].reshape(-1)
+    d = dm_domain['matrix'].reshape(-1)  
         
+    # 最外殻磁気面の内部のみ取り出す
+    ir = g.ir[d == 1]
+    iz = g.iz[d == 1]
+    f = f[d == 1]
+    
+    npr = len(param_i2)
+    # I^2の微分に関する行列
+    p0 = np.array([(f**i-f**npr) for i in range(npr)])
+    p0 = p0.transpose()
+    p0 = np.dot(p0, param_i2)    
+    m_di2 = np.zeros((nz, nr))
+    for v, i, j in zip(p0, ir, iz):
+        m_di2[j, i] = v
+        
+    # 多項式の各項, n, p
+    # an: x^n-x^p, これを積分すると次の式
+    # an: x^(n+1)/(n+1)-x^(p+1)/(p+1), 1/(n+1)-1/(p+1) if x = 1
+    # 例えば最外殻磁気面(x=1)ではプラズマ圧力がゼロとするならオフセットを各項に足す必要ある。つまり、
+    # an: (x^(n+1)-1)/(n+1)-(x^(p+1)-1)/(p+1)
+    
+    # I^2に関する行列
+    p1 = np.array([((f**(i+1)-1)/(i+1)-(f**(npr+1)-1)/(npr+1)) for i in range(npr)])    
+    p1 = p1.transpose()
+    p1 = np.dot(p1, param_i2)
+    m_i = np.zeros((nz, nr))
+    for v, i, j in zip(p1, ir, iz):
+        m_i[j, i] = v
+    # I^2に関してはx=1でI^2=0になるようにしてある。
+    # I^2なのでIにする。
+    m_i = np.sqrt(np.abs(m_i))
+    
+    dm_di2  = get_dmat_dim(dm_domain)
+    dm_i = get_dmat_dim(dm_domain)
+
+    dm_di2['matrix'] = m_di2
+    dm_i['matrix'] = m_i
+    
+    return dm_di2, dm_i   
+ 
 # flux値の極小位置の探索
 def search_local_min(dm_flx, dm_vv):
-    rmin, rmax, dr = dm_flx['rmin'], dm_flx['rmax'], dm_flx['dr']
-    zmin, zmax, dz = dm_flx['zmin'], dm_flx['zmax'], dm_flx['dz']
-    nr, nz = int((rmax-rmin)/dr+1), int((zmax-zmin)/dz+1)
-    
+    g = dm_array(dm_flx)
+    nr, nz = g.nr, g.nz
+
     fl, vv = dm_flx['matrix'], dm_vv['matrix']
     
     ir, iz = int(nr/2), int(nz/2)
@@ -206,14 +256,31 @@ def search_local_min(dm_flx, dm_vv):
         ir, iz = 0, 0
         
     return (ir, iz)
-     
-# 最外殻磁気面の探索
+
+# 最外殻磁気面の探索(ip正負両方に対応)
+def search_domain2(dm_flx, dm_vv):
+    res = search_domain(dm_flx, dm_vv)
+    if None != res:
+        return res
+    
+    #極小値の探索に失敗しているのでfluxを反転させて再探索
+    a = dm_flx['matrix']
+    dm_flx2 = get_dmat_dim(dm_flx)
+    dm_flx2['matrix'] = -a
+    res = search_domain(dm_flx2, dm_vv)
+    res['f_axis'] = -res['f_axis']
+    res['f_surf'] = -res['f_surf']
+        
+    return res
+
+# 最外殻磁気面の探索(最小値)
 def search_domain(dm_flx, dm_vv):
     # dm_flx: fluxのdmat
     # dm_vv: 真空容器のdmat
-    rmin, rmax, dr = dm_flx['rmin'], dm_flx['rmax'], dm_flx['dr']
-    zmin, zmax, dz = dm_flx['zmin'], dm_flx['zmax'], dm_flx['dz']
-    nr, nz = int((rmax-rmin)/dr+1), int((zmax-zmin)/dz+1)
+    g = dm_array(dm_flx)
+    nz, nr = g.nz, g.nr
+    dz, dr = g.dz, g.dr
+    zmin, rmin = g.zmin, g.rmin
     
     # 返り値の作成
     res = get_dmat_dim(dm_flx)
@@ -223,13 +290,16 @@ def search_domain(dm_flx, dm_vv):
     
     # 真空容器内の極小値を探索してシードとして追加
     k, l = search_local_min(dm_flx, dm_vv)
+    if 0 == k and 0 == l:
+        return None
+    
     dm[l, k+1]= 1.0 # 極小値の一つ右側に設定
     
     # 値を記録
     res['ir_ax'] = k
     res['iz_ax'] = l
     res['r_ax'] = rmin + k*dr
-    res['z_ax'] = zmin + l*dr
+    res['z_ax'] = zmin + l*dz
             
     # 磁気軸と最外殻磁気面とヌル点フラックスの定義
     fax = dm_flx['matrix'][l, k]
@@ -238,10 +308,10 @@ def search_domain(dm_flx, dm_vv):
     
     # 一次元配列を作成
     m0 = dm_flx['matrix'].reshape(-1)
-    vv = dm_vv['matrix'].reshape(-1)
-    ir = np.array([[e for e in range(nr)] for f in range(nz)]).reshape(-1)
-    iz = np.array([[f for e in range(nr)] for f in range(nz)]).reshape(-1)    
-
+    vv = dm_vv['matrix'].reshape(-1)  
+    ir = g.ir
+    iz = g.iz
+    
     # 小さい値順に並び替える
     ix = m0.argsort()
     m0, ir, iz, vv = m0[ix], ir[ix], iz[ix], vv[ix]
@@ -275,7 +345,8 @@ def search_domain(dm_flx, dm_vv):
         # ヌル点のフラックス値を記録しておく。
         if not con and 1 == v:
             fnull = f
-            
+    
+    # パディング分を取り除く        
     dm3 = dm2[1:1+nz, 1:1+nr]
         
     # ダイバータ配位かどうかの判定
@@ -298,39 +369,30 @@ def search_domain(dm_flx, dm_vv):
 # 体積平均の算出
 def get_volume_average(dm_val, dm_domain):
     # dm_val: 例えばプラズマ圧力など
-    rmin, rmax, dr = dm_domain['rmin'], dm_domain['rmax'], dm_domain['dr']
-    zmin, zmax, dz = dm_domain['zmin'], dm_domain['zmax'], dm_domain['dz']
-    nr, nz = int((rmax-rmin)/dr+1), int((zmax-zmin)/dz+1)
+    g = dm_array(dm_domain)
+    dr, dz = g.dr, g.dz
         
     m = dm_domain['matrix'].reshape(-1)
     v = dm_val['matrix'].reshape(-1)    
-    ir = np.array([[e for e in range(nr)] for f in range(nz)]).reshape(-1)
-    iz = np.array([[f for e in range(nr)] for f in range(nz)]).reshape(-1)
 
     # domain内のみ考える。
-    ir = ir[m == 1]
-    iz = iz[m == 1]
+    r = g.r[m == 1]
     v = v[m == 1]
 
-    r = rmin + dr*ir
     vol = np.sum(2*np.pi*r*dr*dz) # plasma volume
-    v = np.sum(2*np.pi*r*dr*dz*v) # vol*val
-    
+    v = np.sum(2*np.pi*r*dr*dz*v) # vol*val    
     return v/vol
          
 # 最外殻磁気面形状
 def set_domain_params(dmat):
-    rmin, rmax, dr = dmat['rmin'], dmat['rmax'], dmat['dr']
-    zmin, zmax, dz = dmat['zmin'], dmat['zmax'], dmat['dz']
-    nr, nz = int((rmax-rmin)/dr+1), int((zmax-zmin)/dz+1)
+    g = dm_array(dmat)
+    rmin, dr = g.rmin, g.dr
+    zmin, dz = g.zmin, g.dz
 
     m = dmat['matrix'].reshape(-1)
-    ir = np.array([[e for e in range(nr)] for f in range(nz)]).reshape(-1)
-    iz = np.array([[f for e in range(nr)] for f in range(nz)]).reshape(-1)
-    ir = ir[m == 1]
-    iz = iz[m == 1]
-    r = rmin + dr*ir
-    z = zmin + dz*iz
+    ir = g.ir[m == 1]
+    iz = g.iz[m == 1]
+    r = g.r[m == 1]
     
     # rminがある位置
     v = np.min(ir)
@@ -379,13 +441,7 @@ def calc_equi(dm_jt, dm_flux, dm_domain, npr, ncu):
     #
     # out: dmat_jt
     
-    rmin, rmax, dr = dm_domain['rmin'], dm_domain['rmax'], dm_domain['dr']
-    zmin, zmax, dz = dm_domain['zmin'], dm_domain['zmax'], dm_domain['dz']
-    nr, nz = int((rmax-rmin)/dr+1), int((zmax-zmin)/dz+1)  
-    
-    ir = np.array([[e for e in range(nr)] for f in range(nz)]).reshape(-1)
-    iz = np.array([[f for e in range(nr)] for f in range(nz)]).reshape(-1)    
-    r = rmin + ir*dr
+    g = dm_array(dm_domain)
 
     # fluxの正規化
     dm_nf = get_normalized_flux(dm_flux, dm_domain)
@@ -397,9 +453,9 @@ def calc_equi(dm_jt, dm_flux, dm_domain, npr, ncu):
     d = dm_domain['matrix'].reshape(-1)   
     
     # 最外殻磁気面の内部のみ取り出す。
-    ir = ir[d == 1]
-    iz = iz[d == 1]
-    r = r[d == 1]
+    ir = g.ir[d == 1]
+    iz = g.iz[d == 1]
+    r = g.r[d == 1]
     j = j[d == 1]
     f = f[d == 1]
     
@@ -435,7 +491,7 @@ def calc_equi(dm_jt, dm_flux, dm_domain, npr, ncu):
     # 評価方法はいくつか考えられる。単位メッシュ当たりのエラーに直すとか。
     
     # 新しい電流分布の作成
-    j_new = np.zeros((nz, nr))
+    j_new = np.zeros((g.nz, g.nr))
     for i, j, v in zip(ir, iz, j0):
         j_new[j, i] = v
     
@@ -467,7 +523,6 @@ def equilibrium(coil_currents, plasma_current, npre, npol):
     
     for i in range(100):
         # プラズマ電流によるフラックス
-        dm_fp = gl.get_dmat_coarse()
         dm_fp = pmat.cal_plasma_flux(dm_jt)
         
         # トータルのフラックス
@@ -498,7 +553,9 @@ def equilibrium(coil_currents, plasma_current, npre, npol):
     
     set_domain_params(dm_dm)
     dm_nfl = get_normalized_flux(dm_flux, dm_dm)
-    dm_press, dm_polcur = get_pressure_polcurrent(dm_flux, dm_dm, dm_jt['param_p'], dm_jt['param_i2'])
+    dm_dp, dm_pr = get_dpress_press(dm_nfl, dm_dm, dm_jt['param_p']) 
+    dm_di2, dm_polcur = get_di2_i(dm_nfl, dm_dm, dm_jt['param_i2'])
+    #dm_press, dm_polcur = get_pressure_polcurrent(dm_flux, dm_dm, dm_jt['param_p'], dm_jt['param_i2'])
     
     res = {
         'vessel': dm_vv,
@@ -508,13 +565,85 @@ def equilibrium(coil_currents, plasma_current, npre, npol):
         'flux_normalized': dm_nfl,   # normalized flux
         'jt': dm_jt,                # jt
         'domain': dm_dm,            # domain
-        'pressure': dm_press,        # plasma pressure
-        'polcur': dm_polcur,        # poloidal current
+        'diff_pre': dm_dp,        # derivative pressure
+        'pressure': dm_pr,        # pressure
+        'diff_i2': dm_di2,
+        'pol_current': dm_polcur,
         }    
     pl.d_contour(dm_flux)
     
     return res
     
+def calc_equilibrium(cond):
+    npre = cond['num_dpr']
+    npol = cond['num_di2']
+    err = []
+    
+    # 真空容器
+    dm_vv = vmat.get_vessel(cond)
+    cond['vessel'] = dm_vv
+    
+    # コイルによるフラックス
+    dm_fc = cmat.get_flux_of_coil(cond)
+    cond['flux_coil'] = dm_fc
 
+    # プラズマ電流
+    dm_jt = gl.get_dmat_coarse()
+    dm_jt = pmat.d_plasma_cur_parabolic(dm_jt, 0.6, 0.0, cond['cur_ip'], 0.3)
+    cond['jt'] = dm_jt
+    
+    res = 0
+    for i in range(100):
+        # プラズマ電流によるフラックス
+        dm_fp = pmat.cal_plasma_flux(dm_jt)
+        
+        # トータルのフラックス
+        dm_flux = dm_add(dm_fp, dm_fc)
+        
+        # 最外殻磁気面
+        dm_dm = search_domain2(dm_flux, dm_vv)
+        if None == dm_dm:
+            res = -1
+            break
+
+        # プラズマ平衡
+        dm_jt = calc_equi(dm_jt, dm_flux, dm_dm, npre, npol)
+        
+        # エラー値を記録
+        err.append(dm_jt['error'])
+        
+        print(dm_jt['error'])
+        
+        if len(err) <=1:
+            continue 
+        
+        # 前回値よりエラー値が大きくなったら終了        
+        if err[-1] > err[-2]:
+            break
+        
+        # 一番最初の変化量に対して、最新の変化量が十分小さければ終了
+        v = np.abs((err[-1]-err[-2])/(err[1]-err[0]))
+        if v < 10**(-5):
+            break
+    
+    if -1 == res:
+        return
+    
+    set_domain_params(dm_dm)
+    dm_nfl = get_normalized_flux(dm_flux, dm_dm)
+    dm_dp, dm_pr = get_dpress_press(dm_nfl, dm_dm, dm_jt['param_p']) 
+    dm_di2, dm_polcur = get_di2_i(dm_nfl, dm_dm, dm_jt['param_i2'])
+    
+    cond['flux_jt'] = dm_fp
+    cond['flux_normalized'] = dm_nfl
+    cond['jt'] = dm_jt
+    cond['domani'] = dm_dm
+    cond['diff_pre'] = dm_dp
+    cond['pressure'] = dm_pr
+    cond['diff_i2'] = dm_di2
+    cond['pol_current'] = dm_polcur
+   
+    pl.d_contour(dm_flux)    
+    return cond
 
     

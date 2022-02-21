@@ -30,3 +30,6 @@ def get_vessel_mat(dmat):
     dmat['matrix'] = np.array(a)
     
     return dmat
+
+def get_vessel(cond):
+    return get_vessel_mat(cond['resolution'].copy())
