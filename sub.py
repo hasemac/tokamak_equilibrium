@@ -3,6 +3,7 @@ import plot as pl
 import coils.cmat as cmat
 import vessel.vmat as vmat
 import plasma.pmat as pmat
+from scipy import constants as sc
 from global_variables import gparam
 gl = gparam()
 
@@ -138,6 +139,22 @@ def get_normalized_flux(dm_flux, dm_domain):
     res['matrix'] = f
     return res
 
+def get_normalized_flux2(cond):
+    dm_flux = cond['flux']
+    dm_domain  = cond['domain']
+    # dm_flux: total flux (coil + plasma)
+    # dm_domain: domain
+    # return: dmat, normalized flux
+    # 0: 磁気軸、1: 最外殻磁気面、0: 磁気面外
+    res = get_dmat_dim(dm_domain)
+    faxis, fsurf = cond['f_axis'], cond['f_surf']
+    d = dm_domain['matrix']
+    f = dm_flux['matrix']
+    f = (f-faxis)/(fsurf-faxis) # normalized flux
+    f *= d # domainの外にあるのはゼロにする。
+    res['matrix'] = f
+    return res    
+
 # 圧力の微分dP/dxと、圧力Pの計算
 def get_dpress_press(dm_normalizedflux, dm_domain, param_press):
     g = dm_array(dm_domain)
@@ -183,6 +200,12 @@ def get_dpress_press(dm_normalizedflux, dm_domain, param_press):
     dm_pr['matrix'] = m_pr
     
     return dm_dp, dm_pr    
+
+def n_get_dpress_press(cond):
+    dm_normalizedflux = cond['flux_normalized']
+    dm_domain = cond['domain']
+    param_press = cond['param_dp']
+    return get_dpress_press(dm_normalizedflux, dm_domain, param_press)
 
 # ポロイダルカレントの微分dI^2/dxとポロイダルカレントの計算
 def get_di2_i(dm_normalizedflux, dm_domain, param_i2):
@@ -231,6 +254,12 @@ def get_di2_i(dm_normalizedflux, dm_domain, param_i2):
     
     return dm_di2, dm_i   
  
+def n_get_di2_i(cond):
+    dm_normalizedflux = cond['flux_normalized']
+    dm_domain = cond['domain']
+    param_i2 = cond['param_di2']
+    return get_di2_i(dm_normalizedflux, dm_domain, param_i2)
+    
 # flux値の極小位置の探索
 def search_local_min(dm_flx, dm_vv):
     g = dm_array(dm_flx)
@@ -270,6 +299,26 @@ def search_domain2(dm_flx, dm_vv):
     res = search_domain(dm_flx2, dm_vv)
     res['f_axis'] = -res['f_axis']
     res['f_surf'] = -res['f_surf']
+        
+    return res
+
+# 最外殻磁気面の探索(ip正負両方に対応)
+def search_domain3(cond):
+    res = search_dom(cond)
+    if None != res:
+        return res
+    
+    #極小値の探索に失敗しているのでfluxを反転させて再探索
+    dm_flx = cond['flux']
+    dm_flx['matrix'] = -dm_flx['matrix']
+    #a = dm_flx['matrix']
+    #dm_flx2 = get_dmat_dim(dm_flx)
+    #dm_flx2['matrix'] = -a
+    
+    res = search_dom(cond)
+    dm_flx['matrix'] = -dm_flx['matrix']    
+    cond['f_axis'] = -cond['f_axis']
+    cond['f_surf'] = -cond['f_surf']
         
     return res
 
@@ -366,6 +415,101 @@ def search_domain(dm_flx, dm_vv):
     
     return res
 
+# 最外殻磁気面の探索(最小値)
+def search_dom(cond):
+    # dm_flx: fluxのdmat
+    # dm_vv: 真空容器のdmat
+    dm_flx = cond['flux']
+    dm_vv = cond['vessel']
+    g = dm_array(dm_flx)
+    nz, nr = g.nz, g.nr
+    dz, dr = g.dz, g.dr
+    zmin, rmin = g.zmin, g.rmin
+    
+    # 返り値の作成
+    res = get_dmat_dim(dm_flx)
+        
+    # 領域の初期化
+    dm = np.zeros((nz, nr))    
+    
+    # 真空容器内の極小値を探索してシードとして追加
+    k, l = search_local_min(dm_flx, dm_vv)
+    if 0 == k and 0 == l:
+        return None
+    
+    dm[l, k+1]= 1.0 # 極小値の一つ右側に設定
+    
+    # 値を記録
+    cond['ir_ax'] = k
+    cond['iz_ax'] = l
+    cond['r_ax'] = rmin + k*dr
+    cond['z_ax'] = zmin + l*dz
+            
+    # 磁気軸と最外殻磁気面とヌル点フラックスの定義
+    fax = dm_flx['matrix'][l, k]
+    fsurf = fax
+    fnull = fax
+    
+    # 一次元配列を作成
+    m0 = dm_flx['matrix'].reshape(-1)
+    vv = dm_vv['matrix'].reshape(-1)  
+    ir = g.ir
+    iz = g.iz
+    
+    # 小さい値順に並び替える
+    ix = m0.argsort()
+    m0, ir, iz, vv = m0[ix], ir[ix], iz[ix], vv[ix]
+    
+    # パディング
+    dm2 = np.pad(dm, [(1, 1), (1, 1)])
+    
+    for f, i, j, v in zip(m0, ir, iz, vv):
+        ni, nj = i+1, j+1 # paddingしているので、1を足す。    
+        a = dm2[nj-1:nj+2, ni-1:ni+2].reshape(-1)
+        a = np.sum(a) # 近接点にプラズマが存在していること。
+        # 新しい点に対する判定
+        con = a > 0 # 存在していれば1、その他はゼロ
+        
+        # 他のプラズマと接触して、かつ真空容器内
+        if con and 1 == v:
+            dm2[nj, ni] = con
+            continue
+
+        # 他のプラズマと接触して且つ真空容器外なら探索終了
+        # リミター配位
+        if con and 0 == v:
+            fsurf = f
+            break   
+            
+        # 接触しておらず、真空容器外
+        # この場合はなにもしない。
+        
+        # 接触しておらず、真空容器内
+        # この場合はダイバータ配位のプライベートリージョン
+        # ヌル点のフラックス値を記録しておく。
+        if not con and 1 == v:
+            fnull = f
+    
+    # パディング分を取り除く        
+    dm3 = dm2[1:1+nz, 1:1+nr]
+        
+    # ダイバータ配位かどうかの判定
+    if fnull != fax:
+        # ダイバータ配位の場合、ヌル点近傍でほとんどフラックスが変化しない。
+        # ある値で切り上げたほうが多分良い。
+        fsurf = fax + 0.88*(fnull-fax)
+        dm3[iz[m0 >= fsurf], ir[m0 >= fsurf]] = 0
+        
+        cond['conf_div'] = 1
+    else:
+        cond['conf_div'] = 0
+
+    res['matrix'] = dm3
+    cond['f_axis'] = fax
+    cond['f_surf'] = fsurf
+    
+    return res
+
 # 体積平均の算出
 def get_volume_average(dm_val, dm_domain):
     # dm_val: 例えばプラズマ圧力など
@@ -430,8 +574,57 @@ def set_domain_params(dmat):
     dmat['triangularity'] = (r0 - r_zmax)/a0
     dmat['volume'] = np.sum(2*np.pi*r*dr*dz)
     dmat['cross_section'] = np.sum(m[m == 1])*dr*dz
-       
-# 平衡計算
+    
+# 最外殻磁気面形状
+def set_domain_params2(cond):
+    dmat = cond['domain']
+    g = dm_array(dmat)
+    rmin, dr = g.rmin, g.dr
+    zmin, dz = g.zmin, g.dz
+
+    m = dmat['matrix'].reshape(-1)
+    ir = g.ir[m == 1]
+    iz = g.iz[m == 1]
+    r = g.r[m == 1]
+    
+    # rminがある位置
+    v = np.min(ir)
+    r_rmin = rmin + dr*np.mean(ir[ir == v])
+    z_rmin = zmin + dz*np.mean(iz[ir == v])    
+    cond['r_rmin'] = r_rmin
+    cond['z_rmin'] = z_rmin
+    
+    # rmaxがある位置
+    v = np.max(ir)
+    r_rmax = rmin + dr*np.mean(ir[ir == v])
+    z_rmax = zmin + dz*np.mean(iz[ir == v])
+    cond['r_rmax'] = r_rmax
+    cond['z_rmax'] = z_rmax
+
+    # zminがある位置
+    v = np.min(iz)
+    r_zmin = rmin + dr*np.mean(ir[iz == v])
+    z_zmin = zmin + dz*np.mean(iz[iz == v])
+    cond['r_zmin'] = r_zmin
+    cond['z_zmin'] = z_zmin
+    
+    # zmaxがある位置
+    v = np.max(iz)
+    r_zmax = rmin + dr*np.mean(ir[iz == v])
+    z_zmax = zmin + dz*np.mean(iz[iz == v])
+    cond['r_zmax'] = r_zmax
+    cond['z_zmax'] = z_zmax
+    
+    a0 = (r_rmax - r_rmin)/2.0
+    r0 = (r_rmax + r_rmin)/2.0
+    cond['major_radius'] = r0
+    cond['minor_radius'] = a0
+    cond['elongation'] = (z_zmax - z_zmin)/(r_rmax-r_rmin)
+    cond['triangularity'] = (r0 - r_zmax)/a0
+    cond['volume'] = np.sum(2*np.pi*r*dr*dz)
+    cond['cross_section'] = np.sum(m[m == 1])*dr*dz
+    
+# 平衡計算(1回)
 def calc_equi(dm_jt, dm_flux, dm_domain, npr, ncu):
     # dm_jt: プラズマ電流
     # dm_flux: total fluxのdmat (コイル由来＋プラズマ由来)
@@ -500,6 +693,80 @@ def calc_equi(dm_jt, dm_flux, dm_domain, npr, ncu):
     res['error'] = errest
     res['param_p'] = params[0:npr]
     res['param_i2'] = params[npr:]
+    return res   
+
+# 平衡計算(１回)
+def calc_equi2(cond):
+    dm_jt = cond['jt']
+    dm_domain = cond['domain']
+    npr = cond['num_dpr']
+    ncu = cond['num_di2']
+    
+    # dm_jt: プラズマ電流
+    # dm_domain: 最外殻磁気面のdmat
+    # npr: pressureに関するパラメータの個数
+    # ncu: poloidal電流に関するパラメータの個数
+    #
+    # out: dmat_jt
+    
+    g = dm_array(dm_domain)
+
+    # fluxの正規化
+    dm_nf = get_normalized_flux2(cond)
+    f = dm_nf['matrix'].reshape(-1)
+    j = dm_jt['matrix'].reshape(-1)
+    jtotal = np.sum(j) # 全電流を保持しておく
+    
+    d = dm_domain['matrix'].reshape(-1)   
+    
+    # 最外殻磁気面の内部のみ取り出す。
+    ir = g.ir[d == 1]
+    iz = g.iz[d == 1]
+    r = g.r[d == 1]
+    j = j[d == 1]
+    f = f[d == 1]
+    
+    # 例えばパラメータ数が３の場合の時
+    # (1-x^3) *a0 + (x^1-x^3)*a1 + (x^2-x^3)*a2
+    # という形になることに注意すること
+    
+    # 圧力に関する行列作成
+    p0 = np.array([2 * np.pi * r *(f**i-f**npr) for i in range(npr)])
+    # I^2に関する行列作成
+    p1 = np.array([10**(-7)/(r+10**(-7)) * (f**i-f**ncu) for i in range(ncu)])
+    # 結合させて転置、この時点で[point数, パラメータ数]の形
+    a = np.vstack([p0, p1]).transpose()
+    
+    # 次にAbs(a x -j)を最小とするxを求めればよい。
+    # A[p, n] x[n] = j[p]
+    # このときのxは、At.A x = At.jを満たすxである。
+    
+    m0 = np.dot(a.transpose(), a)    
+    m1 = np.dot(a.transpose(), j)
+    
+    # m0にほんのわずかな値を加算してsingular matrixになるのを避ける
+    #dd = np.min(np.abs(m0))*10**(-7)
+    #m0 += np.identity(npr+ncu)*dd
+    
+    params = np.dot(np.linalg.inv(m0), m1)
+    
+    # エラー値の算出
+    j0 = np.dot(a, params) # 新しい電流
+    j0 *= jtotal/np.sum(j0) # トータルの電流値が維持されるように調整
+    
+    errest = np.sum((j0-j)**2)/2
+    # 評価方法はいくつか考えられる。単位メッシュ当たりのエラーに直すとか。
+    
+    # 新しい電流分布の作成
+    j_new = np.zeros((g.nz, g.nr))
+    for i, j, v in zip(ir, iz, j0):
+        j_new[j, i] = v
+    
+    res = get_dmat_dim(dm_jt)
+    res['matrix'] = j_new
+    cond['error'].append(errest)
+    cond['param_dp'] = params[0:npr]
+    cond['param_di2'] = params[npr:]
     return res   
 
 # 平衡計算
@@ -575,10 +842,7 @@ def equilibrium(coil_currents, plasma_current, npre, npol):
     return res
     
 def calc_equilibrium(cond):
-    npre = cond['num_dpr']
-    npol = cond['num_di2']
-    err = []
-    
+        
     # 真空容器
     dm_vv = vmat.get_vessel(cond)
     cond['vessel'] = dm_vv
@@ -588,31 +852,40 @@ def calc_equilibrium(cond):
     cond['flux_coil'] = dm_fc
 
     # プラズマ電流
-    dm_jt = gl.get_dmat_coarse()
-    dm_jt = pmat.d_plasma_cur_parabolic(dm_jt, 0.6, 0.0, cond['cur_ip'], 0.3)
+    dm_jt = pmat.d_set_plasma_parabolic(cond)
     cond['jt'] = dm_jt
     
     res = 0
     for i in range(100):
         # プラズマ電流によるフラックス
         dm_fp = pmat.cal_plasma_flux(dm_jt)
+        cond['flux_jt'] = dm_fp
         
         # トータルのフラックス
         dm_flux = dm_add(dm_fp, dm_fc)
+        cond['flux'] = dm_flux
         
         # 最外殻磁気面
-        dm_dm = search_domain2(dm_flux, dm_vv)
+        #dm_dm = search_domain2(dm_flux, dm_vv)
+        dm_dm = search_domain3(cond)        
         if None == dm_dm:
             res = -1
             break
-
+        cond['domain'] = dm_dm
+        
         # プラズマ平衡
-        dm_jt = calc_equi(dm_jt, dm_flux, dm_dm, npre, npol)
-        
+        dm_jt = calc_equi2(cond)
+        cond['jt'] = dm_jt
+
+        # プラズマ電流のトリミング
+        # ip>0なら全ての領域でjt>0となるようにする。
+        dm_jt2 = pmat.trim_plasma_current(cond)
+        cond['jt'] = dm_jt2
+                        
         # エラー値を記録
-        err.append(dm_jt['error'])
-        
-        print(dm_jt['error'])
+        #err.append(dm_jt['error'])
+        err = cond['error']
+        print(err[-1])
         
         if len(err) <=1:
             continue 
@@ -629,21 +902,116 @@ def calc_equilibrium(cond):
     if -1 == res:
         return
     
-    set_domain_params(dm_dm)
-    dm_nfl = get_normalized_flux(dm_flux, dm_dm)
-    dm_dp, dm_pr = get_dpress_press(dm_nfl, dm_dm, dm_jt['param_p']) 
-    dm_di2, dm_polcur = get_di2_i(dm_nfl, dm_dm, dm_jt['param_i2'])
-    
-    cond['flux_jt'] = dm_fp
+    set_domain_params2(cond)
+
+    dm_nfl = get_normalized_flux2(cond)
     cond['flux_normalized'] = dm_nfl
-    cond['jt'] = dm_jt
-    cond['domani'] = dm_dm
+
+    dm_dp, dm_pr = n_get_dpress_press(cond) 
     cond['diff_pre'] = dm_dp
     cond['pressure'] = dm_pr
+
+    #dm_di2, dm_polcur = get_di2_i(dm_nfl, dm_dm, dm_jt['param_di2'])
+    dm_di2, dm_polcur = n_get_di2_i(cond)
     cond['diff_i2'] = dm_di2
     cond['pol_current'] = dm_polcur
-   
-    pl.d_contour(dm_flux)    
+    
+    cond = trim_values(cond)
+    cond = calc_values(cond)
+    cond = calc_safty(cond)
+    
+    pl.d_contour(dm_flux)
     return cond
 
+# ipの正負に応じた値の修正
+def trim_values(cond):
+    jt = cond['jt']['matrix']
+    ip = np.sum(jt)
+    
+    # ip < 0のとき、
+    # pressure < 0と計算されてしまうので反転する。
+    # pol_current > 0と計算されてしまうので反転する。
+    if ip < 0:
+        cond['pressure']['matrix'] *= -1.0
+        cond['pol_current']['matrix'] *= -1.0
+    
+    # ポロイダル電流にTFの電流を加算
+    cond['pol_current']['matrix'] += cond['cur_tf']*16.0    
+    
+    return cond
+
+# ベータ値の計算
+def calc_values(cond):
+    u0 = sc.mu_0 # 真空の透磁率
+    pi = sc.pi
+
+    # 圧力の体積平均
+    p = get_volume_average(cond['pressure'], cond['domain'])
+    cond['pressure_vol_average'] = p
+    
+    ir_ax, iz_ax = cond['ir_ax'], cond['iz_ax']
+    r_ax = cond['r_ax']
+    
+    # 2 pi R Bt = mu0 I
+    polcur = cond['pol_current']['matrix'][iz_ax, ir_ax]
+    bt = u0 * polcur/(2*pi*r_ax)
+    
+    # toroidal beta bet_tor = <p>/(bt^2/(2u0))
+    betr = p/(bt**2/2/u0)
+    cond['beta_toroidal'] = betr
+    
+    return cond
+
+# safty factorの計算
+def calc_safty(cond):
+    # calc toroidal flux
+    # ft = Integrate_area[u0*I/(2*pi*r)]
+    g = dm_array(cond['domain'])
+    d = cond['domain']['matrix'].reshape(-1)
+    f = cond['flux_normalized']['matrix'].reshape(-1)
+    p = cond['pol_current']['matrix'].reshape(-1)    
+    
+    # domainの場所だけ取り出す。
+    f = f[d == 1]
+    p = p[d == 1]
+    r = g.r[d == 1]
+    ir = g.ir[d == 1]
+    iz = g.iz[d == 1]
+    nr, nz = g.nr, g.nz
+    
+    func = 2*10**(-7)*p/r
+    x = np.linspace(0, 1, 11)
+    y = [np.sum(func[f <= e]) for e in x]
+    
+    numpol = 2 # polynominalの次元数
+    coef = np.polyfit(x, y, numpol)
+    cond['coef_toroidal_flux'] = coef
+    # 係数は高次の項から出力される。
+    # numpol = 2の時は、２次の係数が最初。
+    # 値を算出したいときは下の式を使う
+    #vals = np.polyval(coef, x)
+    
+    # safty factor q = d ft/df=(1/(fb-fm))*dft(x)/dx
+    dc = [numpol - e for e in range(numpol+1)]
+    dc = np.array(dc)
+    # [2, 1, 0]の配列を掛け合わせて、微分の係数を作成する
+    # 同時に定数項の係数を削除
+    dcoef = (coef*dc)[:-1]
+    fax, fbn = cond['f_axis'], cond['f_surf']
+    
+    q = np.polyval(dcoef, f/(fbn-fax))
+    #q = np.polyval(dcoef, f)
+    
+    qmat = np.zeros((nz, nr))
+    for v, i, j in zip(q, ir, iz):
+        qmat[j, i] = v
+    
+    safty = cond['resolution'].copy()
+    safty['matrix'] = qmat
+    cond['safty_factor'] = safty
+    
+    return cond
+    
+    
+    
     

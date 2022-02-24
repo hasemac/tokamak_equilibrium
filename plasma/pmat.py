@@ -78,3 +78,37 @@ def plasma_cur_parabolic(r0, z0, ip, radius, r_pos, z_pos):
     mat = mat/np.sum(mat)*ip
     
     return mat
+
+def d_set_plasma_parabolic(cond):
+    res = cond['resolution'].copy()
+    ip = cond['cur_ip']['ip']
+    r0 = cond['cur_ip']['r0']
+    z0 = cond['cur_ip']['z0']
+    radius = cond['cur_ip']['radius']
+    
+    return d_plasma_cur_parabolic(res, r0, z0, ip, radius)
+
+def trim_plasma_current(cond):
+    # ip>0ならjt<0の値は不自然。
+    # この場合は全体を底上げした後、トータルを合わせることで
+    # トリミングをかける。
+    res = cond['resolution'].copy()
+    
+    dm = cond['domain']['matrix']
+    jt = cond['jt']['matrix']
+    
+    ip = np.sum(jt)
+    vmin = np.min(jt)
+    vmax = np.max(jt)
+    
+    if ip >= 0:
+        jt -= vmin
+    else:
+        jt -= vmax
+
+    jt *= dm
+    jt *= ip/np.sum(jt)
+    
+    res['matrix'] = jt
+    
+    return res
