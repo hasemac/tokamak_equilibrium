@@ -1,8 +1,8 @@
 import os, sys
 sys.path.append('..')
-import sub as sb
+import sub.functions as sb
 import numpy as np
-import electromagnetics as mag
+import sub.electromagnetics as mag
 from global_variables import gparam
 gl = gparam()
 
@@ -11,7 +11,7 @@ gl = gparam()
 # 対称性から計算していくので、定義された範囲よりもz方向に広く計算している。
 # [nr, 2*nz-1, nr]
 mat = []
-dir = os.path.join(gl.root_dir, 'plasma\plasma_kernel.npy')
+dir = os.path.join(gl.root_dir, 'plasma\plasma_kernel_'+gl.cname+'.npy')
 try:
     mat = np.load(dir)
     

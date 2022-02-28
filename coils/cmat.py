@@ -1,5 +1,5 @@
 import numpy as np
-import sub as sb
+import sub.functions as sb
 from global_variables import gparam
 gl = gparam()
 

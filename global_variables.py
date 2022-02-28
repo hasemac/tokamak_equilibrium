@@ -4,29 +4,23 @@ class gparam:
     
     # fine mesh
     r_min, r_max, del_r = 0.0, 1.8, 0.01
-    nr = None
-    r_pos = []
-        
     z_min, z_max, del_z = -1.8, 1.8, 0.01
-    nz = None
-    z_pos = []
+    
+    nr, nz = None, None
+    r_pos, z_pos = [], []    
     
     # coarse mesh(cの文字を付加)
-    #cr_min, cr_max, cdel_r = 0.0, 1.8, 0.05
-    #cnr = None
-    #cr_pos = []
     
-    #cz_min, cz_max, cdel_z = -1.8, 1.8, 0.05
-    #czr = None
-    #cz_pos = []
+    #cname = 'f0'
+    #cr_min, cr_max, cdel_r = 0.0, 1.4, 0.02
+    #cz_min, cz_max, cdel_z = -1.1, 1.1, 0.02    
     
-    cr_min, cr_max, cdel_r = 0.0, 1.4, 0.02
-    cnr = None
-    cr_pos = []
+    cname = 'f1'
+    cr_min, cr_max, cdel_r = 0.0, 1.8, 0.02    
+    cz_min, cz_max, cdel_z = -1.8, 1.8, 0.02 
     
-    cz_min, cz_max, cdel_z = -1.1, 1.1, 0.02
-    czr = None
-    cz_pos = []    
+    cnr, cnz = None, None
+    cr_pos, cz_pos = [], []   
     
     root_dir = 'c:\\home\\codes\\tokamak_equilibirum\\'
     
