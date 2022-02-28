@@ -19,10 +19,10 @@ graph TD;
   F-->D(Determin LCFS);
   D-->J(Represent jt by the coefficients);
   J-->E(Find coefficients to minimize error);
-  E-->N(Calculate new jt with coefficients);
-  N-->C{small error?};
-  C-->|No|F;
+  E-->C{small error?};
   C-->|Yes|G(End)
+  C-->|No|N(Calculate new jt with coefficients);  
+  N-->F;
 ```
 The plasma current density is given by the following equation.
 
