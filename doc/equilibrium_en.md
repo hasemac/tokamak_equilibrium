@@ -111,11 +111,11 @@ normalized beta：
 \beta_{t}[\%] = \beta_{N} \frac{I_{p}}{a B_{t}} [MA/m.T]
 ```
 
-$B_{t}$: Toroidal magnetic field at the center of the plasma
+$`B_{t}`$: Toroidal magnetic field at the center of the plasma
 
-$<p> $: volume averaged pressure
+$`<p>`$: volume averaged pressure
 
-$a$: minor radius
+$`a`$: minor radius
 
 # Safty factor
 
