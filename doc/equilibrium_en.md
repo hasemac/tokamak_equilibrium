@@ -3,12 +3,26 @@
 1. Assume $`j_{t}(R, z)`$.
 1. Calculate the total magnetic flux $`\psi (R, z)`$ of the coil current and plasma current.
 1. Determines the last closed flux surface (LCFS).
-1. Let $`j_ {t}`$ at each point in the LCFS be $`j_{t0} (i, j)`$.
 1. Represent $`j_{t}`$ at the corresponding point by a linear combination of the coefficients of $`dP/d \psi`$ and $`dI^ {2}/d \psi `$, which is $`j_{t1} (i, j)`$.
-1. Find coefficients using the least squares method. The coefficients that minimizes the following values.
+1. Find coefficients using the least squares method. The coefficients that minimizes the following values
 
 ```math
 error = \frac{1}{2}\sum_{(i, j)}(j_{t1}(i, j)-j_{t0}(i, j))^{2}
+```
+, where $`j_{t0} (i, j)`$ is initial $`j_{t}`$ assumed firstly.
+
+
+
+```mermaid
+graph TD;
+  A(Assume Jt)-->F(Calculate total flux);
+  F-->D(Determin LCFS);
+  D-->J(Represent jt by the coefficients);
+  J-->E(Find coefficients to minimize error);
+  E-->N(Calculate new jt with coefficients);
+  N-->C{small error?};
+  C-->|No|F;
+  C-->|Yes|G(End)
 ```
 The plasma current density is given by the following equation.
 
@@ -19,7 +33,6 @@ j_{\psi} = 2 \pi R \frac{dP(\psi)}{d\psi}+\frac{\mu_{0}}{4 \pi R} \frac{dI^{2}(\
 $`P(\psi)`$：Plasma pressure
 
 $`I(\psi)`$：Poloidal current, **including toroidal coil current**.
-
 # Functions in the magnetic surface
 
 Let $`x`$ be the variable of the polynomial, and $`x = (\psi- \psi_ {M}) / (\psi_{B}- \psi_{M})`$.

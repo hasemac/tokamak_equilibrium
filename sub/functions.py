@@ -497,7 +497,7 @@ def search_dom(cond):
     if fnull != fax:
         # ダイバータ配位の場合、ヌル点近傍でほとんどフラックスが変化しない。
         # ある値で切り上げたほうが多分良い。
-        fsurf = fax + 0.88*(fnull-fax)
+        fsurf = fax + 0.90*(fnull-fax)
         dm3[iz[m0 >= fsurf], ir[m0 >= fsurf]] = 0
         
         cond['conf_div'] = 1
@@ -1036,7 +1036,3 @@ def calc_equilibrium(cond, verbose=1):
         pl.d_contour(dm_flux)
         
     return cond
-
-    
-    
-    

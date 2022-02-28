@@ -52,11 +52,13 @@ dict_keys(['cur_tf', 'cur_ip', 'cur_pf', 'num_dpr', 'num_di2', 'resolution', 'er
 You can check the calculation result with contour map or heat map.
 
 ```python:
+import sub.plot as pl
 pl.d_contour(cond['flux'])
 ```
 ![flux](doc/flux.png)
 
 ```python:
+import sub.plot as pl
 pl.d_heatmap(cond['domain'])
 ```
 ![domain](doc/domain.png)
