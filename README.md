@@ -2,119 +2,63 @@
 
 We will develop a tokamak equilibrium calculation code.
 
-## Procedure of tokamak equilibrium calculation code
-
-1. Assume $`j_{t}(R, z)`$.
-1. Calculate the total magnetic flux $`\psi (R, z)`$ of the coil current and plasma current.
-1. Determines the last closed flux surface (LCFS).
-1. Represent $`j_{t}`$ at the corresponding point by a linear combination of the coefficients of $`dP/d \psi`$ and $`dI^ {2}/d \psi `$, which is $`j_{t1} (i, j)`$.
-1. Find coefficients using the least squares method. The coefficients that minimizes the following values.
-
-```math
-error = \frac{1}{2}\sum_{(i, j)}(j_{t1}(i, j)-j_{t0}(i, j))^{2}
-```
-, where $`j_{t0} (i, j)`$ is first assumued $`j_{t}(R, z)`$.
-
-The plasma current density is given by the following equation.
-
-```math
-j_{\psi} = 2 \pi R \frac{dP(\psi)}{d\psi}+\frac{\mu_{0}}{4 \pi R} \frac{dI^{2}(\psi)}{d\psi}
-```
-
-$`P(\psi)`$：Plasma pressure
-
-$`I(\psi)`$：Poloidal current
-
-[Equations of magnetics](doc/magnetics.md)
+[Equations of magnetics](doc/magnetics_en.md)
 
 [Procedure of equilibrium calculation](doc/equilibrium_en.md)
 
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+1. Clone this project using VS code etc.
+1. Execute 'equalibrium.ipynb' in the root directory in order from the top.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## How to set calculation conditions
+An example of the calculation conditions can be found in the conditions of'equilibrium.ipynb'.
 
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
+```python:
+condition = {
+    # TF current
+    'cur_tf':50, 
+    
+    # initial plasma profile
+    'cur_ip':{'ip':-50, 'r0':0.60, 'z0':0.0, 'radius':0.3},
+    
+    # PF currents
+    'cur_pf':{'hcult16':0.0,'pf17t12':0.5, 'pf26t18':1.0,'pf4_1ab3_cc2':1.0,'pf35_2':-0.5, },        
+    
+    # number of coefficients
+    'num_dpr':2, # dp/df
+    'num_di2':2, # di2/df
+    
+    'resolution': gl.get_dmat_coarse(),
+    'error':[]
+    }
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/hasemac/tokamak_equilibirum.git
-git branch -M main
-git push -uf origin main
+
+Calculation conditions are described in python dictionary type.
+Namely, 'parameter name':value, etc.
+
+The specifiable PF coil name can be found in '/colis/data_npy/'.
+
+## How to check the calculation result.
+You can see what was calculated with '.keys ()'.
+
+```python:
+cond.keys()
 ```
+```python:
+dict_keys(['cur_tf', 'cur_ip', 'cur_pf', 'num_dpr', 'num_di2', 'resolution', 'error', 'vessel', 'flux_coil', 'jt', 'flux_jt', 'flux', 'ir_ax', 'iz_ax', 'r_ax', 'z_ax', 'conf_div', 'f_axis', 'f_surf', 'domain', 'param_dp', 'param_di2', 'r_rmin', 'z_rmin', 'r_rmax', 'z_rmax', 'r_zmin', 'z_zmin', 'r_zmax', 'z_zmax', 'major_radius', 'minor_radius', 'elongation', 'triangularity', 'volume', 'cross_section', 'flux_normalized', 'diff_pre', 'pressure', 'diff_i2', 'pol_current', 'pressure_vol_average', 'beta_toroidal', 'coef_toroidal_flux', 'safty_factor'])
+```
+You can check the calculation result with contour map or heat map.
 
-## Integrate with your tools
+```python:
+pl.d_contour(cond['flux'])
+```
+![flux](doc/flux.png)
 
-- [ ] [Set up project integrations](https://gitlab.com/hasemac/tokamak_equilibirum/-/settings/integrations)
+```python:
+pl.d_heatmap(cond['domain'])
+```
+![domain](doc/domain.png)
 
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!).  Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+We are accepting questions at any time.
