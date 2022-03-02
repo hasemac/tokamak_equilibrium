@@ -1,3 +1,26 @@
+## Maxwell's equations
+
+```math
+\begin{align*}
+&\operatorname{div} \boldsymbol{D}=\rho\\
+
+&\operatorname{div} \boldsymbol{B}=0\\
+
+&\operatorname{rot} \boldsymbol{E} = -\frac{\partial \boldsymbol{B}}{\partial t}\\
+
+&\operatorname{rot} \boldsymbol{H}=\boldsymbol{j}+ \frac{\partial \boldsymbol{D}}{\partial t}\\
+
+\end{align*}
+```
+, where
+```math
+\begin{align*}
+&\boldsymbol{D}=\epsilon_{0}\boldsymbol{E}+\boldsymbol{P}\\
+
+&\boldsymbol{B}=\mu_{0}\boldsymbol{H}+\boldsymbol{M}\\
+
+\end{align*}
+```
 ## Lorentz gauge condition
 
 ```math
@@ -139,3 +162,30 @@ Thus, the following formula is obtained.
 ```math
 \Phi=2\pi r \times A_\theta(\boldsymbol{r})
 ```
+
+## Vector operator with cylindrical coordinates
+
+```math
+\nabla \times \boldsymbol{A} = 
+\bigl(\frac{1}{r} \frac{\partial A_{z}}{\partial \theta} -\frac{\partial A_{\theta}}{\partial z}\bigr) \boldsymbol{e_{r}}
+
++\bigl(\frac{\partial A_{r}}{\partial z} -\frac{\partial A_z}{\partial r}\bigr) \boldsymbol{e_{\theta}}
+
++\frac{1}{r}\bigl(\frac{\partial (r A_{\theta})}{\partial r} -\frac{\partial A_{r}}{\partial \theta}\bigr) \boldsymbol{e_{z}}
+
+```
+
+$`A_{r} = A_{z}=0`$, if $`A`$ is vector potential of axisymetric circuler coils.
+
+```math
+\begin{align*}
+\boldsymbol{B} = \nabla \times \boldsymbol{A} &= 
+ -\frac{\partial A_{\theta}}{\partial z} \boldsymbol{e_{r}}
+
++\frac{1}{r} \frac{\partial (r A_{\theta})}{\partial r}  \boldsymbol{e_{z}}\\
+
+&=-\frac{1}{2 \pi r}\frac{\partial \Phi}{\partial z} \boldsymbol{e_{r}} 
++ \frac{1}{2 \pi r}\frac{\partial \Phi}{\partial r} \boldsymbol{e_{z}}
+\end{align*}
+```
+
