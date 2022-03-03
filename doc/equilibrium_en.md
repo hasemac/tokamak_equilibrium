@@ -196,7 +196,15 @@ The toroidal flux can be given by the following equation.
 ```math
 2 \pi R B_{\phi}=\mu_{0}I
 ```
-Thus, 
+Integration area is inside of flux surfaces. Thus, the $`\phi (x)`$ can be calculated numerically. In this tokamak equilibrium code, the $`\phi (x)`$ is represented by a polynominal approximation after concrete numerical calculation. Since it is a polynomial approximation, its differentiation can be easily performed. 
+
+```math
+q = \frac{d\phi}{d\psi}=\frac{1}{\psi_{B}- \psi_{M}}\frac{d \phi (x)}{dx}
+```
+
+
+
+In other, 
 
 ```math
 \begin{align}
