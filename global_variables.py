@@ -26,42 +26,17 @@ class gparam:
     root_dir = "c:\\home\\codes\\tokamak_equilibirum\\"
 
     def __init__(self):
-        self.r_pos = np.array(
-            [
-                e
-                for e in np.arange(
-                    self.r_min, self.r_max + 0.9 * self.del_r, self.del_r
-                )
-            ]
-        )
+
+        self.r_pos = np.arange(self.r_min, self.r_max + self.del_r / 2, self.del_r)
         self.nr = int((self.r_max - self.r_min) / self.del_r + 1)
-        self.z_pos = np.array(
-            [
-                e
-                for e in np.arange(
-                    self.z_min, self.z_max + 0.9 * self.del_z, self.del_z
-                )
-            ]
-        )
+
+        self.z_pos = np.arange(self.z_min, self.z_max + self.del_z / 2, self.del_z)
         self.nz = int((self.z_max - self.z_min) / self.del_z + 1)
 
-        self.cr_pos = np.array(
-            [
-                e
-                for e in np.arange(
-                    self.cr_min, self.cr_max + 0.9 * self.cdel_r, self.cdel_r
-                )
-            ]
-        )
+        self.cr_pos = np.arange(self.cr_min, self.cr_max + self.cdel_r / 2, self.cdel_r)
         self.cnr = int((self.cr_max - self.cr_min) / self.cdel_r + 1)
-        self.cz_pos = np.array(
-            [
-                e
-                for e in np.arange(
-                    self.cz_min, self.cz_max + 0.9 * self.cdel_z, self.cdel_z
-                )
-            ]
-        )
+
+        self.cz_pos = np.arange(self.cz_min, self.cz_max + self.cdel_z / 2, self.cdel_z)
         self.cnz = int((self.cz_max - self.cz_min) / self.cdel_z + 1)
 
     def __setattr__(self, name, value):
