@@ -9,6 +9,8 @@ We will develop a tokamak equilibrium calculation code.
 
 ## Getting started
 
+"Plotly" is used to draw the graph. Therefore, **Node.js** must be installed in order to display the graph.
+
 1. Clone this project using VS code etc.
 1. Execute 'equalibrium.ipynb' in the root directory in order from the top.
 
@@ -50,6 +52,8 @@ cond.keys()
 dict_keys(['cur_tf', 'cur_ip', 'cur_pf', 'num_dpr', 'num_di2', 'resolution', 'error', 'vessel', 'flux_coil', 'jt', 'flux_jt', 'flux', 'ir_ax', 'iz_ax', 'r_ax', 'z_ax', 'conf_div', 'f_axis', 'f_surf', 'domain', 'param_dp', 'param_di2', 'r_rmin', 'z_rmin', 'r_rmax', 'z_rmax', 'r_zmin', 'z_zmin', 'r_zmax', 'z_zmax', 'major_radius', 'minor_radius', 'elongation', 'triangularity', 'volume', 'cross_section', 'flux_normalized', 'diff_pre', 'pressure', 'diff_i2', 'pol_current', 'pressure_vol_average', 'beta_toroidal', 'coef_toroidal_flux', 'safty_factor'])
 ```
 You can check the calculation result with contour map or heat map.
+
+"Plotly" is used to draw the graph. Therefore, **Node.js** must be installed in order to display the graph.
 
 ```python:
 import sub.plot as pl
