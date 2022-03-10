@@ -23,7 +23,8 @@ class gparam:
     cnr, cnz = None, None
     cr_pos, cz_pos = [], []
 
-    root_dir = "c:\\home\\codes\\tokamak_equilibirum\\"
+    # root_dir = "c:\\home\\codes\\tokamak_equilibirum\\"
+    root_dir = "."
 
     def __init__(self):
 
