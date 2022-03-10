@@ -14,7 +14,7 @@ gl = gparam()
 # 対称性から計算していくので、定義された範囲よりもz方向に広く計算している。
 # [nr, 2*nz-1, nr]
 mat = []
-dir = os.path.join(gl.root_dir, "plasma\plasma_kernel_" + gl.cname + ".npy")
+dir = os.path.join(gl.root_dir, "plasma/plasma_kernel_" + gl.cname + ".npy")
 try:
     mat = np.load(dir)
 
