@@ -22,6 +22,14 @@ column_comments = {
     "r_ax": "r position of magnetic axis",
     "z_ax": "z position of magnetic axis",
     "conf_div": "1: divertor conf. 0: limiter conf.",
+    "f_axis": "flux of magnetic axis",
+    "f_surf": "flux of magnetic surface",
+    "pts_r_rmin": "R where R is the smallest on the last closed flux surface",
+    "pts_z_rmin": "z where R is the smallest on the last closed flux surface",
+    "major_radius": "major radius",
+    "minor_radius": "minor radius",
+    "volume": "plasma volume",
+    "cross_section": "poloidal cross section",
 }
 
 
@@ -205,7 +213,7 @@ select(colName, condition, vals) : データの検索
             + colType
             + " COMMENT %s;"
         )
-        # print(sql)
+        # print(sql, comment)
         self.cur.execute(sql, [comment])
 
     # 新規要素の追加
@@ -302,7 +310,7 @@ class DB_equilibrium(DB):
             # 既にカラムが存在している場合
             if cn in cnames:
                 continue
-
+            
             self.addColumn(cn, ct, cc)
 
     def add_data(self, dat):
