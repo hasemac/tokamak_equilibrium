@@ -1,3 +1,5 @@
+import os
+
 import mysql.connector
 import numpy as np
 
@@ -23,85 +25,40 @@ column_comments = {
 }
 
 
-def conv_type(v):
-    if np.float64 == type(v):
-        return float(v), "FLOAT"
-    if float == type(v):
-        return v, "FLOAT"
-    if int == type(v):
-        return v, "INT"
-    return float(v), "FLOAT"
-
-
-def disassemble_dict(keyname, d: dict):
-    res = []
-    for k in d.keys():
-        res.append([keyname + "_" + k, *conv_type(d[k])])
-
-    return res
-
-
-def disassemble_array(keyname, a):
-    s = ""
-    for e in a:
-        s += str(e) + ", "
-    return [keyname, s[:-2], "TEXT"]
-
+def disassemble(keyname, val, res):
+    # dmat形式のものは除外
+    if dict == type(val) and "matrix" in val:
+        return
+    if np.ndarray == type(val) or list == type(val) or tuple == type(val):
+        s = ""
+        for e in val:
+            s += str(e) + ", "
+        res.append([keyname, s[:-2], "TEXT"])
+        return
+    if np.float64 == type(val) or float == type(val):
+        res.append([keyname, float(val), "FLOAT"])
+        return
+    if int == type(val):
+        res.append([keyname, val, "INT"])
+        return
+    if dict == type(val):
+        for k in val.keys():
+            disassemble(keyname+'_'+k, val[k], res)
+        return
+    
 
 def disassemble_condition(cond):
     res = []
-    keys = cond.keys()
-    for k in keys:
-        v = cond[k]
-        # dmat形式のものは除外
-        if dict == type(v) and "matrix" in v:
-            continue
-        if dict == type(v):
-            for e in disassemble_dict(k, v):
-                res.append(e)
-            continue
-        if np.ndarray == type(v) or list == type(v):
-            res.append(disassemble_array(k, v))
-            continue
-        # res.append([k, cond[k], type(cond[k])])
-        res.append([k, *conv_type(cond[k])])
-
+    for k in cond.keys():
+        disassemble(k, cond[k], res)
     return res
 
+def get_connector():
 
-class Holder:
-
-    data = []
-
-    def __init__(self, absFile):
-        self.read_file(absFile)
-
-    def read_file(self, absFile):
-        head = []
-        with open(absFile) as f:
-            line = f.readline()
-            while line:
-                head.append(line)
-                line = f.readline()
-        head = [e.replace("\n", "") for e in head]
-        self.data = [e.split("\t") for e in head]
-
-    def get(self, name):
-        res = []
-        for e in self.data:
-            if name == e[0]:
-                res = e
-        return res
-
-
-def get_connector(absFile):
-
-    inf = Holder(absFile)
-
-    user = inf.get("user")[1]
-    host = inf.get("host")[1]
-    password = inf.get("password")[1]
-    database = inf.get("database")[1]
+    user = os.getenv("DB_USER")
+    host = os.getenv("DB_HOST")
+    password = os.getenv("DB_PASS")
+    database = os.getenv("DB_DATABASE")
 
     con = mysql.connector.connect(
         user=user, password=password, host=host, database=database
@@ -123,8 +80,8 @@ select(colName, condition, vals) : データの検索
  colName: カラム名, condition: 検索する条件式, vals: 検索する際の値
 """
 
-    def __init__(self, absFile):
-        self.open(get_connector(absFile))
+    def __init__(self):
+        self.open(get_connector())
 
     def open(self, con):
         self.con = con
@@ -371,11 +328,11 @@ class DB_equilibrium(DB):
             + stvals
             + ")"
         )
-        # print(sql, vals)
+        #print(sql, vals)
 
         try:
             self.cur.execute(sql, vals)
         except Exception as f:
-            print("error: ", e, f)
+            print("error: ", f)
 
         self.commit()

@@ -1028,12 +1028,19 @@ def equi_pre_process(cond):
 
 
 def equi_post_process(cond):
-
+    # 形状パラメータの計算（elongationなど）
     set_domain_params2(cond)
 
     # 正規化フラックスの計算
     dm_nfl = get_normalized_flux2(cond)
     cond["flux_normalized"] = dm_nfl
+    
+    if 'fl_pos' in cond.keys():
+        pos = cond['fl_pos']
+        cond['fl_val'] = {}
+        for k in pos.keys():
+            r, z = pos[k]
+            cond['fl_val'][k] = linval(r, z, cond['flux'])
 
     # 圧力微分dp/dfと圧力pの計算
     dm_dp, dm_pr = n_get_dpress_press(cond)
