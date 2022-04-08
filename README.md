@@ -57,7 +57,7 @@ dict_keys(['cur_tf', 'cur_ip', 'cur_pf', 'num_dpr', 'num_di2', 'fl_pos', 'resolu
 
 jt: toroidal current. Note, current through one mesh.
 
-ex. If total plasma current is set to 10, cond['jt']['matrix'] = 10.
+ex. If total plasma current is set to 10, cond['jt']['matrix'].sum() = 10.
 
 flux_coil: magnetic flux due to PF coils.
 
