@@ -554,7 +554,11 @@ def calc_safty(cond):
     iz = g.iz[d == 1]
     nr, nz = g.nr, g.nz
 
+    # bfの磁気面内の面積分を行う。
+    # 2 pi r bf = u0 I, thus bf = 2.0e-7 * I / t
     func = 2 * 10 ** (-7) * p / r
+    func *= (g.dr*g.dz) # 面積積分なのでメッシュ面積をかける。
+    
     x = np.linspace(0, 1, 11)
     y = [np.sum(func[f <= e]) for e in x]
 

@@ -30,6 +30,8 @@ column_comments = {
     "minor_radius": "minor radius",
     "volume": "plasma volume",
     "cross_section": "poloidal cross section",
+    "param_dp": "coefficients of dp/dx0, [0th order, 1st, 2nd, ...]",
+    "param_di2": "coefficients of di^2/dx, [0th order, 1st, 2nd, ...]",
 }
 
 
