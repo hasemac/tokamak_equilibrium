@@ -67,7 +67,15 @@ Integrating each term and setting it to zero at x = 1, each term becomes the fol
 ```math
 \frac{x^{n+t}-1}{n+1} - \frac{x^{p+1}-1}{p+1}
 ```
+Note that a coefficient is applied when integrating.
 
+```math
+P(\psi)=\int d \psi \frac{dP(\psi)}{d \psi}=(\psi_{B}- \psi_{M}) \int dx \: (\sum_{n=0}^{n_p}\alpha_{n}x^{n}- x^{n_{p}+1} \sum_{n=0}^{n_{p}}\alpha_{n})
+```
+
+```math
+\because d \psi = (\psi_{B}- \psi_{M}) \: dx
+```
 # The least squares method
 
 ```math
