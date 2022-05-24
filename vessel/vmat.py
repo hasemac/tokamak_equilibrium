@@ -1,5 +1,6 @@
 import numpy as np
 from global_variables import gparam
+
 gl = gparam()
 
 # 真空容器内かの判定(真空容器内１，容器外0)
