@@ -6,7 +6,6 @@ We will develop a tokamak equilibrium calculation code.
 
 [Procedure of equilibrium calculation](doc/equilibrium_en.md)
 
-
 ## Getting started
 
 "Plotly" is used to draw the graph. Therefore, **Node.js** must be installed in order to display the graph.
@@ -15,6 +14,7 @@ We will develop a tokamak equilibrium calculation code.
 1. Execute 'equalibrium.ipynb' in the root directory in order from the top.
 
 ## How to set calculation conditions
+
 An example of the calculation conditions can be found in the conditions of'equilibrium.ipynb'.
 
 ```python:
@@ -45,12 +45,14 @@ Namely, 'parameter name':value, etc.
 
 The specifiable PF coil name can be found in '/colis/data_npy/'.
 
-## How to check the calculation result.
+## How to check the calculation result
+
 You can see what was calculated with '.keys ()'.
 
 ```python:
 cond.keys()
 ```
+
 ```python:
 dict_keys(['cur_tf', 'cur_ip', 'cur_pf', 'num_dpr', 'num_di2', 'fl_pos', 'resolution', 'vessel', 'flux_coil', 'jt', 'flux_jt', 'flux', 'ir_ax', 'iz_ax', 'r_ax', 'z_ax', 'conf_div', 'f_axis', 'f_surf', 'domain', 'error', 'param_dp', 'param_di2', 'iter', 'cal_result', 'pts', 'major_radius', 'minor_radius', 'elongation', 'triangularity', 'volume', 'cross_section', 'flux_normalized', 'fl_val', 'diff_pre', 'pressure', 'diff_i2', 'pol_current', 'pressure_vol_average', 'beta_toroidal', 'coef_toroidal_flux', 'safty_factor'])
 ```
@@ -65,7 +67,6 @@ flux_jt: magnetic flux due to plasma current
 
 flux: total magnetic flux (flux_coil+flux_jt)
 
-
 You can check the calculation result with contour map or heat map.
 
 "Plotly" is used to draw the graph. Therefore, **Node.js** must be installed in order to display the graph.
@@ -74,12 +75,14 @@ You can check the calculation result with contour map or heat map.
 import sub.plot as pl
 pl.d_contour(cond['flux'])
 ```
+
 ![flux](doc/flux.png)
 
 ```python:
 import sub.plot as pl
 pl.d_heatmap(cond['domain'])
 ```
+
 ![domain](doc/domain.png)
 
 We are accepting questions at any time.
