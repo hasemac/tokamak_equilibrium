@@ -47,13 +47,23 @@ def cflux(pl_mat):
 
 # プラズマ電流分布が作るフラックスのマトリックス
 def cal_plasma_flux(dmat):
+    """プラズマ電流密度によるフラックス
 
+    Args:
+        dmat (dmat): 電流密度のdmat(メッシュ内の総電流ではない)
+
+    Returns:
+        _type_: _description_
+    """
     # 粗いメッシュにする。
     dm = gl.get_dmat_coarse()
     dm = sb.resampling(dm, dmat)
     dm["matrix"] = cflux(dm["matrix"])
     r = sb.get_dmat_dim(dmat)
     r = sb.resampling(r, dm)
+    
+    r['matrix'] *= r['dr']*r['dz'] # jtを電流密度とする場合
+    
     return r
 
 
@@ -66,6 +76,7 @@ def d_plasma_cur_parabolic(dmat, r0, z0, ip, radius):
 
     m1 = plasma_cur_parabolic(r0, z0, ip, radius, rpos, zpos)
     dmat["matrix"] = m1
+    dmat['matrix'] /= (dr*dz) # jtを電流密度とする場合
     return dmat
 
 

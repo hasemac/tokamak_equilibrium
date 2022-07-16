@@ -1,4 +1,6 @@
-# Procedure of tokamak equilibrium calculation code
+# Equilibrium calculation code
+
+## Procedure of calculation
 
 1. Assume $`j_{t}(R, z)`$.
 1. Calculate the total magnetic flux $`\psi (R, z)`$ of the coil current and plasma current.
@@ -34,7 +36,7 @@ $`P(\psi)`$：Plasma pressure
 
 $`I(\psi)`$：Poloidal current, **including toroidal coil current**.
 
-# Functions in the magnetic surface
+## Functions in the magnetic surface
 
 Let $`x`$ be the variable of the polynomial, and $`x = (\psi- \psi_{M}) / (\psi_{B}- \psi_{M})`$.
 
@@ -44,12 +46,14 @@ $`x =1,\quad when\quad\psi = \psi_{B} `$: boundary
 
 $` 0 \leqq x \leqq 1`$
 
+The $`dP/d\psi`$ and $`dI^{2}/d\psi`$ are approximated by functions of $`x`$ as shown in the equations below.
+
 ```math
-\frac{dP(\psi)}{d \psi}=\sum_{n=0}^{n_p}\alpha_{n}x^{n}- x^{n_{p}+1} \sum_{n=0}^{n_{p}}\alpha_{n}
+\frac{dP}{d \psi}(x)=\sum_{n=0}^{n_p}a_{n}x^{n}- x^{n_{p}+1} \sum_{n=0}^{n_{p}}a_{n}
 ```
 
 ```math
-\frac{dI^{2}(\psi)}{d \psi}=\sum_{n=0}^{n_I}\alpha_{n}x^{n}- x^{n_{I}+1} \sum_{n=0}^{n_{I}}\alpha_{n}
+\frac{dI^{2}}{d \psi}(x)=\sum_{n=0}^{n_I}b_{n}x^{n}- x^{n_{I}+1} \sum_{n=0}^{n_{I}}b_{n}
 ```
 
 Specifically, write down when $`n=2`$.
@@ -58,7 +62,24 @@ $`a_{0}+a_{1} x+a_{2}x^{2} -x^{3}(a_{0}+a_{1}+a{2})`$
 
 $`=(1-x^{3})a_{0}+(x-x^{3})a_{1}+(x^{2}-x^{3})a_{2}`$
 
-Thus, the coefficient for $`a_{n}`$ is given by $`x^{n}-x^{p}`$.
+Thus, the coefficient for $`a_{n}`$ is given by $`x^{n}-x^{p}`$.  
+The values ​​of these functions at the magnetic axis and the boundary are as follows.
+
+```math
+\frac{dP}{d \psi}(x)= 
+\left \{ \begin{array}{ll}
+a_{0}&x=0 \;(axis)\\
+0&x=1 \; (boudary)
+\end{array} \right.
+```
+
+```math
+\frac{dI^{2}}{d \psi}(x)= 
+\left \{ \begin{array}{ll}
+b_{0}&x=0 \;(axis)\\
+0&x=1 \; (boudary)
+\end{array} \right.
+```
 
 This is a differentiated formula and actually needs to be integrated to calculate pressure and the like.
 
@@ -68,17 +89,65 @@ Integrating each term and setting it to zero at x = 1, each term becomes the fol
 \frac{x^{n+t}-1}{n+1} - \frac{x^{p+1}-1}{p+1}
 ```
 
-Note that a coefficient is applied when integrating.
+Note that a coefficient is applied when integrating by $`\psi`$.
 
 ```math
-P(\psi)=\int d \psi \frac{dP(\psi)}{d \psi}=(\psi_{B}- \psi_{M}) \int dx \: (\sum_{n=0}^{n_p}\alpha_{n}x^{n}- x^{n_{p}+1} \sum_{n=0}^{n_{p}}\alpha_{n})
+P(\psi)=\int d \psi \frac{dP}{d \psi}(x)=(\psi_{B}- \psi_{M}) \int dx \: (\sum_{n=0}^{n_p}\alpha_{n}x^{n}- x^{n_{p}+1} \sum_{n=0}^{n_{p}}\alpha_{n})
 ```
 
 ```math
 \because d \psi = (\psi_{B}- \psi_{M}) \: dx
 ```
 
-# The least squares method
+## Handling of poloidal current
+
+Poloidal currents used in equilibrium calculation include those derived from plasma and those derived from toroidal coils.
+
+```math
+I(x) = i(x) + i_{0}
+```
+$`i(x)`$ : Derived from plasma  
+$`i_{0}`$ : Derived from toroidal coil current  
+
+The integral part of the following equation is zero when x = 1, and the offset term $`i_{0}^{2}`$ is added because $`I^{2}(x=1) = i_{0}^{2}`$.  
+
+```math
+I^{2} = \int d \psi \frac{dI^{2}}{d \psi}(x) + i_{0}^{2}
+```
+
+Thus, the following equation holds.
+
+```math
+\int d \psi \frac{dI^{2}}{d \psi}(x) + i_{0}^{2} = (i(x) + i_{0})^{2}
+```
+
+Thus, 
+
+```math
+i^{2}(x)+2\:i_{0}\:i(x)-F(x)=0
+```
+
+Here,  
+
+```math
+F(x)=\int d \psi \frac{dI^{2}}{d \psi}(x)
+```
+
+Thus,  
+
+```math
+i(x)=-i_{0}\plusmn\sqrt{i_{0}^{2}+F(x)}
+```
+
+```math
+I(x) = \plusmn\sqrt{i_{0}^{2}+F(x)} = 
+\left \{ \begin{array}{ll}
++\sqrt{i_{0}^{2}+F(x)} &(i_{0}>0)\\
+-\sqrt{i_{0}^{2}+F(x)} &(i_{0}<0)
+\end{array} \right.
+```
+
+## The least squares method
 
 ```math
 E = \frac{1}{2}\sum_{i}(\sum_{j}a_{ij}x_{j}-b_{i})^{2}
@@ -104,9 +173,9 @@ A^{T}Ax=A^{T}b
 Here, $`b_{i}`$ assumes each point of $`j_{t0}`$. And, $`x_{j}`$ assumes the coefficient of the polynomial represented by the magnetic surface function.
 Therefore, $`a_{ij} x_{j}`$ is a linear combination of coefficients of $`j_{t1}`$ at the $`i`$ point.
 
-# Grad-Shafranov equation
+## Grad-Shafranov equation
 
-## Each components of magnetic field
+### Each components of magnetic field
 
 ```math
 \begin{align*}
@@ -118,7 +187,7 @@ Therefore, $`a_{ij} x_{j}`$ is a linear combination of coefficients of $`j_{t1}`
 
 $`I`$: poloidal current
 
-## Each components of $`j`$
+### Each components of $`j`$
 
 ```math
 \begin{align*}
@@ -135,7 +204,7 @@ $`I`$: poloidal current
 
 ,where $`\space \partial/\partial \theta=0`$
 
-## Equilibrium
+### Equilibrium
 
 r component of$`\boldsymbol{j}\times\boldsymbol{B}=\nabla p`$ is
 
@@ -183,7 +252,7 @@ You can get the same equation from z-component.
 
 The $`\theta`$-component becomes 0 = 0.
 
-# Definitions of beta
+## Definitions of beta
 
 poloidal beta：
 
@@ -209,7 +278,7 @@ $`<p>`$: volume averaged pressure
 
 $`a`$: minor radius
 
-# Safty factor
+## Safety factor
 
 ```math
 q = \frac{d\phi}{d\psi}
@@ -257,7 +326,7 @@ Finally,
 q =\frac{1}{\psi_{B}- \psi_{M}}\frac{\mu_{0}}{4 \pi} \int dS \frac{1}{IR} \frac{dI^{2}}{dx}
 ```
 
-# Reference
+## Reference
 
 Lao, L. L.; John, H. S.; Stambaugh, R.; Kellman, A. & Pfeiffer, W.; Reconstruction of current profile parameters and plasma shapes in tokamaks; Nuclear Fusion, 1985, 25, 1611
 

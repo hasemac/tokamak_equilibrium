@@ -1,4 +1,6 @@
-# 平衡計算コードの基本手順
+# 平衡計算コード
+
+## 計算の基本手順
 
 1. $j_{t}(R, z)$を仮定する。
 1. コイル電流、プラズマ電流の総和の磁束$\psi(R, z)$を計算する。
@@ -11,6 +13,7 @@
 ```math
 error = \frac{1}{2}\sum_{(i, j)}(j_{t1}(i, j)-j_{t0}(i, j))^{2}
 ```
+
 プラズマ電流密度は次の式で与えられる。
 
 ```math
@@ -21,7 +24,7 @@ j_{\psi} = 2 \pi R \frac{dP(\psi)}{d\psi}+\frac{\mu_{0}}{4 \pi R} \frac{dI^{2}(\
 $P(\psi)$：プラズマ圧力
 $I(\psi)$：ポロイダル電流
 
-# 磁気面の関数について
+## 磁気面の関数について
 
 多項式の変数を$x$として、$0 \leqq x \leqq 1$の範囲にあり、
 $x = (\psi-\psi_{M})/(\psi_B-\psi_{M})$
@@ -50,11 +53,12 @@ $(1-x^{3})a_{0}+(x-x^{3})a_{1}+(x^{2}-x^{3})a_{2}$
 \frac{x^{n+t}-1}{n+1} - \frac{x^{p+1}-1}{p+1}
 ```
 
-# 最小二乗法について
+## 最小二乗法について
 
 ```math
 E = \frac{1}{2}\sum_{i}(\sum_{j}a_{ij}x_{j}-b_{i})^{2}
 ```
+
 を最小にする$x_{j}$を求める。
 
 ```math
@@ -65,19 +69,20 @@ E = \frac{1}{2}\sum_{i}(\sum_{j}a_{ij}x_{j}-b_{i})^{2}
 &=0
 \end{align}
 ```
+
 行列の形で書きあらためると次の式を満たす$x$になる。
 $A^{T}Ax=A^{T}b$
 ここで、$b_{i}$は最初に仮定した$j_{t0}$の各点を想定している。
 $x_{j}$は磁気面関数で表される多項式の係数を想定している。
 従って、$a_{ij}x_{j}$は$i$点における$j_{t1}$を係数の線形結合で表したものになる。
 
-# ベータ値の定義
+## ベータ値の定義
+
 ポロイダルベータ：
 
 ```math
 \beta_{p}=\frac{<p>}{B_{\theta}^{2}(a) /2 \mu_{0}}
 ```
-
 
 トロイダルベータ：
 
@@ -93,12 +98,12 @@ $x_{j}$は磁気面関数で表される多項式の係数を想定している�
 
 $B_{t}$: プラズマ中心でのトロイダル磁場
 
-$<p> $: 体積平均プラズマ圧力
+<$p$>: 体積平均プラズマ圧力
 
 $a$: プラズマ小半径
 
+## 参考文献
 
-# 参考文献
 Lao, L. L.; John, H. S.; Stambaugh, R.; Kellman, A. & Pfeiffer, W.; Reconstruction of current profile parameters and plasma shapes in tokamaks; Nuclear Fusion, 1985, 25, 1611
 https://www.jstage.jst.go.jp/article/ieejfms/124/5/124_5_393/_pdf
 https://www.jstage.jst.go.jp/article/jspf/79/2/79_2_123/_pdf

@@ -1,3 +1,5 @@
+# The equation for the magnetic field of 
+
 ## Maxwell's equations
 
 ```math
@@ -12,7 +14,9 @@
 
 \end{align*}
 ```
+
 , where
+
 ```math
 \begin{align*}
 &\boldsymbol{D}=\epsilon_{0}\boldsymbol{E}+\boldsymbol{P}\\
@@ -21,6 +25,7 @@
 
 \end{align*}
 ```
+
 ## Lorentz gauge condition
 
 ```math
@@ -34,7 +39,7 @@
 
 &\Bigl(\Delta-\frac{1}{c^2}\frac{\partial^{2}}{\partial t^{2}}\Bigr)\phi_L=-\frac{1}{\epsilon_{0}}\rho\\
 
-&\operatorname{div}\boldsymbol{A_{L}}+\frac{1}{c^2}\frac{\phi_L}{t}=0
+&\operatorname{div}\boldsymbol{A_{L}}+\frac{1}{c^2}\frac{\partial \phi_L}{\partial t}=0
 \end{align*}
 ```
 
@@ -48,6 +53,7 @@ The following two formulas are used in the calculation of the static magnetic fi
 &\boldsymbol{B}=\operatorname{rot}\boldsymbol{A}
 \end{align*}
 ```
+
 Rewrite these equations in integral form.
 
 ```math
@@ -66,7 +72,7 @@ Further rewrite it in the form of a line integral.
 \end{align*}
 ```
 
-Let the ring current position vector $`\boldsymbol{x}`$ and the position vector $`\boldsymbol{r}`$ to calculate the static magnetic field . 
+Let the ring current position vector $`\boldsymbol{x}`$ and the position vector $`\boldsymbol{r}`$ to calculate the static magnetic field .  
 
 ```math
 \boldsymbol{x}=\begin{pmatrix}
@@ -123,6 +129,7 @@ B_x(r)=\frac{\mu_{0}I}{4 \pi}\frac{z}{\sqrt{k}\sqrt{Rr}}\Bigl(\frac{2(2-k)R E(k)
 ```math
 B_{z}(r)=\frac{\mu_{0}I}{4 \pi}\frac{\sqrt{k}}{\sqrt{Rr}}\Bigl(K(k)-\frac{(r^{2}-R^{2}+z^2)E(k)}{d^{2}}\Bigr)
 ```
+
 definitions:
 
 ```math
@@ -146,17 +153,19 @@ B_r(\boldsymbol{r})=\frac{\mu_{0}I}{4 \pi}\frac{z-Z}{\sqrt{k}\sqrt{Rr}}\Bigl(\fr
 ```math
 B_{z}(\boldsymbol{r})=\frac{\mu_{0}I}{4 \pi}\frac{\sqrt{k}}{\sqrt{Rr}}\Bigl(K(k)-\frac{(r^{2}-R^{2}+(z-Z)^2)E(k)}{d^{2}}\Bigr)
 ```
+
 definitions:
 
 ```math
 k=\frac{4 r R}{(r+R)^{2}+(z-Z)^{2}}, d^{2}=(r-R)^{2}+(z-Z)^{2}
 ```
 
-
 ## Magnetic flux
+
 ```math
 \Phi=\int\boldsymbol{B}\cdot d\boldsymbol{S}=\int\operatorname{rot}\boldsymbol{A}\cdot d\boldsymbol{S}=\int \boldsymbol{A}\cdot d\boldsymbol{l}
 ```
+
 Thus, the following formula is obtained.
 
 ```math
@@ -188,4 +197,3 @@ $`A_{r} = A_{z}=0`$, if $`A`$ is vector potential of axisymetric circuler coils.
 + \frac{1}{2 \pi r}\frac{\partial \Phi}{\partial r} \boldsymbol{e_{z}}
 \end{align*}
 ```
-
