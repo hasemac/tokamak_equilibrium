@@ -260,8 +260,12 @@ def get_di2_i_norm(cond, num):
     params = cond['param_di2']
     f = np.linspace(0.0, 1.0, num)
     
+    # TFcoilによるポロイダル電流
+    i0 = cond["cur_tf"]["tf"]*cond["cur_tf"]["turn"]
+
     # I^2の微分に関する行列
     p0 = get_arr_diff(params, f)
+    #p0 += i0**2
 
     # I^2に関する行列
     p1 = get_arr(params, f, cond)
@@ -276,7 +280,6 @@ def get_di2_i_norm(cond, num):
         p1 *= -1.0
 
     # TFコイルによる分を加算する。
-    i0 = cond["cur_tf"]["tf"] * cond["cur_tf"]["turn"]
     p1 += i0
     
     return p0, p1
@@ -326,7 +329,7 @@ def get_di2_i(cond):
         p1 *= -1.0
 
     # TFコイルによる分を加算する。
-    i0 = cond["cur_tf"]["tf"] * cond["cur_tf"]["turn"]
+    i0 = cond["cur_tf"]["tf"]
     p1 += i0
 
     m_i = np.zeros((nz, nr))
