@@ -22,7 +22,6 @@ class dm_array:
         self.r = self.rmin + self.ir * self.dr
         self.z = self.zmin + self.iz * self.dz
 
-
 # 同じ構造のdmatを取得
 def get_dmat_dim(dmat):
     rmin, rmax, dr = dmat["rmin"], dmat["rmax"], dmat["dr"]
@@ -132,7 +131,6 @@ def dm_add(dmat0, dmat1):
     dmat2 = get_dmat_dim(dmat0)
     dmat2["matrix"] = mat
     return dmat2
-
 
 # 正規化フラックスの計算
 def get_normalized_flux(cond):
@@ -248,7 +246,7 @@ def get_dpress_press(cond):
 
 # 規格化フラックス内でのポロイダルカレントの微分とポロイダルカレントの計算
 def get_di2_i_norm(cond, num):
-    """正規化フラックスでのdi2, iを返す。
+    """規格化フラックスでのdi2, iを返す。
     np.linspec(0.0, 1.0, num)の正規化フラックス
     x = 0.0 (axis) - 1.0 (boundary)
 
@@ -267,25 +265,19 @@ def get_di2_i_norm(cond, num):
 
     # I^2に関する行列
     p1 = get_arr(params, f, cond)
-    
-    """
-    # プラズマ表面でI^2はゼロになるようにとってある。
-    # 実際は表面でトロイダルコイルによるポロイダルカレントの値になる。
-    # 従って、積分してI^2となったこの時点でオフセットを加算する。
-    p1 += ( cond["cur_tf"]["tf"] * cond["cur_tf"]["turn"] )**2
 
     # I^2なのでIにする。
     p1 = np.sqrt(np.abs(p1))
-    
+
+    # プラズマ表面でI^2はゼロになるようにとってある。
     # p1は正負の任意性があるが
     # プラズマ電流が負の時は、ポロイダル電流も負になる。
     if cond['cur_ip']['ip'] < 0:
         p1 *= -1.0
-    """
+
+    # TFコイルによる分を加算する。
     i0 = cond["cur_tf"]["tf"] * cond["cur_tf"]["turn"]
-    p1 = (i0**2+p1)**(0.5)
-    if i0 < 0:
-        p1 *= -1.0
+    p1 += i0
     
     return p0, p1
              
@@ -324,22 +316,22 @@ def get_di2_i(cond):
     # I^2に関する行列
     p1 = get_arr(params, f, cond)  
 
+    # I^2なのでIにする。
+    p1 = np.sqrt(np.abs(p1))
+
     # プラズマ表面でI^2はゼロになるようにとってある。
-    # 実際は表面でトロイダルコイルによるポロイダルカレントの値になる。
-    # 従って、積分してI^2となったこの時点でオフセットを加算する。
-    
-    p1 += ( cond["cur_tf"]["tf"] * cond["cur_tf"]["turn"] )**2
+    # p1は正負の任意性があるが
+    # プラズマ電流が負の時は、ポロイダル電流も負になる。
+    if cond['cur_ip']['ip'] < 0:
+        p1 *= -1.0
+
+    # TFコイルによる分を加算する。
+    i0 = cond["cur_tf"]["tf"] * cond["cur_tf"]["turn"]
+    p1 += i0
 
     m_i = np.zeros((nz, nr))
     for v, i, j in zip(p1, ir, iz):
         m_i[j, i] = v
-    
-    m_i = np.sqrt(np.abs(m_i))
-
-    # プラズマ電流が負の時は、ポロイダル電流も負になる。
-    if cond['cur_ip']['ip'] < 0:
-        m_i *= -1.0
-    
     
     dm_di2 = get_dmat_dim(dm_domain)
     dm_i = get_dmat_dim(dm_domain)

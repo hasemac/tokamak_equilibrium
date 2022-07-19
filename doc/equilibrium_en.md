@@ -101,51 +101,27 @@ P(\psi)=\int d \psi \frac{dP}{d \psi}(x)=(\psi_{B}- \psi_{M}) \int dx \: (\sum_{
 
 ## Handling of poloidal current
 
-Poloidal currents used in equilibrium calculation include those derived from plasma and those derived from toroidal coils.
+Poloidal currents include those derived from plasma and those derived from toroidal coils. The process of expressing the poloidal current as a polynomial of x means that I in the equilibrium calculation code does not include those derived from the toroidal coil.  
+Namely, 
+$`I(x)=0`$ at x=1 (boundary).  
+If plasma current is positive, poloidal current is also positive, and vice versa. Thus,
 
 ```math
-I(x) = i(x) + i_{0}
-```
-$`i(x)`$ : Derived from plasma  
-$`i_{0}`$ : Derived from toroidal coil current  
-
-The integral part of the following equation is zero when x = 1, and the offset term $`i_{0}^{2}`$ is added because $`I^{2}(x=1) = i_{0}^{2}`$.  
-
-```math
-I^{2} = \int d \psi \frac{dI^{2}}{d \psi}(x) + i_{0}^{2}
-```
-
-Thus, the following equation holds.
-
-```math
-\int d \psi \frac{dI^{2}}{d \psi}(x) + i_{0}^{2} = (i(x) + i_{0})^{2}
-```
-
-Thus, 
-
-```math
-i^{2}(x)+2\:i_{0}\:i(x)-F(x)=0
-```
-
-Here,  
-
-```math
-F(x)=\int d \psi \frac{dI^{2}}{d \psi}(x)
-```
-
-Thus,  
-
-```math
-i(x)=-i_{0}\plusmn\sqrt{i_{0}^{2}+F(x)}
-```
-
-```math
-I(x) = \plusmn\sqrt{i_{0}^{2}+F(x)} = 
+I(x) = 
 \left \{ \begin{array}{ll}
-+\sqrt{i_{0}^{2}+F(x)} &(i_{0}>0)\\
--\sqrt{i_{0}^{2}+F(x)} &(i_{0}<0)
++\sqrt{I^{2}(x)} &(I_{p}>0)\\
+-\sqrt{I^{2}(x)} &(I_{p}<0)
 \end{array} \right.
 ```
+
+Total poloidal currents is denoted as below.
+
+```math
+I_{total} = I(x) + I_{0}
+```
+
+$`I_{0}`$ : Derived from toroidal coil current  
+
 
 ## The least squares method
 
