@@ -122,6 +122,28 @@ I_{total} = I(x) + I_{0}
 
 $`I_{0}`$ : Derived from toroidal coil current  
 
+```math
+\frac{d I_{total}^{2}}{d \psi} = \frac{dI^{2}}{d \psi}(x)+2I_{0}\frac{dI(x)}{d \psi}
+```
+
+The second term of right hand side can be transformed as below.
+
+```math
+\frac{dI(x)}{d \psi}
+= \pm \frac{1}{2} \frac{dI^{2}/d \psi}{\sqrt{I^{2}(x)}}
+=\frac{1}{2} \frac{1}{I(x)} \frac{d I^{2}}{d \psi}
+```
+
+Thus,  
+
+```math
+\frac{d I_{total}^{2}}{d \psi} = \frac{dI^{2}}{d \psi}(x)
++I_{0} \left \{ \frac{d I^{2}}{d \psi}/I(x)) \right \}
+```
+
+When $`x \rightarrow 1`$, $`dI^{2}/d \psi \rightarrow 0`$ and $`I(x) \rightarrow 0`$.  
+However, the 2nd term of right hand side has a value in limit of $`x \rightarrow 1`$.  
+ For example, the l'Hôpital's rule can be used to calculate the value.  
 
 ## The least squares method
 

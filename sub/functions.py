@@ -244,6 +244,63 @@ def get_dpress_press(cond):
 
     return dm_dp, dm_pr
 
+def get_di2total_itotal(cond, arr_norm_flux):
+
+    f = arr_norm_flux
+    
+    # この時点で下のように調節することも考えられるが、
+    # 調節した点で、やはり計算誤差が出やすい。
+    # 従って、不定形di2/iを計算するときにのみ
+    # 補正を入れたほうが良い
+    #f = [e if e != 1.0 else 0.999 for e in arr_norm_flux]
+    #f = np.array(f)
+        
+    params = cond['param_di2']
+    
+    # TFcoilによるポロイダル電流
+    i0 = cond["cur_tf"]["tf"]*cond["cur_tf"]["turn"]
+    
+    # I^2の微分に関する行列
+    di2 = get_arr_diff(params, f)
+    
+    # I^2に関する行列
+    i2 = get_arr(params, f, cond)
+    
+    # I^2なのでIにする。
+    i = np.sqrt(np.abs(i2))
+
+    # プラズマ表面でI^2はゼロになるようにとってある。
+    # iは正負の任意性があるが
+    # プラズマ電流が負の時は、ポロイダル電流も負になる。
+    if cond['cur_ip']['ip'] < 0:
+        i *= -1.0
+    
+    # TFコイルによる分を加算する。
+    itotal = i + i0
+    
+    # di2とiはf=1(最外殻磁気面)での値が共にゼロ
+    # 従ってdi2/iは0/0の不定形であるがf=1への極限で値を持つ。
+    # ロピタルの定理などを用いて極限値を求めることも考えられるが、
+    # ここでは既にここで行った通り、規格化フラックスでの、
+    # 最外殻磁気面の少し内側の値で代用することにする。
+    if 1.0 in f:
+        nfb = np.array([0.99])
+        
+        di2b = get_arr_diff(params, nfb)
+        di2[f == 1.0] = di2b
+        
+        i2b = get_arr(params, nfb, cond)
+        ib = np.sqrt(np.abs(i2b))
+        if cond['cur_ip']['ip'] < 0:
+            ib *= -1.0
+        i[f == 1] = ib
+
+    di2di = di2/i
+    #di2total = di2 + i0*di2di
+    di2total = di2
+    
+    return di2total, itotal
+    
 # 規格化フラックス内でのポロイダルカレントの微分とポロイダルカレントの計算
 def get_di2_i_norm(cond, num):
     """規格化フラックスでのdi2, iを返す。
@@ -257,32 +314,12 @@ def get_di2_i_norm(cond, num):
     Returns:
         array_float, array_float: dI^2/df_norm, I
     """
-    params = cond['param_di2']
+
     f = np.linspace(0.0, 1.0, num)
     
-    # TFcoilによるポロイダル電流
-    i0 = cond["cur_tf"]["tf"]*cond["cur_tf"]["turn"]
+    di2total, itotal = get_di2total_itotal(cond, f)
 
-    # I^2の微分に関する行列
-    p0 = get_arr_diff(params, f)
-    #p0 += i0**2
-
-    # I^2に関する行列
-    p1 = get_arr(params, f, cond)
-
-    # I^2なのでIにする。
-    p1 = np.sqrt(np.abs(p1))
-
-    # プラズマ表面でI^2はゼロになるようにとってある。
-    # p1は正負の任意性があるが
-    # プラズマ電流が負の時は、ポロイダル電流も負になる。
-    if cond['cur_ip']['ip'] < 0:
-        p1 *= -1.0
-
-    # TFコイルによる分を加算する。
-    p1 += i0
-    
-    return p0, p1
+    return di2total, itotal
              
 # ポロイダルカレントの微分dI^2/dxとポロイダルカレントの計算
 def get_di2_i(cond):
@@ -296,7 +333,6 @@ def get_di2_i(cond):
     """
     dm_normalizedflux = cond["flux_normalized"]
     dm_domain = cond["domain"]
-    params = cond["param_di2"]
         
     g = dm_array(dm_domain)
     nr, nz = g.nr, g.nz
@@ -309,31 +345,14 @@ def get_di2_i(cond):
     iz = g.iz[d == 1]
     f = f[d == 1]
 
-    # I^2の微分に関する行列
-    p0 = get_arr_diff(params, f)
+    di2total, itotal = get_di2total_itotal(cond, f)
     
     m_di2 = np.zeros((nz, nr))
-    for v, i, j in zip(p0, ir, iz):
+    for v, i, j in zip(di2total, ir, iz):
         m_di2[j, i] = v
-
-    # I^2に関する行列
-    p1 = get_arr(params, f, cond)  
-
-    # I^2なのでIにする。
-    p1 = np.sqrt(np.abs(p1))
-
-    # プラズマ表面でI^2はゼロになるようにとってある。
-    # p1は正負の任意性があるが
-    # プラズマ電流が負の時は、ポロイダル電流も負になる。
-    if cond['cur_ip']['ip'] < 0:
-        p1 *= -1.0
-
-    # TFコイルによる分を加算する。
-    i0 = cond["cur_tf"]["tf"]
-    p1 += i0
-
+        
     m_i = np.zeros((nz, nr))
-    for v, i, j in zip(p1, ir, iz):
+    for v, i, j in zip(itotal, ir, iz):
         m_i[j, i] = v
     
     dm_di2 = get_dmat_dim(dm_domain)
