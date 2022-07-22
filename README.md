@@ -99,4 +99,4 @@ When publishing a paper using this equilibrium code, please post the link approp
 
 ## Support
 
-We are accepting questions at any time by [e-mail](mailto:hasegawa@triam.kyushu-u.ac.jp).
+We are accepting questions at any time by e-mail (hasegawa(atm)triam.kyushu-u.ac.jp).
