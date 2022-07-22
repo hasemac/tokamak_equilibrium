@@ -101,6 +101,29 @@ P(\psi)=\int d \psi \frac{dP}{d \psi}(x)=(\psi_{B}- \psi_{M}) \int dx \: (\sum_{
 
 ## Handling of poloidal current
 
+Poloidal currents include those derived from plasma and those derived from toroidal coils.  
+The poloidal current in the equilibrium code also includ those derived from toroidal coils.  
+Here, we represent the integral of $`dI^{2}/d\psi`$ as $`K(x)`$, and  K is adjusted so that $`K(x)=0`$ at $`x=1`$ (boundary). Thus,  
+
+```math
+I^{2}(x)=K(x)+I_{0}^{2}
+```
+
+$`I_{0}`$ : Derived from toroidal coil current  
+
+$`I^{2}(x)`$ should be positive in the interval where x is from 0 (axis) to 1 (boundary).
+
+```math
+I(x) = 
+\left \{ \begin{array}{ll}
++\sqrt{K(x)+I_{0}^{2}} &(I_{0}>0)\\
+-\sqrt{K(x)+I_{0}^{2}} &(I_{0}<0)
+\end{array} \right.
+```
+
+
+----- Wrong description from here -----
+
 Poloidal currents include those derived from plasma and those derived from toroidal coils. The process of expressing the poloidal current as a polynomial of x means that I in the equilibrium calculation code does not include those derived from the toroidal coil.  
 Namely, 
 $`I(x)=0`$ at x=1 (boundary).  
@@ -145,6 +168,7 @@ When $`x \rightarrow 1`$, $`dI^{2}/d \psi \rightarrow 0`$ and $`I(x) \rightarrow
 However, the 2nd term of right hand side has a value in limit of $`x \rightarrow 1`$.  
  For example, the l'Hôpital's rule can be used to calculate the value.  
 
+----- Wrong description so far -----
 ## The least squares method
 
 ```math
@@ -294,7 +318,7 @@ The toroidal flux can be given by the following equation.
 2 \pi R B_{\phi}=\mu_{0}I
 ```
 
-Integration area is inside of flux surfaces. Thus, the $`\phi (x)`$ can be calculated numerically. In this tokamak equilibrium code, the $`\phi (x)`$ is represented by a polynominal approximation after concrete numerical calculation. Since it is a polynomial approximation, its differentiation can be easily performed.
+Integration area is inside of flux surfaces. Thus, the $`\phi (x)`$ and its derivative function can be calculated numerically. And, the safety factor can be calculated as below.
 
 ```math
 q = \frac{d\phi}{d\psi}=\frac{1}{\psi_{B}- \psi_{M}}\frac{d \phi (x)}{dx}

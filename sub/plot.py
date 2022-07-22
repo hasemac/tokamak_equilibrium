@@ -1,6 +1,8 @@
 import plotly.graph_objects as go
 import vessel.draw as vd
 import numpy as np
+import pandas as pd
+import plotly.express as px
 from plotly.subplots import make_subplots
 
 def d_contour(d_mat: dict):
@@ -89,7 +91,7 @@ def heatmap(data, xmin, ymin, dx, dy, shapes=vd.vac):
     fig = go.Figure(data=data, layout=layout)
     fig.show()
     
-def plot_fundamental(cond):
+def plot_fundamental_nf(cond):
     def add_trace(fig, x, y, row, col, ylabel=''):
         fig.add_trace(go.Scatter(x=x, y=y), row=row, col=col)
         fig.update_yaxes(title_text=ylabel, row=row, col=col)
@@ -111,3 +113,41 @@ def plot_fundamental(cond):
 
     fig.update_layout(height=600, width=800)
     fig.show()
+    
+def plot_fundamental(cond):
+    def add_trace(fig, x, y, row, col, xlabel='', ylabel=''):
+        fig.add_trace(go.Scatter(x=x, y=y), row=row, col=col)
+        fig.update_yaxes(title_text=ylabel, row=row, col=col)
+        fig.update_xaxes(title_text=xlabel, row=row, col=col)
+                
+    fig = make_subplots(rows=3, cols=2)
+        
+    y0 = cond['diff_pre_norm']
+    x = np.linspace(0, 1, len(y0))
+    x1 = x*(cond['f_surf']-cond['f_axis'])+cond['f_axis']
+    
+    add_trace(fig, x1, y0, 1, 1, xlabel='flux', ylabel='(dp/df)[x]')
+
+    y1 = cond['pressure_norm']
+    add_trace(fig, x1, y1, 2, 1, xlabel='flux', ylabel='p[x]')
+
+    y2 = cond['diff_i2_norm']
+    add_trace(fig, x1, y2, 1, 2, xlabel='flux', ylabel='(di^2/df)[x]')
+
+    y3 = cond['pol_current_norm']
+    add_trace(fig, x1, y3, 2, 2, xlabel='flux', ylabel='i[x]')
+    
+    y5 = 2.0*np.pi*y0
+    y6 = 10**(-7)*y2
+    add_trace(fig, x1, y5, 3, 1, xlabel='flux', ylabel='2pi(dp/df)')
+    add_trace(fig, x1, y6, 3, 2, xlabel='flux', ylabel='(u0/4pi)(di^2/df)')
+    
+    fig.update_layout(height=600, width=800)
+    fig.show()
+
+def plot_val(cond, name):
+    y = cond[name]
+    x = np.linspace(0, 1, len(y))
+    df = pd.DataFrame(data=np.array([x, y]).T, columns=['norm flux', name])
+    fig2 = px.line(df, x='norm flux', y=name, width=600, height=400)
+    fig2.show()

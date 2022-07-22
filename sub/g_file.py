@@ -282,7 +282,7 @@ def convert_to_g_parm(cond):
     pr['zdim'] = da.zmax - da.zmin
     pr['rcentr'] = 1.0
     total_tf = cond['cur_tf']['tf']*cond['cur_tf']['turn']
-    pr['bcentr'] = 2.0*1.0e-7*total_tf/pr['rcentr']
+    pr['bcentr'] = (2.0*np.pi)**(0.5)*2.0*1.0e-7*total_tf/pr['rcentr']
     pr['rleft'] = da.rmin
     pr['zmid'] = (da.zmax + da.zmin)/2.0
     pr['rmaxis'] = cond['r_ax']

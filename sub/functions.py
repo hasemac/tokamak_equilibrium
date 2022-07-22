@@ -3,6 +3,7 @@ import numpy as np
 import plasma.pmat as pmat
 import vessel.vmat as vmat
 from global_variables import gparam
+from scipy.interpolate import interp1d
 from scipy import constants as sc
 import sub.plot as pl
 
@@ -263,44 +264,23 @@ def get_di2total_itotal(cond, arr_norm_flux):
     # I^2の微分に関する行列
     di2 = get_arr_diff(params, f)
     
-    # I^2に関する行列
-    i2 = get_arr(params, f, cond)
+    # I^2に関する行列, トロイダルコイルによる成分も加算
+    i2 = get_arr(params, f, cond) + i0**2
+    
+    # ここで正負の判定をする。
+    #print(i2)
     
     # I^2なのでIにする。
-    i = np.sqrt(np.abs(i2))
+    i = np.sqrt(i2)
 
-    # プラズマ表面でI^2はゼロになるようにとってある。
-    # iは正負の任意性があるが
-    # プラズマ電流が負の時は、ポロイダル電流も負になる。
-    if cond['cur_ip']['ip'] < 0:
+    # iは正負の任意性がある。
+    # トロイダルコイル電流が負の場合は、x=1(最外殻磁気面）で
+    # マイナスになるので、値を反転する。
+    if i0 < 0:
         i *= -1.0
     
-    # TFコイルによる分を加算する。
-    itotal = i + i0
-    
-    # di2とiはf=1(最外殻磁気面)での値が共にゼロ
-    # 従ってdi2/iは0/0の不定形であるがf=1への極限で値を持つ。
-    # ロピタルの定理などを用いて極限値を求めることも考えられるが、
-    # ここでは既にここで行った通り、規格化フラックスでの、
-    # 最外殻磁気面の少し内側の値で代用することにする。
-    if 1.0 in f:
-        nfb = np.array([0.99])
-        
-        di2b = get_arr_diff(params, nfb)
-        di2[f == 1.0] = di2b
-        
-        i2b = get_arr(params, nfb, cond)
-        ib = np.sqrt(np.abs(i2b))
-        if cond['cur_ip']['ip'] < 0:
-            ib *= -1.0
-        i[f == 1] = ib
+    return di2, i
 
-    di2di = di2/i
-    #di2total = di2 + i0*di2di
-    di2total = di2
-    
-    return di2total, itotal
-    
 # 規格化フラックス内でのポロイダルカレントの微分とポロイダルカレントの計算
 def get_di2_i_norm(cond, num):
     """規格化フラックスでのdi2, iを返す。
@@ -628,23 +608,14 @@ def calc_safety(cond):
     x = np.linspace(0, 1, 11)
     y = [np.sum(func[f <= e]) for e in x]
 
-    numpol = 2  # polynominalの次元数
-    coef = np.polyfit(x, y, numpol)
-    cond["coef_toroidal_flux"] = coef
-    # 係数は高次の項から出力される。
-    # numpol = 2の時は、２次の係数が最初。
-    # 値を算出したいときは下の式を使う
-    # vals = np.polyval(coef, x)
-
-    # safety factor q = d ft/df=(1/(fb-fm))*dft(x)/dx
-    dc = [numpol - e for e in range(numpol + 1)]
-    dc = np.array(dc)
-    # [2, 1, 0]の配列を掛け合わせて、微分の係数を作成する
-    # 同時に定数項の係数を削除
-    dcoef = (coef * dc)[:-1]
+    cond['toroidal_flux'] = y
+    dy = np.diff(y)/(x[1]-x[0]) # 微分を計算
+    dy = np.append(dy[0], dy) # 要素数を揃える。
+    cond['toroidal_flux_diff'] = dy
+    
+    fnc = interp1d(x, dy, kind='cubic') 
     fax, fbn = cond["f_axis"], cond["f_surf"]
-
-    q = np.polyval(dcoef, f)/ (fbn - fax)
+    q = fnc(f)/(fbn - fax)
 
     qmat = np.zeros((nz, nr))
     for v, i, j in zip(q, ir, iz):
@@ -656,7 +627,7 @@ def calc_safety(cond):
 
     # 正規化フラックスに応じた値の計算
     f0 = np.linspace(0.0, 1.0, nr)
-    q0 = np.polyval(dcoef, f0) / (fbn - fax)
+    q0 = fnc(f0)/(fbn - fax)
 
     cond["safety_factor_norm"] = q0
     
