@@ -1,3 +1,5 @@
+# 円環電流の磁場の式の導出
+
 ## Lorentzゲージ表式
 
 ```math
@@ -11,7 +13,7 @@
 
 &\Bigl(\Delta-\frac{1}{c^2}\frac{\partial^{2}}{\partial t^{2}}\Bigr)\phi_L=-\frac{1}{\epsilon_{0}}\rho\\
 
-&\operatorname{div}\boldsymbol{A_{L}}+\frac{1}{c^2}\frac{\phi_L}{t}=0
+&\operatorname{div}\boldsymbol{A_{L}}+\frac{1}{c^2}\frac{\partial \phi_L}{\partial t}=0
 \end{align*}
 ```
 
@@ -25,6 +27,7 @@
 &\boldsymbol{B}=\operatorname{rot}\boldsymbol{A}
 \end{align*}
 ```
+
 この式を積分形式で書き直す。
 
 ```math
@@ -100,6 +103,7 @@ B_x(r)=\frac{\mu_{0}I}{4 \pi}\frac{z}{\sqrt{k}\sqrt{Rr}}\Bigl(\frac{2(2-k)R E(k)
 ```math
 B_{z}(r)=\frac{\mu_{0}I}{4 \pi}\frac{\sqrt{k}}{\sqrt{Rr}}\Bigl(K(k)-\frac{(r^{2}-R^{2}+z^2)E(k)}{d^{2}}\Bigr)
 ```
+
 ただし、
 
 ```math
@@ -122,6 +126,7 @@ B_r(\boldsymbol{r})=\frac{\mu_{0}I}{4 \pi}\frac{z-Z}{\sqrt{k}\sqrt{Rr}}\Bigl(\fr
 ```math
 B_{z}(\boldsymbol{r})=\frac{\mu_{0}I}{4 \pi}\frac{\sqrt{k}}{\sqrt{Rr}}\Bigl(K(k)-\frac{(r^{2}-R^{2}+(z-Z)^2)E(k)}{d^{2}}\Bigr)
 ```
+
 ただし、
 
 ```math
@@ -130,9 +135,11 @@ k=\frac{4 r R}{(r+R)^{2}+(z-Z)^{2}}, d^{2}=(r-R)^{2}+(z-Z)^{2}
 
 
 ## 磁束の式
+
 ```math
 \Phi=\int\boldsymbol{B}\cdot d\boldsymbol{S}=\int\operatorname{rot}\boldsymbol{A}\cdot d\boldsymbol{S}=\int \boldsymbol{A}\cdot d\boldsymbol{l}
 ```
+
 という関係が成り立つので、下の式になる。
 
 ```math

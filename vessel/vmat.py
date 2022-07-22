@@ -33,4 +33,5 @@ def get_vessel_mat(dmat):
     return dmat
 
 def get_vessel(cond):
-    return get_vessel_mat(cond['resolution'].copy())
+    dmat = cond['resolution'].copy()
+    return get_vessel_mat(dmat)

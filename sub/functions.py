@@ -3,30 +3,25 @@ import numpy as np
 import plasma.pmat as pmat
 import vessel.vmat as vmat
 from global_variables import gparam
+from scipy.interpolate import interp1d
 from scipy import constants as sc
-
 import sub.plot as pl
-
-gl = gparam()
-
 
 class dm_array:
     def __init__(self, dmat):
         self.rmin, self.rmax, self.dr = dmat["rmin"], dmat["rmax"], dmat["dr"]
         self.zmin, self.zmax, self.dz = dmat["zmin"], dmat["zmax"], dmat["dz"]
-        self.nr, self.nz = int((self.rmax - self.rmin) / self.dr + 1), int(
-            (self.zmax - self.zmin) / self.dz + 1
-        )
-
-        self.ir = np.array(
-            [[e for e in range(self.nr)] for f in range(self.nz)]
-        ).reshape(-1)
-        self.iz = np.array(
-            [[f for e in range(self.nr)] for f in range(self.nz)]
-        ).reshape(-1)
+        self.nr = int((self.rmax - self.rmin) / self.dr + 1)
+        self.nz = int((self.zmax - self.zmin) / self.dz + 1)
+        
+        ir = [[e for e in range(self.nr)] for f in range(self.nz)]
+        self.ir = np.array(ir).reshape(-1)
+        
+        iz = [[f for e in range(self.nr)] for f in range(self.nz)]
+        self.iz = np.array(iz).reshape(-1)
+        
         self.r = self.rmin + self.ir * self.dr
         self.z = self.zmin + self.iz * self.dz
-
 
 # 同じ構造のdmatを取得
 def get_dmat_dim(dmat):
@@ -41,7 +36,6 @@ def get_dmat_dim(dmat):
         "dz": dz,
     }
     return a
-
 
 # q[nr, nz], r, z が与えられたときに近傍３点の値から線形補間
 def linval(r, z, d_mat):
@@ -109,7 +103,6 @@ def linval(r, z, d_mat):
 
     return v
 
-
 # 再サンプリング
 def resampling(d_mat0, d_mat1):
     # d_mat0: 作成したい行列
@@ -133,14 +126,12 @@ def resampling(d_mat0, d_mat1):
     d_mat0["matrix"] = np.array(mat)
     return d_mat0
 
-
 # 加算
 def dm_add(dmat0, dmat1):
     mat = dmat0["matrix"] + dmat1["matrix"]
     dmat2 = get_dmat_dim(dmat0)
     dmat2["matrix"] = mat
     return dmat2
-
 
 # 正規化フラックスの計算
 def get_normalized_flux(cond):
@@ -159,12 +150,66 @@ def get_normalized_flux(cond):
     res["matrix"] = f
     return res
 
+def get_arr_diff(params, arr_norm_flux):
+    """正規化フラックスからdp, またはdi2を算出
+
+    Args:
+        params (list[float]): 多項式の係数
+        arr_norm_flux (array[float]): 正規化フラックスの1次元配列
+
+    Returns:
+        val (array[float]): 要素数は正規化フラックスの要素数に同じ
+    """
+    f = arr_norm_flux
+    num = len(params)
+    p0 = np.array([(f**i - f**num) for i in range(num)])
+    p0 = p0.transpose()
+    p0 = np.dot(p0, params)
+    return p0
+
+def get_arr(params, arr_norm_flux, cond):
+    f = arr_norm_flux
+    num = len(params)
+
+    # 多項式の各項, n, p
+    # an: x^n-x^p, これを積分すると次の式
+    # an: x^(n+1)/(n+1)-x^(p+1)/(p+1), 1/(n+1)-1/(p+1) if x = 1
+    # 例えば最外殻磁気面(x=1)ではプラズマ圧力がゼロとするならオフセットを各項に足す必要ある。つまり、
+    # an: (x^(n+1)-1)/(n+1)-(x^(p+1)-1)/(p+1)
+
+    # 積分した各項の行列
+    p1 = np.array(
+        [
+            ((f ** (i + 1) - 1) / (i + 1) - (f ** (num + 1) - 1) / (num + 1))
+            for i in range(num)
+        ]
+    )
+    p1 = p1.transpose()
+    p1 = np.dot(p1, params)
+    
+    # 積分の変数変換に伴う係数をかける。
+    p1 *= (cond['f_surf']-cond['f_axis'])
+
+    return p1        
+        
+# 規格化フラックスでの圧力の微分dP/dxと、圧力Pの計算
+def get_dpress_press_normal(cond, num):
+    params = cond['param_dp']
+    f = np.linspace(0.0, 1.0, num)
+    
+    # 圧力の微分に関する行列
+    p0 = get_arr_diff(params, f)
+    
+    # 圧力に関する行列
+    p1 = get_arr(params, f, cond)
+        
+    return p0, p1
 
 # 圧力の微分dP/dxと、圧力Pの計算
 def get_dpress_press(cond):
     dm_normalizedflux = cond["flux_normalized"]
     dm_domain = cond["domain"]
-    param_press = cond["param_dp"]    
+    params = cond["param_dp"]    
     
     g = dm_array(dm_domain)
     nr, nz = g.nr, g.nz
@@ -175,37 +220,18 @@ def get_dpress_press(cond):
     # 最外殻磁気面の内部のみ取り出す
     ir = g.ir[d == 1]
     iz = g.iz[d == 1]
-    r = g.r[d == 1]
     f = f[d == 1]
 
-    npr = len(param_press)
     # 圧力の微分に関する行列
-    p0 = np.array([(f**i - f**npr) for i in range(npr)])
-    p0 = p0.transpose()
-    p0 = np.dot(p0, param_press)
+    p0 = get_arr_diff(params, f)
+    
     m_dp = np.zeros((nz, nr))
     for v, i, j in zip(p0, ir, iz):
         m_dp[j, i] = v
 
-    # 多項式の各項, n, p
-    # an: x^n-x^p, これを積分すると次の式
-    # an: x^(n+1)/(n+1)-x^(p+1)/(p+1), 1/(n+1)-1/(p+1) if x = 1
-    # 例えば最外殻磁気面(x=1)ではプラズマ圧力がゼロとするならオフセットを各項に足す必要ある。つまり、
-    # an: (x^(n+1)-1)/(n+1)-(x^(p+1)-1)/(p+1)
-
     # 圧力に関する行列
-    p1 = np.array(
-        [
-            ((f ** (i + 1) - 1) / (i + 1) - (f ** (npr + 1) - 1) / (npr + 1))
-            for i in range(npr)
-        ]
-    )
-    p1 = p1.transpose()
-    p1 = np.dot(p1, param_press)
-    
-    # 積分の変数変換に伴う係数をかける。
-    p1 *= (cond['f_surf']-cond['f_axis'])
-    
+    p1 = get_arr(params, f, cond)
+        
     m_pr = np.zeros((nz, nr))
     for v, i, j in zip(p1, ir, iz):
         m_pr[j, i] = v
@@ -213,17 +239,80 @@ def get_dpress_press(cond):
     # 圧力に関してはx=1でp=0になるようにしてある。
     dm_dp = get_dmat_dim(dm_domain)
     dm_pr = get_dmat_dim(dm_domain)
-
+        
     dm_dp["matrix"] = m_dp
     dm_pr["matrix"] = m_pr
 
     return dm_dp, dm_pr
 
+def get_di2total_itotal(cond, arr_norm_flux):
+
+    f = arr_norm_flux
+    
+    # この時点で下のように調節することも考えられるが、
+    # 調節した点で、やはり計算誤差が出やすい。
+    # 従って、不定形di2/iを計算するときにのみ
+    # 補正を入れたほうが良い
+    #f = [e if e != 1.0 else 0.999 for e in arr_norm_flux]
+    #f = np.array(f)
+        
+    params = cond['param_di2']
+    
+    # TFcoilによるポロイダル電流
+    i0 = cond["cur_tf"]["tf"]*cond["cur_tf"]["turn"]
+    
+    # I^2の微分に関する行列
+    di2 = get_arr_diff(params, f)
+    
+    # I^2に関する行列, トロイダルコイルによる成分も加算
+    i2 = get_arr(params, f, cond) + i0**2
+    
+    # ここで正負の判定をする。
+    #print(i2)
+    
+    # I^2なのでIにする。
+    i = np.sqrt(i2)
+
+    # iは正負の任意性がある。
+    # トロイダルコイル電流が負の場合は、x=1(最外殻磁気面）で
+    # マイナスになるので、値を反転する。
+    if i0 < 0:
+        i *= -1.0
+    
+    return di2, i
+
+# 規格化フラックス内でのポロイダルカレントの微分とポロイダルカレントの計算
+def get_di2_i_norm(cond, num):
+    """規格化フラックスでのdi2, iを返す。
+    np.linspec(0.0, 1.0, num)の正規化フラックス
+    x = 0.0 (axis) - 1.0 (boundary)
+
+    Args:
+        cond (dict): 平衡計算結果
+        num (int): 返す個数
+
+    Returns:
+        array_float, array_float: dI^2/df_norm, I
+    """
+
+    f = np.linspace(0.0, 1.0, num)
+    
+    di2total, itotal = get_di2total_itotal(cond, f)
+
+    return di2total, itotal
+             
 # ポロイダルカレントの微分dI^2/dxとポロイダルカレントの計算
 def get_di2_i(cond):
+    """di^2/dfとiのdmatを返す。
+
+    Args:
+        cond (dict): calculation result
+
+    Returns:
+        tuple of dmat: di2, i
+    """
     dm_normalizedflux = cond["flux_normalized"]
     dm_domain = cond["domain"]
-    param_i2 = cond["param_di2"]
         
     g = dm_array(dm_domain)
     nr, nz = g.nr, g.nz
@@ -236,44 +325,19 @@ def get_di2_i(cond):
     iz = g.iz[d == 1]
     f = f[d == 1]
 
-    npr = len(param_i2)
-    # I^2の微分に関する行列
-    p0 = np.array([(f**i - f**npr) for i in range(npr)])
-    p0 = p0.transpose()
-    p0 = np.dot(p0, param_i2)
+    di2total, itotal = get_di2total_itotal(cond, f)
+    
     m_di2 = np.zeros((nz, nr))
-    for v, i, j in zip(p0, ir, iz):
+    for v, i, j in zip(di2total, ir, iz):
         m_di2[j, i] = v
-
-    # 多項式の各項, n, p
-    # an: x^n-x^p, これを積分すると次の式
-    # an: x^(n+1)/(n+1)-x^(p+1)/(p+1), 1/(n+1)-1/(p+1) if x = 1
-    # 例えば最外殻磁気面(x=1)ではプラズマ圧力がゼロとするならオフセットを各項に足す必要ある。つまり、
-    # an: (x^(n+1)-1)/(n+1)-(x^(p+1)-1)/(p+1)
-
-    # I^2に関する行列
-    p1 = np.array(
-        [
-            ((f ** (i + 1) - 1) / (i + 1) - (f ** (npr + 1) - 1) / (npr + 1))
-            for i in range(npr)
-        ]
-    )
-    p1 = p1.transpose()
-    p1 = np.dot(p1, param_i2)
-    
-    # 積分の変数変換に伴う係数をかける。
-    p1 *= (cond['f_surf']-cond['f_axis'])    
-    
+        
     m_i = np.zeros((nz, nr))
-    for v, i, j in zip(p1, ir, iz):
+    for v, i, j in zip(itotal, ir, iz):
         m_i[j, i] = v
-    # I^2に関してはx=1でI^2=0になるようにしてある。
-    # I^2なのでIにする。
-    m_i = np.sqrt(np.abs(m_i))
-
+    
     dm_di2 = get_dmat_dim(dm_domain)
     dm_i = get_dmat_dim(dm_domain)
-
+     
     dm_di2["matrix"] = m_di2
     dm_i["matrix"] = m_i
 
@@ -329,7 +393,6 @@ def search_domain(cond):
     cond["f_surf"] = -cond["f_surf"]
 
     return res
-
 
 # 最外殻磁気面の探索(最小値)
 def search_dom(cond):
@@ -428,7 +491,6 @@ def search_dom(cond):
 
     return res
 
-
 # 体積平均の算出
 def get_volume_average(dm_val, dm_domain):
     # dm_val: 例えばプラズマ圧力など
@@ -498,23 +560,6 @@ def set_domain_params(cond):
     cond["volume"] = np.sum(2 * np.pi * r * dr * dz)
     cond["cross_section"] = np.sum(m[m == 1]) * dr * dz
 
-# ipの正負に応じた値の修正
-def trim_values(cond):
-    jt = cond["jt"]["matrix"]
-    ip = np.sum(jt)
-
-    # ip < 0のとき、
-    # pressure < 0と計算されてしまうので反転する。
-    # pol_current > 0と計算されてしまうので反転する。
-    if ip < 0:
-        cond["pressure"]["matrix"] *= -1.0
-        cond["pol_current"]["matrix"] *= -1.0
-
-    # ポロイダル電流にTFの電流を加算
-    cond["pol_current"]["matrix"] += cond["cur_tf"]["tf"] * cond["cur_tf"]["turn"]
-
-    return cond
-
 # ベータ値の計算
 def calc_beta(cond):
     u0 = sc.mu_0  # 真空の透磁率
@@ -537,8 +582,8 @@ def calc_beta(cond):
 
     return cond
 
-# safty factorの計算
-def calc_safty(cond):
+# safety factorの計算
+def calc_safety(cond):
     # calc toroidal flux
     # ft = Integrate_area[u0*I/(2*pi*r)]
     g = dm_array(cond["domain"])
@@ -555,40 +600,37 @@ def calc_safty(cond):
     nr, nz = g.nr, g.nz
 
     # bfの磁気面内の面積分を行う。
-    # 2 pi r bf = u0 I, thus bf = 2.0e-7 * I / t
-    func = 2 * 10 ** (-7) * p / r
+    # bf: トロイダル方向の磁束密度
+    # 2 pi r bf = u0 I, thus bf = 2.0e-7 * I / r
+    func = 2.0 * 10 ** (-7) * p / r
     func *= (g.dr*g.dz) # 面積積分なのでメッシュ面積をかける。
     
     x = np.linspace(0, 1, 11)
     y = [np.sum(func[f <= e]) for e in x]
 
-    numpol = 2  # polynominalの次元数
-    coef = np.polyfit(x, y, numpol)
-    cond["coef_toroidal_flux"] = coef
-    # 係数は高次の項から出力される。
-    # numpol = 2の時は、２次の係数が最初。
-    # 値を算出したいときは下の式を使う
-    # vals = np.polyval(coef, x)
-
-    # safty factor q = d ft/df=(1/(fb-fm))*dft(x)/dx
-    dc = [numpol - e for e in range(numpol + 1)]
-    dc = np.array(dc)
-    # [2, 1, 0]の配列を掛け合わせて、微分の係数を作成する
-    # 同時に定数項の係数を削除
-    dcoef = (coef * dc)[:-1]
+    cond['toroidal_flux'] = y
+    dy = np.diff(y)/(x[1]-x[0]) # 微分を計算
+    dy = np.append(dy[0], dy) # 要素数を揃える。
+    cond['toroidal_flux_diff'] = dy
+    
+    fnc = interp1d(x, dy, kind='cubic') 
     fax, fbn = cond["f_axis"], cond["f_surf"]
-
-    q = np.polyval(dcoef, f / (fbn - fax))
-    # q = np.polyval(dcoef, f)
+    q = fnc(f)/(fbn - fax)
 
     qmat = np.zeros((nz, nr))
     for v, i, j in zip(q, ir, iz):
         qmat[j, i] = v
 
-    safty = cond["resolution"].copy()
-    safty["matrix"] = qmat
-    cond["safty_factor"] = safty
+    safety = cond["resolution"].copy()
+    safety["matrix"] = qmat
+    cond["safety_factor"] = safety
 
+    # 正規化フラックスに応じた値の計算
+    f0 = np.linspace(0.0, 1.0, nr)
+    q0 = fnc(f0)/(fbn - fax)
+
+    cond["safety_factor_norm"] = q0
+    
     return cond
 
 # 平衡計算の前処理
@@ -630,13 +672,17 @@ def equi_pre_process(cond):
 
 # 平衡計算の後処理
 def equi_post_process(cond):
+    
+    g = dm_array(cond['domain'])
+    
     # 形状パラメータの計算（elongationなど）
     set_domain_params(cond)
 
     # 正規化フラックスの計算
     dm_nfl = get_normalized_flux(cond)
     cond["flux_normalized"] = dm_nfl
-    
+
+    # fluxループの位置におけるフラックスの計算    
     if 'fl_pos' in cond.keys():
         pos = cond['fl_pos']
         cond['fl_val'] = {}
@@ -648,15 +694,24 @@ def equi_post_process(cond):
     dm_dp, dm_pr = get_dpress_press(cond)
     cond["diff_pre"] = dm_dp
     cond["pressure"] = dm_pr
+    
+    # 規格化フラックスでの圧力微分dp/dfと圧力pの計算
+    dp, pr = get_dpress_press_normal(cond, g.nr)
+    cond['diff_pre_norm'] = dp
+    cond['pressure_norm'] = pr
 
     # ポロイダル電流微分di^2/dfとポロイダル電流の計算
     dm_di2, dm_polcur = get_di2_i(cond)
     cond["diff_i2"] = dm_di2
     cond["pol_current"] = dm_polcur
+    
+    # 規格化フラックスでの電流微分di^2/dfとポロイダル電流の計算
+    di2, polcur = get_di2_i_norm(cond, g.nr)
+    cond['diff_i2_norm'] = di2
+    cond['pol_current_norm'] = polcur
 
-    cond = trim_values(cond)  # ip<0の時の処理
     cond = calc_beta(cond)  # ベータ値の計算
-    cond = calc_safty(cond)  # safty factorの計算
+    cond = calc_safety(cond)  # safety factorの計算
 
     return cond
 
@@ -704,17 +759,18 @@ def calc_equi(cond):
     p1 = np.array(
         [10 ** (-7) / (r + 10 ** (-7)) * (f**i - f**ncu) for i in range(ncu)]
     )
+    
     # 結合させて転置、この時点で[point数, パラメータ数]の形
     a = np.vstack([p0, p1]).transpose()
-
+    
     # 次にAbs(a x -j)を最小とするxを求めればよい。
     # A[p, n] x[n] = j[p]
     # このときのxは、At.A x = At.jを満たすxである。
 
-    # またここでのjtの定義は、1メッシュ内に流れるトータルの電流
-    # 平衡計算で用いるのは電流密度なので、メッシュサイズで割った値にする。
+    # フィッティングする場合は電流密度の値を用いる。
     m0 = np.dot(a.transpose(), a)
-    m1 = np.dot(a.transpose(), j/ds)
+    #m1 = np.dot(a.transpose(), j/ds)
+    m1 = np.dot(a.transpose(), j) # jtを電流密度とする場合
 
     # m0にほんのわずかな値を加算してsingular matrixになるのを避ける
     # dd = np.min(np.abs(m0))*10**(-7)
@@ -724,17 +780,36 @@ def calc_equi(cond):
 
     # エラー値の算出
     j0 = np.dot(a, params)  # 新しい電流
-    j0 *= jtotal / np.sum(j0)  # トータルの電流値が維持されるように調整
+    jsum = np.sum(j0)
+    j0 *= jtotal / jsum  # トータルの電流値が維持されるように調整
     # この時点で、１メッシュ内に流れるトータルの電流に正規化される。
-
+    
     errest = np.sum((j0 - j) ** 2) / 2
     # 評価方法はいくつか考えられる。単位メッシュ当たりのエラーに直すとか。
-
+    
     # 新しい電流分布の作成
     j_new = np.zeros((g.nz, g.nr))
     for i, j, v in zip(ir, iz, j0):
         j_new[j, i] = v
 
+    # 新しい圧力由来電流分布の作成
+    j0_p = np.dot(a[:, 0:npr], params[0:npr])
+    j_pres = np.zeros((g.nz, g.nr))
+    for i, j, v in zip(ir, iz, j0_p):
+        j_pres[j, i] = v
+    res = get_dmat_dim(dm_jt)
+    res['matrix'] = j_pres * jtotal / jsum
+    cond['jt_dp'] = res
+
+    # 新しいポロイダル電流由来電流分布の作成
+    j0_d = np.dot(a[:, npr:], params[npr:])
+    j_di2 = np.zeros((g.nz, g.nr))
+    for i, j, v in zip(ir, iz, j0_d):
+        j_di2[j, i] = v
+    res = get_dmat_dim(dm_jt)
+    res['matrix'] = j_di2 * jtotal / jsum
+    cond['jt_di2'] = res
+    
     res = get_dmat_dim(dm_jt)
     res["matrix"] = j_new
     cond["error"].append(errest)
