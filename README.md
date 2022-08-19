@@ -22,7 +22,15 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 "Plotly" is used to draw the graph. Therefore, **Node.js** must be installed in order to display the graph.
 
 1. Clone this project using VS code etc.
-1. Execute 'equalibrium.ipynb' in the root directory in order from the top.
+2. Go to the cloned directory, and execute below to install required modules.
+
+   ```shell
+   > python -m pip install -r requirements.txt
+   ```
+
+   - Be aware of whether or not you use a virtual environment.
+   - When using it, execute the above command under a virtual environment.
+3. Execute 'equalibrium.ipynb' in the root directory in order from the top.
 
 ## How to set calculation conditions
 
@@ -59,7 +67,14 @@ The specifiable PF coil name can be found in '/colis/data_npy/'.
 
 ## How to check the calculation result
 
-You can see what was calculated with '.keys ()'.
+Equilibrium calculation is executed with the following command.  
+All the calculation results are assigned to the variable cond as a python dictionary type.
+
+```shell
+cond = sb.calc_equilibrium(condition)
+```
+
+You can see what was calculated with '.keys()', which is a method to obtains a key list.
 
 ```python:
 cond.keys()
@@ -91,6 +106,22 @@ pl.d_heatmap(cond['domain'])
 ```
 
 ![domain](doc/domain.png)
+
+## How to get g-file
+
+The g file is created by inputting the calculation result of the equilibrium to the function as follows.
+
+```python
+# export g-file
+import sub.g_file as sgf
+sgf.write_g_file('g_quest.txt', cond)
+```
+
+## How to regist to database
+
+When you perform equilibrium calculations with many parameters, you may want to register the many calculation results in the database.  
+A sample code to do this is "equi_reg_db.ipynb" in the root.  
+Before running this file, copy '.env_example' in the same directory, rename it to '.env', and edit it to suit your environment.
 
 ## Licence
 
