@@ -51,6 +51,8 @@ def disassemble(keyname, val, res):
     if int == type(val):
         res.append([keyname, val, "INT"])
         return
+    if str == type(val):
+        res.append([keyname, val, "TEXT"])
     if dict == type(val):
         for k in val.keys():
             disassemble(keyname+'_'+k, val[k], res)

@@ -388,6 +388,7 @@ def search_domain(cond):
         # 反転させても探索失敗の場合
         return res
 
+    # 反転させたものを元に戻す。
     dm_flx["matrix"] = -dm_flx["matrix"]
     cond["f_axis"] = -cond["f_axis"]
     cond["f_surf"] = -cond["f_surf"]
@@ -636,7 +637,8 @@ def calc_safety(cond):
 # 平衡計算の前処理
 def equi_pre_process(cond):
     cond['comments'] = ""
-    
+    cond["error"] = []
+        
     # 真空容器
     dm_vv = vmat.get_vessel(cond)
     cond["vessel"] = dm_vv
@@ -835,7 +837,6 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
             print(cond['comments'])
         return cond
 
-    cond["error"] = []
     for i in range(iteration):
         # プラズマ平衡
         dm_jt = calc_equi(cond)
@@ -858,6 +859,7 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
         dm_dm = search_domain(cond)
         cond["domain"] = dm_dm
         if None == cond["domain"]:
+            cond['comments'] += 'Can not find domain.'
             break
 
         # エラー値を記録
@@ -879,6 +881,7 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
         if err[-1] > err[-2]:
             if 0 == cond["conf_div"]:
                 cond["domain"] = None
+                cond['comments'] += 'Increased error value in limiter configuration.'
             break
 
         # 一番最初の変化量に対して、最新の変化量が十分小さければ終了
@@ -889,6 +892,8 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
     if None == cond["domain"]:
         del cond["domain"]
         cond["cal_result"] = 0
+        if 1 == verbose:
+            print(cond['comments'])
         return cond
 
     cond["cal_result"] = 1
