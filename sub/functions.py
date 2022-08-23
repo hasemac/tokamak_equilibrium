@@ -635,6 +635,8 @@ def calc_safety(cond):
 
 # 平衡計算の前処理
 def equi_pre_process(cond):
+    cond['comments'] = ""
+    
     # 真空容器
     dm_vv = vmat.get_vessel(cond)
     cond["vessel"] = dm_vv
@@ -667,6 +669,7 @@ def equi_pre_process(cond):
     # ipとfの積が正の場合は平衡が成り立たないので除外する。
     if 0 < f * ip:
         cond["domain"] = None
+        cond["comments"] += 'Invalid direction of plasma current.'
 
     return cond
 
@@ -828,6 +831,8 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
     if cond["domain"] == None:
         del cond["domain"]
         cond["cal_result"] = 0
+        if 1 == verbose:
+            print(cond['comments'])
         return cond
 
     cond["error"] = []
