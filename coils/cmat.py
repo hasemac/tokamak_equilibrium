@@ -12,7 +12,7 @@ def coil_flux(data):
 
     mat = np.zeros((gl.nz, gl.nr))
     for k in data.keys():
-        dir = os.path.join(gl.root_dir, "coils/data_npy/" + k + ".npy")
+        dir = os.path.join(gl.root_dir, f"coils/data_npy/{k}.npy")
         mat += data[k] * np.load(dir)
 
     return mat

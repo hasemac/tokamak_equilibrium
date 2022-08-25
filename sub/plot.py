@@ -1,9 +1,40 @@
+import plotly
 import plotly.graph_objects as go
 import vessel.draw as vd
 import numpy as np
 import pandas as pd
 import plotly.express as px
 from plotly.subplots import make_subplots
+
+def line_plot(points, shapes = vd.vac):
+    aspect = 2.0
+    margin = 50
+    width = 250
+    
+    r = [np.sqrt(e[0]**2+e[1]**2) for e in points]
+    z = [e[2] for e in points]
+
+    data = go.Scatter(x=r, y=z)
+    layout = go.Layout(
+        width = width + 2*margin,
+        height = width*aspect + 2*margin,
+        margin = dict(l=margin, r=margin, t=margin, b=margin, autoexpand=False),
+        xaxis=dict(title='R(m)'), 
+        yaxis=dict(title='z(m)', scaleanchor='x'),
+        shapes = vd.vac
+        )
+    fig = go.Figure(data=data, layout=layout)
+    fig.show()    
+
+def line_plot3d(points):
+    df = pd.DataFrame(points, columns=['x(m)', 'y(m)', 'z(m)'])
+    fig = px.line_3d(df, 
+                     x="x(m)", y="y(m)", z="z(m)", 
+                     range_x=[-1.5, 1.5], 
+                     range_y=[-1.5, 1.5], 
+                     range_z=[-1.1, 1.1],
+                     )
+    fig.show()
 
 def d_contour(d_mat: dict):
     contour(d_mat['matrix'], d_mat['rmin'], d_mat['zmin'], d_mat['dr'], d_mat['dz'])
@@ -90,6 +121,62 @@ def heatmap(data, xmin, ymin, dx, dy, shapes=vd.vac):
                     )
     fig = go.Figure(data=data, layout=layout)
     fig.show()
+
+# インタラクティブプロット　共通x, 複数y: yは2次元arrayであることに注意
+def iplot_df(
+    df, labels = None, 
+    xlabel = None, ylabel = None,
+    xrange = None, yrange = None, 
+    yaxis_type='linear', 
+    title=None,
+    width=600, height=400,
+    mode='lines',
+    showlegend = True, legend_title=None, legend=None, 
+    draw = True
+    ):
+    # arrayY = [[ch1], [ch2],,,,,]
+    # xrange = [0, 10], yrange = [10, 20]
+    # xaxis_type: 自動判別、datetimeの時'linear'だと表示されない。
+    # yaxis_type: 'linear', 'log', etc.
+    # mode: 'lines', 'markers', 'lines+markers', or ['lines', 'markers', ]
+    # legend = {"x":0.02, "y":0.95}
+    # draw = True: グラフを描画して何も返さない。
+    # draw = False: グラフを描画しないでグラフを返す。 
+    #showlegend = True
+    if labels == None:
+        #labels = [''] * len(df.columns)
+        labels = df.columns
+        #showlegend = False
+    modes = []
+    if type(mode) != list:
+        modes = [mode] * len(df.columns)
+    else:
+        modes = mode
+
+    plotly.offline.init_notebook_mode(connected=False)
+    dat = []
+    for i in range(len(df.columns)):
+        dat.append(plotly.graph_objs.Scatter(x = df.index, y = df.iloc[:,i], mode=modes[i], name=labels[i]))
+
+    lay = plotly.graph_objs.Layout(
+    showlegend=showlegend,        
+    title=title,
+    legend=legend,
+    #legend={"x":0.02, "y":0.95},
+    #xaxis_type=xaxis_type,
+    legend_title=legend_title,
+    yaxis_type=yaxis_type,
+    xaxis={"title":xlabel, 'range':xrange},
+    yaxis={"title":ylabel, 'range':yrange, 'showgrid':None},
+    width=width, height=height
+    )
+
+    fig = plotly.graph_objs.Figure(data=dat, layout=lay)
+    if draw:
+        plotly.offline.iplot(fig)
+    else:
+        #plotly.io.write_image(fig, 'c://home/data/text.png')
+        return fig
     
 def plot_fundamental_nf(cond):
     def add_trace(fig, x, y, row, col, ylabel=''):
