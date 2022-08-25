@@ -2,6 +2,7 @@ from cmath import inf
 import numpy as np
 from scipy.special import *
 from scipy import constants as sc
+import sub.functions as sfn
 
 # 全ての定数の表示
 #sc.find()
@@ -50,3 +51,37 @@ def bz(r, z, rc, zc, ic):
     bz = (u0*ic/4/pi)*k**0.5/(r*rc)**0.5
     bz *= ellipk(k)-(r**2-rc**2+(z-zc)**2)*ellipe(k)/d
     return bz
+
+class Magnetic:
+    
+    def __init__(self, dm_flux, dm_polcur):
+        self.dm_flux = dm_flux
+        self.dm_polcur = dm_polcur
+        self.dm_br = sfn.get_dm_br(dm_flux)
+        self.dm_bz = sfn.get_dm_bz(dm_flux)
+        self.dm_bt = sfn.get_dm_bt(dm_polcur)
+        
+    def get_br(self, r, z):
+        return sfn.linval(r, z, self.dm_br)
+    
+    def get_bz(self, r, z):
+        return sfn.linval(r, z, self.dm_bz)
+    
+    def get_bt(self, r, z):
+        return sfn.linval(r, z, self.dm_bt)
+    
+    def get_mag(self, p3):
+        x, y, z = p3
+        r = np.sqrt(x**2 + y**2)
+        cos = x/r
+        sin = y/r
+        
+        br = self.get_br(r, z)
+        bz = self.get_bz(r, z)
+        bt = self.get_bt(r, z)
+        
+        bx = br*cos - bt*sin
+        by = br*sin + bt*cos
+        
+        return (bx, by, bz)
+        

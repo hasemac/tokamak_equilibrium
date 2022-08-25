@@ -110,7 +110,7 @@ dict_keys(['cur_tf', 'cur_ip', 'cur_pf', 'num_dpr', 'num_di2', 'fl_pos', 'resolu
 |diff_i2_norm| array | array of di^2/df from magnetic axis to surf.|
 |pol_current_norm| array | array of poloidal current from magnetic axis to surf.|
 |iter| int | number of iterations |
-|cal_result| int | 1: converged, 0: exit with error|
+|cal_result| int | 1: converged, 0: in calculation, -1: exit with error|
 |pts| dictionary | Four points that define the top, bottom, left, and right of the plasma<br>ex. z_rmin: z position of the point where r is minimum.|
 |major_radius | float | major radius|
 |minor_radius | float | minor radius|

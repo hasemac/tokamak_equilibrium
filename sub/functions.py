@@ -132,6 +132,73 @@ def dm_add(dmat0, dmat1):
     dmat2 = get_dmat_dim(dmat0)
     dmat2["matrix"] = mat
     return dmat2
+    
+# R方向の微分
+def dm_diff_r(dmat):
+    v = dmat['matrix']
+    d = np.diff(v, axis = 1) # r方向に差分を取る。
+    c = d[:,0]-(d[:, 1]-d[:,0]) # 勾配を維持した値で付加するカラム作成
+    c = c.reshape(-1, 1) # ２次元に変換
+    d = np.hstack((c, d))/dmat['dr']
+    
+    return d
+
+# z方向の微分
+def dm_diff_z(dmat):
+    # iz = 0はzminの場所
+    v = dmat['matrix']
+    d = np.diff(v, axis = 0) # z方向に差分を取る
+    c = d[0,:]-(d[1,:]-d[0,:]) # 勾配を維持した値で付加するカラム作成
+    c = c.reshape(1, -1)
+    d = np.vstack((c, d))/dmat['dz']
+    
+    return d
+
+def dm_2pir(dmat):
+    # 1/(2piR)のマトリックスを返す。
+    g = dm_array(dmat)
+    r = g.r
+    r = r.reshape((g.nz, -1))
+    
+    # rmin=0のとき発散する。
+    # これを避けるために、その隣の値を使用する。
+    if 0 == g.rmin:
+        r[:,0] = r[:,1]
+    
+    m = 1/(2*np.pi*r)
+
+    return m
+
+# Brの計算
+def get_dm_br(dm_flux):
+    r1 = dm_2pir(dm_flux)
+    r2 = dm_diff_z(dm_flux)
+    r3 = -r1*r2
+    dm = get_dmat_dim(dm_flux)
+    dm['matrix'] = r3
+    return dm
+
+# Bzの計算
+def get_dm_bz(dm_flux):
+    r1 = dm_2pir(dm_flux)
+    r2 = dm_diff_r(dm_flux)
+    r3 = r1*r2
+    dm = get_dmat_dim(dm_flux)
+    dm['matrix'] = r3
+    return dm
+
+# Btの計算
+def get_dm_bt(dm_pol_cur):
+    """プラズマを含むポロイダル電流からBtを計算
+
+    Args:
+        dm_pol_cur (dmat): ポロイダル電流 
+    """
+    r1 = dm_2pir(dm_pol_cur)
+    r2 = (4*np.pi*10**(-7))*r1*dm_pol_cur['matrix']
+    dm= get_dmat_dim(dm_pol_cur)
+    dm['matrix'] = r2
+    return dm
 
 # 正規化フラックスの計算
 def get_normalized_flux(cond):
@@ -334,6 +401,10 @@ def get_di2_i(cond):
     m_i = np.zeros((nz, nr))
     for v, i, j in zip(itotal, ir, iz):
         m_i[j, i] = v
+        
+    # プラズマの存在しない領域のポロイダル電流を設定
+    # これはTFコイル電流に依存する。
+    m_i[m_i == 0] = cond["cur_tf"]["tf"]*cond["cur_tf"]["turn"]
     
     dm_di2 = get_dmat_dim(dm_domain)
     dm_i = get_dmat_dim(dm_domain)
@@ -383,13 +454,17 @@ def search_domain(cond):
     # dm_flx2['matrix'] = -a
 
     res = search_dom(cond)
-
+    
+    # 反転させたものを元に戻しておく。
+    dm_flx["matrix"] = -dm_flx["matrix"]
+    
     if None == res:
         # 反転させても探索失敗の場合
+        cond['cal_result'] = -1
+        cond['error_messages'] += 'Can not find domain.'
         return res
-
-    # 反転させたものを元に戻す。
-    dm_flx["matrix"] = -dm_flx["matrix"]
+    
+    # これも反転させておく。
     cond["f_axis"] = -cond["f_axis"]
     cond["f_surf"] = -cond["f_surf"]
 
@@ -635,14 +710,22 @@ def calc_safety(cond):
     return cond
 
 # 平衡計算の前処理
-def equi_pre_process(cond):
-    cond['comments'] = ""
+def equi_pre_process(condition, verbose=2):
+    cond = condition.copy()
+    cond['error_messages'] = ""
     cond["error"] = []
+    cond["cal_result"] = 0
         
     # 真空容器
     dm_vv = vmat.get_vessel(cond)
     cond["vessel"] = dm_vv
 
+    g = dm_array(dm_vv)
+    # ポロイダル電流
+    dm = get_dmat_dim(dm_vv)
+    dm['matrix'] = np.ones((g.nz, g.nr))*cond["cur_tf"]["tf"]*cond["cur_tf"]["turn"]
+    cond['pol_current'] = dm
+    
     # コイルによるフラックス
     dm_fc = cmat.get_flux_of_coil(cond)
     cond["flux_coil"] = dm_fc
@@ -670,13 +753,21 @@ def equi_pre_process(cond):
     ip = cond["cur_ip"]["ip"]
     # ipとfの積が正の場合は平衡が成り立たないので除外する。
     if 0 < f * ip:
-        cond["domain"] = None
-        cond["comments"] += 'Invalid direction of plasma current.'
+        #cond["domain"] = None
+        cond["cal_result"] = -1
+        cond["error_messages"] += 'Invalid direction of plasma current.'
 
+    if -1 == cond['cal_result'] and 1 <= verbose:
+        print(cond['error_messages'])
+    
+    if 2 <= verbose:
+        print('pre-process:')
+        pl.d_contour(cond['flux'])
+        
     return cond
 
 # 平衡計算の後処理
-def equi_post_process(cond):
+def equi_post_process(cond, verbose=2):
     
     g = dm_array(cond['domain'])
     
@@ -718,10 +809,16 @@ def equi_post_process(cond):
     cond = calc_beta(cond)  # ベータ値の計算
     cond = calc_safety(cond)  # safety factorの計算
 
+    if 2 <= verbose:
+        print('post-process:')
+        pl.d_contour(cond['flux'])
+                
     return cond
 
 # 平衡計算(１回)
-def calc_equi(cond):
+def equi_fit_and_evaluate_error(condition):
+    cond = condition.copy()
+    
     dm_jt = cond["jt"]
     dm_domain = cond["domain"]
     npr = cond["num_dpr"]
@@ -796,7 +893,10 @@ def calc_equi(cond):
     j_new = np.zeros((g.nz, g.nr))
     for i, j, v in zip(ir, iz, j0):
         j_new[j, i] = v
-
+    res = get_dmat_dim(dm_jt)
+    res["matrix"] = j_new
+    cond['jt'] = res
+    
     # 新しい圧力由来電流分布の作成
     j0_p = np.dot(a[:, 0:npr], params[0:npr])
     j_pres = np.zeros((g.nz, g.nr))
@@ -815,13 +915,49 @@ def calc_equi(cond):
     res['matrix'] = j_di2 * jtotal / jsum
     cond['jt_di2'] = res
     
-    res = get_dmat_dim(dm_jt)
-    res["matrix"] = j_new
     cond["error"].append(errest)
     cond["param_dp"] = params[0:npr]
     cond["param_di2"] = params[npr:]
-    return res
+    
+    return cond
 
+def equi_calc_one_step(condition, verbose=2):
+    cond = condition.copy()
+
+    # プラズマ平衡
+    cond = equi_fit_and_evaluate_error(cond)
+
+    # プラズマ電流のトリミング
+    # ip>0なら全ての領域でjt>0となるようにする。
+    dm_jt2 = pmat.trim_plasma_current(cond)
+    cond["jt"] = dm_jt2
+
+    # プラズマ電流によるフラックス
+    dm_fp = pmat.cal_plasma_flux(cond["jt"])
+    cond["flux_jt"] = dm_fp
+
+    # トータルのフラックス
+    dm_flux = dm_add(cond["flux_jt"], cond["flux_coil"])
+    cond["flux"] = dm_flux
+
+    # 最外殻磁気面の探索
+    dm_dm = search_domain(cond)
+    cond["domain"] = dm_dm
+    if -1 == cond['cal_result']:
+        if 1 == verbose:
+            print(cond['error_messages'])
+        return cond
+
+    # エラー値を記録
+    err = cond["error"]
+    cond["iter"] = len(err)
+    if 1 <= verbose:
+        print(f'{len(err)} loss: {err[-1]:.3e}')
+    if 2 <= verbose:
+        pl.d_contour(cond['flux'])
+        
+    return cond
+              
 # 平衡計算
 def calc_equilibrium(condition, iteration=100, verbose=1):
     # iteration: イタレーション数。
@@ -829,48 +965,18 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
     # verbose: 1:詳細表示, 0:なし
 
     cond = condition.copy()
-    cond = equi_pre_process(cond)
-    if cond["domain"] == None:
-        del cond["domain"]
-        cond["cal_result"] = 0
-        if 1 == verbose:
-            print(cond['comments'])
+    cond = equi_pre_process(cond, verbose=verbose)
+    if cond["cal_result"] == -1:
         return cond
 
     for i in range(iteration):
-        # プラズマ平衡
-        dm_jt = calc_equi(cond)
-        cond["jt"] = dm_jt
+        
+        cond = equi_calc_one_step(cond, verbose=verbose)
 
-        # プラズマ電流のトリミング
-        # ip>0なら全ての領域でjt>0となるようにする。
-        dm_jt2 = pmat.trim_plasma_current(cond)
-        cond["jt"] = dm_jt2
-
-        # プラズマ電流によるフラックス
-        dm_fp = pmat.cal_plasma_flux(cond["jt"])
-        cond["flux_jt"] = dm_fp
-
-        # トータルのフラックス
-        dm_flux = dm_add(cond["flux_jt"], cond["flux_coil"])
-        cond["flux"] = dm_flux
-
-        # 最外殻磁気面の探索
-        dm_dm = search_domain(cond)
-        cond["domain"] = dm_dm
-        if None == cond["domain"]:
-            cond['comments'] += 'Can not find domain.'
-            break
-
-        # エラー値を記録
         err = cond["error"]
-        cond["iter"] = len(err)
-        if 1 == verbose:
-            print(i, "loss: ", err[-1])
-
         if len(err) <= 1:
             continue
-
+        
         # iterationがデフォルト値でない場合は、設定されたという事。
         # このときは、最後までiterationする。
         if iteration < 100:
@@ -880,8 +986,8 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
         # その時の配位がリミター配位なら収束しなかったとみなす。
         if err[-1] > err[-2]:
             if 0 == cond["conf_div"]:
-                cond["domain"] = None
-                cond['comments'] += 'Increased error value in limiter configuration.'
+                cond['error_messages'] += 'Increased error value in limiter configuration.'
+                cond['cal_result'] = -1
             break
 
         # 一番最初の変化量に対して、最新の変化量が十分小さければ終了
@@ -889,18 +995,13 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
         if v < 10 ** (-5):
             break
 
-    if None == cond["domain"]:
-        del cond["domain"]
-        cond["cal_result"] = 0
-        if 1 == verbose:
-            print(cond['comments'])
+    if -1 == cond["cal_result"]:
+        if 1 <= verbose:
+            print(cond['error_messages'])
         return cond
 
     cond["cal_result"] = 1
-
-    cond = equi_post_process(cond)
-
-    if 1 == verbose:
-        pl.d_contour(dm_flux)
+    
+    cond = equi_post_process(cond, verbose=verbose+1)
 
     return cond
