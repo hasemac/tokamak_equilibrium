@@ -19,6 +19,8 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 [Introducig QUEST](doc/introducing_quest.md)
 
+[Tracing magnetic field lines](doc/tracing_mag_lines.md)
+
 ## Getting started
 
 "Plotly" is used to draw the graph. Therefore, **Node.js** must be installed in order to display the graph.
