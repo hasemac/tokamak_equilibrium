@@ -1,5 +1,5 @@
 import os
-
+import contextlib
 import mysql.connector
 import numpy as np
 
@@ -65,62 +65,55 @@ def disassemble_condition(cond):
         disassemble(k, cond[k], res)
     return res
 
-def get_connector():
+class Db_cur:
+    """接続情報が.envに記載されているcursor
 
-    user = os.getenv("DB_USER")
-    host = os.getenv("DB_HOST")
-    password = os.getenv("DB_PASS")
-    database = os.getenv("DB_DATABASE")
+    Args:
+        Db_cur (class): 接続情報は.envに記載されていること
+    """
+    def __init__(self, database="quest", admin=False):
+        self.user = os.getenv("DB_USER")
+        self.host = os.getenv("DB_HOST")
+        self.password = os.getenv("DB_PASS")
+        self.database = os.getenv("DB_DATABASE")
 
-    con = mysql.connector.connect(
-        user=user, password=password, host=host, database=database
-    )
-
-    return con
-
-
+    @contextlib.contextmanager
+    def get_cursor(self):
+        try:
+            con = mysql.connector.connect(
+                user=self.user,
+                password=self.password,
+                host=self.host,
+                database=self.database,
+            )
+            cur = con.cursor()
+            yield cur
+        finally:
+            con.commit()
+            con.close()
+            
 class DB:
-    con = None  # connect
-    cur = None  # cursor
+    dcur = None  # cursor
     tableName = None  # tableName
     keyName = None  # keyName, ex. shotNumber, fileName, etc.
 
-    info = """\
-print_column_info() : カラム情報の表示
-
-select(colName, condition, vals) : データの検索
- colName: カラム名, condition: 検索する条件式, vals: 検索する際の値
-"""
-
     def __init__(self):
-        self.open(get_connector())
-
-    def open(self, con):
-        self.con = con
-        self.cur = self.con.cursor()
-
-    def close(self):
-        self.con.close()
-
-    def commit(self):
-        self.con.commit()
-
-    def commitClose(self):
-        self.commit()
-        self.close()
+        self.dcur = Db_cur()
 
     # 現在のカラム一覧を取得
     def getColumnNames(self):
         res = []
-        self.cur.execute("SHOW COLUMNS FROM " + self.tableName)
-        for v in self.cur:
-            res.append(v[0])
+        with self.dcur.get_cursor() as cur:
+            cur.execute(f"SHOW COLUMNS FROM {self.tableName}")
+            for v in cur:
+                res.append(v[0])
         return res
 
     def print_column_info(self):
         sql = "SELECT COLUMN_NAME, COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=%s and TABLE_NAME=%s ORDER BY TABLE_NAME"
-        self.cur.execute(sql, [self.con.database, self.tableName])
-        a = self.cur.fetchall()
+        with self.dcur.get_cursor() as cur:
+            cur.execute(sql, [self.con.database, self.tableName])
+            a = cur.fetchall()
         for e in a:
             print(e[0], ":", e[1])
         return a
@@ -135,12 +128,12 @@ select(colName, condition, vals) : データの検索
 
     # 現在のデータベース内にあるテーブル一覧
     def getTables(self):
-        sql = "SHOW TABLES FROM " + self.con.database
-        self.cur.execute(sql)
-
-        res = []
-        for e in self.cur:
-            res.append(e[0])
+        sql = f"SHOW TABLES FROM {self.dcur.database}"
+        with self.dcur.get_cursor() as cur:
+            cur.execute(sql)
+            res = []
+            for e in cur:
+                res.append(e[0])
         return res
 
     # 使用するテーブルの指定
@@ -154,35 +147,18 @@ select(colName, condition, vals) : データの検索
         self.keyName = keyName
 
         # もし既に存在しているなら削除する。
-        sql = "DROP TABLE IF EXISTS " + tableName
-        self.cur.execute(sql)
+        sql0 = f"DROP TABLE IF EXISTS {tableName}"
 
-        sql = (
-            "CREATE TABLE "
-            + tableName
-            + " ("
-            + keyName
-            + " "
-            + keyType
-            + " PRIMARY KEY)"
-        )
+        sql1 = f"CREATE TABLE {tableName} ({keyName} {keyType} PRIMARY KEY)"
 
         # keyTypeがテキストの時は、長さを指定する必要がある。
         if keyType == "TEXT":
-            sql = (
-                "CREATE TABLE "
-                + tableName
-                + " ("
-                + keyName
-                + " "
-                + keyType
-                + ", PRIMARY KEY("
-                + keyName
-                + "(255)))"
-            )
+            sql1 = f"CREATE TABLE {tableName} ({keyName} {keyType}, PRIMARY KEY({keyName}(255)))"
             # sql = 'CREATE TABLE test (testfile TEXT, PRIMARY KEY(testfile(255)))'
 
-        self.cur.execute(sql)
+        with self.dcur.get_cursor() as cur:
+            cur.execute(sql0)
+            cur.execute(sql1)
 
     # id (int, autoincrement)付きのテーブル作成
     def make_new_table(self, tablename):
@@ -190,101 +166,58 @@ select(colName, condition, vals) : データの検索
         self.keyName = "id"
 
         # もし既に存在しているなら削除する。
-        sql = "DROP TABLE IF EXISTS " + tablename
-        self.cur.execute(sql)
+        sql0 = f"DROP TABLE IF EXISTS {tablename}"
+        sql1 = f"CREATE TABLE {tablename} ({self.keyName} INT NOT NULL AUTO_INCREMENT PRIMARY KEY)"
 
-        sql = (
-            "CREATE TABLE "
-            + tablename
-            + " ("
-            + self.keyName
-            + " INT NOT NULL AUTO_INCREMENT PRIMARY KEY)"
-        )
-
-        self.cur.execute(sql)
+        with self.dcur.get_cursor() as cur:
+            cur.execute(sql0)
+            cur.execute(sql1)
 
     # カラムの追加
     def addColumn(self, colName, colType, comment=""):
         # colType: DATETIME, DATE, TIME, INT, FLOAT, TEXT, TINYTEXT, etc.
         # comment (str)
         tableName = self.tableName
-        sql = (
-            "ALTER TABLE "
-            + tableName
-            + " ADD COLUMN "
-            + colName
-            + " "
-            + colType
-            + " COMMENT %s;"
-        )
+        sql = f"ALTER TABLE {tableName} ADD COLUMN {colName} {colType} COMMENT %s;"
         # print(sql, comment)
-        self.cur.execute(sql, [comment])
+        with self.dcur.get_cursor() as cur:
+            cur.execute(sql, [comment])
 
     # 新規要素の追加
     def insert(self, keyValues):
-        """テーブルへの要素の追加
-
-         keyValuesの値を持った要素を追加する。
-
-        Args:
-            keyValues (array of keyValue): 要素の配列
-
-        Returns:
-           戻り値の型: 戻り値の説明 (例 : True なら成功, False なら失敗.)
-
-        Raises:
-            例外の名前: 例外の説明 (例 : 引数が指定されていない場合に発生 )
-
-        Yields:
-           戻り値の型: 戻り値についての説明
-
-        Examples:
-
-            関数の使い方について記載
-
-            >>> print_test ("test", "message")
-               test message
-
-        Note:
-            注意事項などを記載
-
-        """
         tableName = self.tableName
         colName = self.keyName
-        sql = "INSERT INTO " + tableName + " (" + colName + ") VALUES (%s)"
+        sql = f"INSERT INTO {tableName} ({colName}) VALUES (%s)"
 
-        for e in keyValues:
-            try:
-                self.cur.execute(sql, [e])
-            except Exception as f:
-                print("error: ", e, f)
-
-        self.commit()
+        with self.dcur.get_cursor() as cur:
+            for e in keyValues:
+                try:
+                    cur.execute(sql, [e])
+                except Exception as f:
+                    print("error: ", e, f)
 
     # 要素の編集
     def update(self, keyValues, colName, colValues):
         tableName = self.tableName
         keyName = self.keyName
-        sql = "UPDATE " + tableName + " SET " + colName + "=%s WHERE " + keyName + "=%s"
-        for i, e in enumerate(keyValues):
-            self.cur.execute(sql, [colValues[i], e])
-        self.commit()
+        sql = f"UPDATE {tableName} SET {colName}=%s WHERE {keyName}=%s"
+        with self.dcur.get_cursor() as cur:
+            for i, e in enumerate(keyValues):
+                cur.execute(sql, [colValues[i], e])
 
     # 要素の抽出(対象：特定カラム）
     def select(self, colName, condition=None, vals=None):  # conditionはwhere以降を記述すること
         # condition: 'date=%s'
         # vals: ['2010-07-28']
         tableName = self.tableName
-        sql = "SELECT " + colName + " FROM " + tableName
+        sql = f"SELECT {colName} FROM {tableName}"
         if condition != None:
-            sql = "SELECT " + colName + " FROM " + tableName + " WHERE " + condition
+            sql = f"SELECT {colName} FROM {tableName} WHERE {condition}"
 
-        self.cur.execute(sql, vals)
+        with self.dcur.get_cursor() as cur:
+            cur.execute(sql, vals)
+            res = cur.fetchall()
 
-        # res = []
-        # for e in self.cur:
-        #    res.append(e)
-        res = self.cur.fetchall()
         return res
 
 
@@ -318,6 +251,12 @@ class DB_equilibrium(DB):
             self.addColumn(cn, ct, cc)
 
     def add_data(self, dat):
+        """regist dat into database
+        dat = [['colname', val, 'type'],,,]
+            'type': ex. 'TEXT', 'FLOAT', etc.
+        Args:
+            dat (list): [['colname', val, 'type'],,,]
+        """
         self.check_column(dat)
 
         cnames = ""
@@ -331,20 +270,10 @@ class DB_equilibrium(DB):
         cnames = cnames[:-2]
         stvals = stvals[:-2]
 
-        sql = (
-            "INSERT INTO "
-            + self.tableName
-            + " ("
-            + cnames
-            + ") VALUES ("
-            + stvals
-            + ")"
-        )
+        sql = f"INSERT INTO {self.tableName} ({cnames}) VALUES ({stvals})"
+
         #print(sql, vals)
 
-        try:
-            self.cur.execute(sql, vals)
-        except Exception as f:
-            print("error: ", f)
+        with self.dcur.get_cursor() as cur:
+            cur.execute(sql, vals)
 
-        self.commit()

@@ -1,6 +1,7 @@
 # Tracing magnetic field lines
 
 See 'mag_trace.ipynb' in root directory.
+
 ## Runge-kutta 4th order method
 
 Solve differential equation
@@ -47,4 +48,3 @@ $`\boldsymbol{b}_{0}`$ : unit vector of magnetic field, which doesn't depend on 
 &Bz = Bz
 \end{align*}
 ```
-

@@ -6,7 +6,7 @@ from global_variables import gparam
 from scipy.interpolate import interp1d
 from scipy import constants as sc
 import sub.plot as pl
-
+import sub.sub_func as ssf
 class dm_array:
     def __init__(self, dmat):
         self.rmin, self.rmax, self.dr = dmat["rmin"], dmat["rmax"], dmat["dr"]
@@ -492,17 +492,20 @@ def search_dom(cond):
     if 0 == k and 0 == l:
         return None
 
-    dm[l, k + 1] = 1.0  # 極小値の一つ右側に設定
+    dm[l, k] = 1.0  # 探索用のシードを極小値を持つ場所にセット
 
     # 値を記録
     cond["ir_ax"] = k
     cond["iz_ax"] = l
-    cond["r_ax"] = rmin + k * dr
-    cond["z_ax"] = zmin + l * dz
+    # 近傍9点のデータから極値の補正値を求める。
+    zc, rc, fax = ssf.find_extremum_loc_and_val(dm_flx['matrix'][l-1:l+2, k-1:k+2]) # 補正
+    cond["r_ax"] = rmin + k * dr + rc * dr
+    cond["z_ax"] = zmin + l * dz + zc * dz
+    cond['f_axis'] = fax
 
     # 磁気軸のフラックスを保存し、
     # 最外殻磁気面とヌル点フラックスの初期値を設定
-    fax = dm_flx["matrix"][l, k]
+    #fax = dm_flx["matrix"][l, k]
     fsurf = fax
     fnull = fax
 
@@ -533,7 +536,8 @@ def search_dom(cond):
             continue
 
         # 他のプラズマと接触して且つ真空容器外なら探索終了
-        # リミター配位
+        # リミター配位、または
+        # ダイバータ配位で探索中にレッグが真空容器に到達
         if con and 0 == v:
             fsurf = f
             break
@@ -562,7 +566,6 @@ def search_dom(cond):
         cond["conf_div"] = 0
 
     res["matrix"] = dm3
-    cond["f_axis"] = fax
     cond["f_surf"] = fsurf
 
     return res
