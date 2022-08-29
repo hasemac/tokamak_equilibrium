@@ -272,9 +272,8 @@ j_{\theta}=2 \pi r \frac{dP}{d\Phi}+\frac{\mu_{0}}{4 \pi r}\frac{dI^{2}}{d\Phi}
 
 You can get the same equation from z-component.
 
+The $`\theta`$-component becomes 0 = 0.  
 The $`\theta`$-component becomes 0 = 0.
-The $`\theta`$-component becomes 0 = 0.
-
 
 ## Definitions of beta
 
