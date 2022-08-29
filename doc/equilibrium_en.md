@@ -273,7 +273,6 @@ j_{\theta}=2 \pi r \frac{dP}{d\Phi}+\frac{\mu_{0}}{4 \pi r}\frac{dI^{2}}{d\Phi}
 You can get the same equation from z-component.
 
 The $`\theta`$-component becomes 0 = 0.  
-The $`\theta`$-component becomes 0 = 0.
 
 ## Definitions of beta
 
@@ -341,7 +340,9 @@ Because,
 \frac{dI}{d\psi}=\frac{1}{2 I}\frac{dI^{2}}{d\psi}
 ```
 
-$`d\psi = (\psi_{B}- \psi_{M}) dx`$ from $`x = (\psi- \psi_{M}) / (\psi_{B}- \psi_{M})`$.
+```math
+d\psi = (\psi_{B}- \psi_{M}) dx`$ from $`x = (\psi- \psi_{M}) / (\psi_{B}- \psi_{M})
+```
 
 Finally,
 
