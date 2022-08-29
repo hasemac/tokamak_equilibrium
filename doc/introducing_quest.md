@@ -2,7 +2,7 @@
 
 ## coil location and specification
 
-![quest_coil_name](quest_coil_name.drawio.svg)
+![quest_coil_name](quest_coil_name.png)
 
 unit: (mm)
 |name|turn|R|z|width|height|registance(mΩ)|inductance(mH)|

@@ -282,11 +282,15 @@ poloidal beta：
 \beta_{p}=\frac{<p>}{B_{\theta}^{2}(a) /2 \mu_{0}}
 ```
 
+$`\theta`$
+
 toroidal beta：
 
 ```math
 \beta_{t}=\frac{<p>}{B_{t}^{2}/2 \mu_{0}}
 ```
+
+$`\theta`$
 
 normalized beta：
 

@@ -31,7 +31,7 @@ $`\boldsymbol{b}_{0}`$ : unit vector of magnetic field, which doesn't depend on 
 
 ## Representation of the magnetic field in Cartesian coordinates
 
-![relation](tracing_mag_fig.drawio.svg)
+![relation](tracing_mag_fig.png)
 
 ```math
 \begin{align*}
