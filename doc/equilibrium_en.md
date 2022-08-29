@@ -274,11 +274,13 @@ You can get the same equation from z-component.
 
 The $`\theta`$-component becomes 0 = 0.
 
+$`\theta`$
+
 ## Definitions of beta
 
-poloidal beta：
-
 $`\theta`$
+
+poloidal beta：
 
 ```math
 \beta_{p}=\frac{<p>}{B_{\theta}^{2}(a) /2 \mu_{0}}
