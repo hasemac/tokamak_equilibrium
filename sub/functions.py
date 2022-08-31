@@ -214,6 +214,12 @@ def get_normalized_flux(cond):
     f = dm_flux["matrix"]
     f = (f - faxis) / (fsurf - faxis)  # normalized flux
     f *= d  # domainの外にあるのはゼロにする。
+    # 正規化フラックスは0(axis)-1(boundary)の間の数値
+    # 0(axis)のf_axisは２次関数近似、近似がずれて、たまに負の値を出す。
+    # というように必ず、0-1の範囲に収めるとする。
+    f[f < 0] = 0.0 
+    f[f > 1] = 1.0
+    #print(f'fmax:{np.max(f)}, fmin:{np.min(f)}')
     res["matrix"] = f
     return res
 
@@ -559,11 +565,12 @@ def search_dom(cond):
         # ダイバータ配位の場合、ヌル点近傍でほとんどフラックスが変化しない。
         # ある値で切り上げたほうが多分良い。
         fsurf = fax + 0.90 * (fnull - fax)
-        dm3[iz[m0 >= fsurf], ir[m0 >= fsurf]] = 0
-
         cond["conf_div"] = 1
     else:
         cond["conf_div"] = 0
+        
+    dm3[iz[m0 >= fsurf], ir[m0 >= fsurf]] = 0
+    #print(f'fs:{fsurf}')
 
     res["matrix"] = dm3
     cond["f_surf"] = fsurf
@@ -599,34 +606,66 @@ def set_domain_params(cond):
     iz = g.iz[m == 1]
     r = g.r[m == 1]
 
+    fl = cond['flux']['matrix']
+    fsur = cond['f_surf']
+    
     # ptsの辞書型での初期化
     cond["pts"] = {}
-
+    
     # rminがある位置
     v = np.min(ir)
-    r_rmin = rmin + dr * np.mean(ir[ir == v])
-    z_rmin = zmin + dz * np.mean(iz[ir == v])
+    #r_rmin = rmin + dr * np.mean(ir[ir == v])
+    #z_rmin = zmin + dz * np.mean(iz[ir == v])
+    kr = int(np.mean(ir[ir == v]))
+    kz = int(np.mean(iz[ir == v]))
+    p = ssf.find_points_of_quad_func(fl[kz-1:kz+2, kr-1:kr+2], fsur)
+    i = np.argmin([r for z, r in p])
+    cz, cr = p[i]
+    r_rmin = rmin + dr * (kr+cr)
+    z_rmin = zmin + dz * (kz+cz)
     cond["pts"]["r_rmin"] = r_rmin
     cond["pts"]["z_rmin"] = z_rmin
 
+    
     # rmaxがある位置
     v = np.max(ir)
-    r_rmax = rmin + dr * np.mean(ir[ir == v])
-    z_rmax = zmin + dz * np.mean(iz[ir == v])
+    #r_rmax = rmin + dr * np.mean(ir[ir == v])
+    #z_rmax = zmin + dz * np.mean(iz[ir == v])
+    kr = int(np.mean(ir[ir == v]))
+    kz = int(np.mean(iz[ir == v]))
+    p = ssf.find_points_of_quad_func(fl[kz-1:kz+2, kr-1:kr+2], fsur)
+    i = np.argmax([r for z, r in p])
+    cz, cr = p[i]
+    r_rmax = rmin + dr * (kr+cr)
+    z_rmax = zmin + dz * (kz+cz)
     cond["pts"]["r_rmax"] = r_rmax
     cond["pts"]["z_rmax"] = z_rmax
 
     # zminがある位置
     v = np.min(iz)
-    r_zmin = rmin + dr * np.mean(ir[iz == v])
-    z_zmin = zmin + dz * np.mean(iz[iz == v])
+    #r_zmin = rmin + dr * np.mean(ir[iz == v])
+    #z_zmin = zmin + dz * np.mean(iz[iz == v])
+    kr = int(np.mean(ir[iz == v]))
+    kz = int(np.mean(iz[iz == v]))
+    p = ssf.find_points_of_quad_func(fl[kz-1:kz+2, kr-1:kr+2], fsur)
+    i = np.argmin([z for z, r in p])
+    cz, cr = p[i]
+    r_zmin = rmin + dr * (kr+cr)
+    z_zmin = zmin + dz * (kz+cz)
     cond["pts"]["r_zmin"] = r_zmin
     cond["pts"]["z_zmin"] = z_zmin
 
     # zmaxがある位置
     v = np.max(iz)
-    r_zmax = rmin + dr * np.mean(ir[iz == v])
-    z_zmax = zmin + dz * np.mean(iz[iz == v])
+    #r_zmax = rmin + dr * np.mean(ir[iz == v])
+    #z_zmax = zmin + dz * np.mean(iz[iz == v])
+    kr = int(np.mean(ir[iz == v]))
+    kz = int(np.mean(iz[iz == v]))
+    p = ssf.find_points_of_quad_func(fl[kz-1:kz+2, kr-1:kr+2], fsur)
+    i = np.argmax([z for z, r in p])
+    cz, cr = p[i]
+    r_zmax = rmin + dr * (kr+cr)
+    z_zmax = zmin + dz * (kz+cz)
     cond["pts"]["r_zmax"] = r_zmax
     cond["pts"]["z_zmax"] = z_zmax
 
@@ -694,6 +733,7 @@ def calc_safety(cond):
     
     fnc = interp1d(x, dy, kind='cubic') 
     fax, fbn = cond["f_axis"], cond["f_surf"]
+    #print(f'fmax:{max(f)}, fmin:{min(f)}, xmin:{x[0]}, xmax:{x[-1]}')
     q = fnc(f)/(fbn - fax)
 
     qmat = np.zeros((nz, nr))
