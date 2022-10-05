@@ -1,5 +1,6 @@
 import coils.cmat as cmat
 import numpy as np
+import copy
 import plasma.pmat as pmat
 import vessel.vmat as vmat
 from global_variables import gparam
@@ -740,7 +741,7 @@ def calc_safety(cond):
     for v, i, j in zip(q, ir, iz):
         qmat[j, i] = v
 
-    safety = cond["resolution"].copy()
+    safety = copy.deepcopy(cond["resolution"])
     safety["matrix"] = qmat
     cond["safety_factor"] = safety
 
@@ -754,7 +755,7 @@ def calc_safety(cond):
 
 # 平衡計算の前処理
 def equi_pre_process(condition, verbose=2):
-    cond = condition.copy()
+    cond = copy.deepcopy(condition)
     cond['error_messages'] = ""
     cond["error"] = []
     cond["cal_result"] = 0
@@ -860,7 +861,7 @@ def equi_post_process(cond, verbose=2):
 
 # 平衡計算(１回)
 def equi_fit_and_evaluate_error(condition):
-    cond = condition.copy()
+    cond = copy.deepcopy(condition)
     
     dm_jt = cond["jt"]
     dm_domain = cond["domain"]
@@ -965,7 +966,7 @@ def equi_fit_and_evaluate_error(condition):
     return cond
 
 def equi_calc_one_step(condition, verbose=2):
-    cond = condition.copy()
+    cond = copy.deepcopy(condition)
 
     # プラズマ平衡
     cond = equi_fit_and_evaluate_error(cond)
@@ -1007,7 +1008,7 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
     #   指定があった場合は、最後までイタレーションする。
     # verbose: 1:詳細表示, 0:なし
 
-    cond = condition.copy()
+    cond = copy.deepcopy(condition)
     cond = equi_pre_process(cond, verbose=verbose)
     if cond["cal_result"] == -1:
         return cond

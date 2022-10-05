@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import copy
 import sub.functions as sb
 from global_variables import gparam
 
@@ -26,6 +27,6 @@ def get_coil_flux(dmat, coil_currents):
 
 
 def get_flux_of_coil(cond):
-    dmat = cond["resolution"].copy()
+    dmat = copy.deepcopy(cond["resolution"])
     coil_currents = cond["cur_pf"]
     return get_coil_flux(dmat, coil_currents)

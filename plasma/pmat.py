@@ -2,6 +2,7 @@ import os
 import sys
 
 sys.path.append("..")
+import copy
 import numpy as np
 import sub.electromagnetics as mag
 import sub.functions as sb
@@ -102,7 +103,7 @@ def plasma_cur_parabolic(r0, z0, ip, radius, r_pos, z_pos):
 
 
 def d_set_plasma_parabolic(cond):
-    res = cond["resolution"].copy()
+    res = copy.deepcopy(cond["resolution"])
     ip = cond["cur_ip"]["ip"]
     r0 = cond["cur_ip"]["r0"]
     z0 = cond["cur_ip"]["z0"]
@@ -115,7 +116,7 @@ def trim_plasma_current(cond):
     # ip>0ならjt<0の値は不自然。
     # この場合は全体を底上げした後、トータルを合わせることで
     # トリミングをかける。
-    res = cond["resolution"].copy()
+    res = copy.deepcopy(cond["resolution"])
 
     dm = cond["domain"]["matrix"]
     jt = cond["jt"]["matrix"]

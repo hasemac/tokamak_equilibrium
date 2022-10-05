@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 from global_variables import gparam
 
 gl = gparam()
@@ -37,5 +38,5 @@ def get_vessel_mat(dmat):
     return dmat
 
 def get_vessel(cond):
-    dmat = cond['resolution'].copy()
+    dmat = copy.deepcopy(cond['resolution'])
     return get_vessel_mat(dmat)
