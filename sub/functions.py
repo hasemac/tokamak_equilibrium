@@ -856,7 +856,18 @@ def equi_post_process(cond, verbose=2):
     if 2 <= verbose:
         print('post-process:')
         pl.d_contour(cond['flux'])
-                
+
+    # 計算結果の確認
+    # 圧力分布の正負の確認
+    a = [e <0 for e in cond["pressure_norm"]]
+    if any(a):
+        cond["cal_result"] = -1
+        cond['error_messages'] += "Negtive pressure found."
+        return cond
+    
+    # 正常終了の場合
+    cond["cal_result"] = +1
+    
     return cond
 
 # 平衡計算(１回)
@@ -1038,14 +1049,11 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
         v = np.abs((err[-1] - err[-2]) / (err[1] - err[0]))
         if v < 10 ** (-5):
             break
+    
+    cond = equi_post_process(cond, verbose=verbose+1)
 
     if -1 == cond["cal_result"]:
         if 1 <= verbose:
             print(cond['error_messages'])
-        return cond
-
-    cond["cal_result"] = 1
-    
-    cond = equi_post_process(cond, verbose=verbose+1)
 
     return cond
