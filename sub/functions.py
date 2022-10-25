@@ -724,7 +724,7 @@ def calc_beta(cond):
     #  normalized beta
     ipma = ip/(10**6) # unit: MA
     betrper = betr*100 # unit: [%], percent
-    betnor = betrper*a*bt/ipma
+    betnor = np.abs(betrper*a*bt/ipma)
     cond["beta_normalized"] = betnor
     
     return cond

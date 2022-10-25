@@ -8,6 +8,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# tokamak equilibrium
+# numpy matrix_tokamak
+*.npy
+# g-file
+g_eqdsk/*.txt
+
 # C extensions
 *.so
 

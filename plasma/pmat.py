@@ -1,12 +1,12 @@
 import os
 import sys
-import sub.sub_func as ssf
 
 sys.path.append("..")
 import copy
 import numpy as np
 import sub.electromagnetics as mag
 import sub.functions as sb
+import sub.sub_func as ssf
 from global_variables import gparam
 
 gl = gparam()
@@ -150,15 +150,22 @@ def shift_plasma_profile(cond):
     
     # トータルipを保持
     ip0 = np.sum(jt)
-    
+    """
     ira = cond["ir_ax"]
     iza = cond["iz_ax"]
     
     ir0 = int((cond["cur_ip"]["r0"]-rmin)/dr)
     iz0 = int((cond["cur_ip"]["z0"]-zmin)/dz)
     
+    print(ir0-ira, iz0-iza)
     njt = ssf.shift_x( jt, ir0-ira, 0.0)
     njt = ssf.shift_y(njt, iz0-iza, 0.0)
+    """
+    ir = int((cond["cur_ip"]["r0"]-cond["r_ax"])/dr)
+    iz = int((cond["cur_ip"]["z0"]-cond["z_ax"])/dz)
+    #print(ir, iz)
+    njt = ssf.shift_x( jt, ir, 0.0)
+    njt = ssf.shift_y(njt, iz, 0.0)    
     
     # domain外のjtはゼロにする。
     njt *= dm
