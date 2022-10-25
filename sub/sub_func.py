@@ -67,24 +67,27 @@ def find_points_of_quad_func(data_array2d, val):
     で与えられる(z, r)の曲線上の点群を返す。
     Args:
         data_array2d (2d_matrix): 最小3 X 3の計9点を与えること
-        val (float): 2時間数を定義する値
+        val (float): 2次関数を定義する値
 
     Returns:
         array of (z, r): _description_
     """
+    # valがデータの範囲外の時は(0, 0)を返す。
+    if not (np.min(data_array2d) < val < np.max(data_array2d)):
+        return [(0, 0)]
     
     nz, nr = data_array2d.shape
     (a, b, c, d, e, f), _ = fitting_quad_func(data_array2d)
     
     r = np.linspace(-(nr // 2), (nr // 2), nr*20) # 1メッシュで20ポイント
-    r1 = (e + b*r)**2 - 4*c*(f - val + d*r + a*r**2)
+    r1 = (e + b*r)**2 - 4*c*(f - val + d*r + a*r**2) # ２次式の判別式
     r2 = r[r1 >= 0] # 解が実数であるrを取得
     r3 = np.sqrt(r1[r1 >= 0]) # その時のルートの値を計算
     
-    pz0 = (-e - b*r2 - r3)/(2*c)
+    pz0 = (-e - b*r2 - r3)/(2*c) # 解の公式の負側
     p0 = [(z, r) for z, r in zip(pz0, r2) if -(nz//2) <= z <= (nz//2)]
     
-    pz1 = (-e - b*r2 + r3)/(2*c)
+    pz1 = (-e - b*r2 + r3)/(2*c) # 解の公式の正側
     p1 = [(z, r) for z, r in zip(pz1, r2) if -(nz//2) <= z <= (nz//2)]
     
     z = np.linspace(-(nz // 2), (nz // 2), nz*20) # 1メッシュで20ポイント
