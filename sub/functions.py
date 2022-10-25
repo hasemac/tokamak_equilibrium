@@ -595,6 +595,22 @@ def get_volume_average(dm_val, dm_domain):
     v = np.sum(2 * np.pi * r * dr * dz * v)  # vol*val
     return v / vol
 
+# ポロイダル断面平均の算出
+def get_cross_section_average(dm_val, dm_domain):
+    g = dm_array(dm_domain)
+    dr, dz = g.dr, g.dz
+
+    m = dm_domain["matrix"].reshape(-1)
+    v = dm_val["matrix"].reshape(-1)
+
+    # domain内のみ考える。
+    v = v[m == 1]
+    
+    csec = np.sum(m[m == 1]) * dr * dz # cross section
+    val = np.sum(dr * dz * v)
+    
+    return val/csec
+
 # 最外殻磁気面形状
 def set_domain_params(cond):
     dmat = cond["domain"]
@@ -688,17 +704,29 @@ def calc_beta(cond):
     p = get_volume_average(cond["pressure"], cond["domain"])
     cond["pressure_vol_average"] = p
 
+    # 磁気軸におけるプラズマ込みのトロイダル磁場
     ir_ax, iz_ax = cond["ir_ax"], cond["iz_ax"]
     r_ax = cond["r_ax"]
-
     # 2 pi R Bt = mu0 I
     polcur = cond["pol_current"]["matrix"][iz_ax, ir_ax]
     bt = u0 * polcur / (2 * pi * r_ax)
+
+    # poloidal beta bp = (8 pi <p> S)/(u0 Ip^2)
+    ip = cond["cur_ip"]["ip"] # ip
+    s = cond["cross_section"] # cross section area
+    a = np.sqrt(s/pi) # minor radius
+    cond["beta_poloidal"] = (8*pi*p*s)/(u0*ip*ip)
 
     # toroidal beta bet_tor = <p>/(bt^2/(2u0))
     betr = p / (bt**2 / 2 / u0)
     cond["beta_toroidal"] = betr
 
+    #  normalized beta
+    ipma = ip/(10**6) # unit: MA
+    betrper = betr*100 # unit: [%], percent
+    betnor = betrper*a*bt/ipma
+    cond["beta_normalized"] = betnor
+    
     return cond
 
 # safety factorの計算
@@ -853,21 +881,25 @@ def equi_post_process(cond, verbose=2):
     cond = calc_beta(cond)  # ベータ値の計算
     cond = calc_safety(cond)  # safety factorの計算
 
-    if 2 <= verbose:
-        print('post-process:')
-        pl.d_contour(cond['flux'])
-
     # 計算結果の確認
     # 圧力分布の正負の確認
     a = [e <0 for e in cond["pressure_norm"]]
     if any(a):
         cond["cal_result"] = -1
-        cond['error_messages'] += "Negtive pressure found."
-        return cond
+        cond['error_messages'] += "Negtive pressure found.\n"
     
     # 正常終了の場合
-    cond["cal_result"] = +1
-    
+    if cond["cal_result"] != -1:
+        cond["cal_result"] = +1
+
+    if -1 == cond["cal_result"]:
+        if 1 <= verbose:
+            print(cond['error_messages'])
+            
+    if 2 <= verbose:
+        print('post-process:')
+        pl.d_contour(cond['flux'])
+        
     return cond
 
 # 平衡計算(１回)
@@ -987,6 +1019,11 @@ def equi_calc_one_step(condition, verbose=2):
     dm_jt2 = pmat.trim_plasma_current(cond)
     cond["jt"] = dm_jt2
 
+    # 磁気軸位置をプラズマ初期位置に一致させる。
+    if ('fix_pos' in cond) and cond['fix_pos']:
+        dm_jt = pmat.shift_plasma_profile(cond)
+        cond["jt"] = dm_jt
+    
     # プラズマ電流によるフラックス
     dm_fp = pmat.cal_plasma_flux(cond["jt"])
     cond["flux_jt"] = dm_fp
@@ -1028,8 +1065,9 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
         
         cond = equi_calc_one_step(cond, verbose=verbose)
 
+        # 少なくとも２回は計算を行う。
         err = cond["error"]
-        if len(err) <= 1:
+        if len(err) <= 2:
             continue
         
         # iterationがデフォルト値でない場合は、設定されたという事。
@@ -1037,11 +1075,11 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
         if iteration < 100:
             continue
 
-        # 前回値よりエラー値が大きくなったら終了
+        # 2回連続して、前回値よりエラー値が大きくなったら終了
         # その時の配位がリミター配位なら収束しなかったとみなす。
-        if err[-1] > err[-2]:
+        if (err[-1] > err[-2]) and (err[-2] > err[-3]):
             if 0 == cond["conf_div"]:
-                cond['error_messages'] += 'Increased error value in limiter configuration.'
+                cond['error_messages'] += 'Error value increased in limiter configuration.\n'
                 cond['cal_result'] = -1
             break
 
@@ -1051,9 +1089,5 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
             break
     
     cond = equi_post_process(cond, verbose=verbose+1)
-
-    if -1 == cond["cal_result"]:
-        if 1 <= verbose:
-            print(cond['error_messages'])
 
     return cond

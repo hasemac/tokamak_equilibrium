@@ -222,10 +222,14 @@ class DB:
 
 
 class DB_equilibrium(DB):
-    def set_table(self, tableName):
+    def set_table(self, tableName, comment=''):
         self.setTable(tableName, "id")
         if not self.is_exist_table():
             self.make_new_table(tableName)
+            
+        with self.dcur.get_cursor() as cur:
+            sql = f"ALTER TABLE {tableName} COMMENT %s"
+            cur.execute(sql, [comment])
 
     # カラムの有無の確認、無ければ作成
     def check_column(self, dat):
@@ -247,7 +251,7 @@ class DB_equilibrium(DB):
             # 既にカラムが存在している場合
             if cn in cnames:
                 continue
-            
+            #print('try to add:'+cn)
             self.addColumn(cn, ct, cc)
 
     def add_data(self, dat):

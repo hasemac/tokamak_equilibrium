@@ -1,5 +1,6 @@
 import os
 import sys
+import sub.sub_func as ssf
 
 sys.path.append("..")
 import copy
@@ -135,4 +136,37 @@ def trim_plasma_current(cond):
 
     res["matrix"] = jt
 
+    return res
+
+def shift_plasma_profile(cond):
+    res = copy.deepcopy(cond["resolution"])
+    
+    dmat = cond['domain']
+    rmin, dr = dmat["rmin"], dmat["dr"]
+    zmin, dz = dmat["zmin"], dmat["dz"]
+    
+    dm = cond["domain"]["matrix"]
+    jt = cond["jt"]["matrix"]
+    
+    # トータルipを保持
+    ip0 = np.sum(jt)
+    
+    ira = cond["ir_ax"]
+    iza = cond["iz_ax"]
+    
+    ir0 = int((cond["cur_ip"]["r0"]-rmin)/dr)
+    iz0 = int((cond["cur_ip"]["z0"]-zmin)/dz)
+    
+    njt = ssf.shift_x( jt, ir0-ira, 0.0)
+    njt = ssf.shift_y(njt, iz0-iza, 0.0)
+    
+    # domain外のjtはゼロにする。
+    njt *= dm
+    ip1 = np.sum(njt)
+    
+    # トータルipになるように調整
+    njt *= ip0/ip1
+    
+    res["matrix"] = njt
+    
     return res

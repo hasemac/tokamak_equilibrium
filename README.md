@@ -17,6 +17,8 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 [Procedure of equilibrium calculation](doc/equilibrium_en.md)
 
+[Definition of parameters](doc/def_of_params.md)
+
 [Introducig QUEST](doc/introducing_quest.md)
 
 [Tracing magnetic field lines](doc/tracing_mag_lines.md)
@@ -40,23 +42,31 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 An example of the calculation conditions can be found in the conditions of'equilibrium.ipynb'.  
 The unit used in the parameter is the MKSA system of units. For example, the parameter of 'ip':-100.0e+3 means -100.0 [kA] of plasma current.  
+If you want the position of the magnetic axis to be the initial position of the plasma, please set the fix_pos flag to be True in the calculation condition.
+
+```python
+    'fix_pos': True,
+```
 
 ```python:
 condition = {
     # TF current
-    'cur_tf':{'tf': 50.0e+3, 'turn': 16},
+    'cur_tf':{'tf': +50.0e+3, 'turn': 16},
     
     # initial plasma profile
-    'cur_ip':{'ip':-100.0e+3, 'r0':0.65, 'z0':0.0, 'radius':0.3},
+    'cur_ip':{'ip':+100.0e+3, 'r0':0.65, 'z0':0.0, 'radius':0.3},
     
     # PF currents
-    'cur_pf':{'hcult16':0.0,'pf17t12':1.0e+3, 'pf26t18':1.0e+3,'pf4_1ab3_cc2':0.0,'pf35_2':0.0, },
-    
+    'cur_pf':{'hcult16':0.0,'pf17t12':-1.0e+3, 'pf26t36':-1.0e+3,'pf4_1ab3_cc2':0.0,'pf35_2':0.0, },
+        
     # number of coefficients
-    'num_dpr':2, # dp/df
-    'num_di2':2, # di2/df
-    
-    # calculate position of flux: 'fl_val'
+    'num_dpr':1, # dp/df
+    'num_di2':1, # di2/df
+
+    # flag to fix magnetic axis at initial plasma profile (r0, z0) 
+    #'fix_pos': True,
+        
+    # calculate flux (r, z): result is set to 'fl_val'.
     'fl_pos':{'flc8':(0.1985, 0.450), 'f_im':(0.1985, 0.0), 'flc17':(0.1985, -0.450),
               'fls1':(1.374, 0.450), 'fls5':(1.374, 0.0), 'fls9':(1.374, -0.481)},
     
@@ -71,12 +81,21 @@ The specifiable PF coil name can be found in '/colis/data_npy/'.
 
 ## How to check the calculation result
 
+### Equilibrium calculation
+
 Equilibrium calculation is executed with the following command.  
 All the calculation results are assigned to the variable cond as a python dictionary type.
 
 ```shell
 cond = sb.calc_equilibrium(condition)
 ```
+
+### Negative pressure
+
+If the calculation did not converge due to negative plasma pressure, please try to increase the vertical fields, or try to move plasma initial position r0 to outward.
+
+
+### Calculated parameters
 
 You can see what was calculated with '.keys()', which is a method to obtains a key list.
 

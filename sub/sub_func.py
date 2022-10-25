@@ -102,3 +102,40 @@ def find_points_of_quad_func(data_array2d, val):
     p0.extend(p2)
     p0.extend(p3)
     return p0
+
+def shift_x(mat, num: int, val: float):
+    """shift mat in x direction
+
+    Args:
+        mat (2d_array): 2d_array of numpy
+        num (int): shift right when num>0, and left when num<0
+        val (float): fill with this value
+
+    Returns:
+        2d_array: shifted matrix
+    """
+    o = np.roll(mat, num, axis=1)
+    if num > 0:
+        o[:, :num] = val
+    elif num < 0:
+        o[:, num:] = val
+        
+    return o
+
+def shift_y(mat, num: int, val: float):
+    """shift mat in y direction
+
+    Args:
+        mat (2d_array): 2d_array of numpy
+        num (int): shift down when num>0, and up when num<0
+        val (float): fill with this value
+
+    Returns:
+        2d_array: shifted matrix
+    """
+    o = np.roll(mat, num, axis=0)
+    if num > 0:
+        o[:num,:] = val
+    elif num < 0:
+        o[num:,:] = val
+    return o
