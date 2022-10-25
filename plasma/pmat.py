@@ -21,6 +21,7 @@ try:
     mat = np.load(dir)
 
 except Exception as e:
+    print('Making plama matrix. Please wait to finish.')
     cz_pos = np.arange(
         gl.cz_min - (gl.cz_max - gl.cz_min), gl.cz_max + gl.cdel_z, gl.cdel_z
     )
@@ -161,8 +162,9 @@ def shift_plasma_profile(cond):
     njt = ssf.shift_x( jt, ir0-ira, 0.0)
     njt = ssf.shift_y(njt, iz0-iza, 0.0)
     """
-    ir = int((cond["cur_ip"]["r0"]-cond["r_ax"])/dr)
-    iz = int((cond["cur_ip"]["z0"]-cond["z_ax"])/dz)
+    # int()は切り捨てなので、round()で四捨五入する。
+    ir = round((cond["cur_ip"]["r0"]-cond["r_ax"])/dr)
+    iz = round((cond["cur_ip"]["z0"]-cond["z_ax"])/dz)
     #print(ir, iz)
     njt = ssf.shift_x( jt, ir, 0.0)
     njt = ssf.shift_y(njt, iz, 0.0)    

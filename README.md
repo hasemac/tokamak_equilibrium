@@ -165,6 +165,27 @@ pl.d_heatmap(cond['domain'])
 
 ![domain](doc/domain.png)
 
+## How to change resolution or calculation area
+
+To change resolution or calculation area, please edit global_variables.py in root directory.  
+Examples are shown in this file.  
+In initial execution, the plasma matrix will be created, so please wait until the calculation is finished.  
+The higher the resolution, the longer the calculation time.  
+
+```python
+    cname = "f0"
+    cr_min, cr_max, cdel_r = 0.0, 1.4, 0.02
+    cz_min, cz_max, cdel_z = -1.1, 1.1, 0.02
+
+    #cname = 'f1'
+    #cr_min, cr_max, cdel_r = 0.0, 1.8, 0.02
+    #cz_min, cz_max, cdel_z = -1.8, 1.8, 0.02
+
+    #cname = "f2"
+    #cr_min, cr_max, cdel_r = 0.0, 1.4, 0.01
+    #cz_min, cz_max, cdel_z = -1.1, 1.1, 0.01
+```
+
 ## How to get g-file
 
 The g file is created by inputting the calculation result of the equilibrium to the function as follows.
