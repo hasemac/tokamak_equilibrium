@@ -342,7 +342,10 @@ def get_di2total_itotal(cond, arr_norm_flux):
     i2 = get_arr(params, f, cond) + i0**2
     
     # ここで正負の判定をする。
-    #print(i2)
+    #print('i2:', i2)
+    # 場合によっては負の数を返すこともあるみたいなので、
+    # その場所はゼロにする。
+    i2[i2 < 0] = 0.0
     
     # I^2なのでIにする。
     i = np.sqrt(i2)
@@ -751,7 +754,7 @@ def calc_safety(cond):
     # 2 pi r bf = u0 I, thus bf = 2.0e-7 * I / r
     func = 2.0 * 10 ** (-7) * p / r
     func *= (g.dr*g.dz) # 面積積分なのでメッシュ面積をかける。
-    
+
     x = np.linspace(0, 1, 11)
     y = [np.sum(func[f <= e]) for e in x]
 
@@ -787,6 +790,7 @@ def equi_pre_process(condition, verbose=2):
     cond['error_messages'] = ""
     cond["error"] = []
     cond["cal_result"] = 0
+    cond["bad_step"] = 0
         
     # 真空容器
     dm_vv = vmat.get_vessel(cond)
@@ -1043,6 +1047,10 @@ def equi_calc_one_step(condition, verbose=2):
     # エラー値を記録
     err = cond["error"]
     cond["iter"] = len(err)
+    # 前回よりエラーが増えていたらbat_stepを+1
+    if (len(err) >= 2) and (err[-1] > err[-2]):
+        cond['bad_step'] += 1
+        
     if 1 <= verbose:
         print(f'{len(err)} loss: {err[-1]:.3e}')
     if 2 <= verbose:
@@ -1077,12 +1085,18 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
 
         # 2回連続して、前回値よりエラー値が大きくなったら終了
         # その時の配位がリミター配位なら収束しなかったとみなす。
-        if (err[-1] > err[-2]) and (err[-2] > err[-3]):
-            if 0 == cond["conf_div"]:
-                cond['error_messages'] += 'Error value increased in limiter configuration.\n'
-                cond['cal_result'] = -1
-            break
+        #if (err[-1] > err[-2]) and (err[-2] > err[-3]):
+        #    if 0 == cond["conf_div"]:
+        #        cond['error_messages'] += 'Error value increased in limiter configuration.\n'
+        #        cond['cal_result'] = -1
+        #    break
 
+        # エラー値が悪くなった回数が規定に達したら、収束せず振動しているとみなす。
+        if cond['bad_step'] > 4:
+            cond["error_messages"] += "Calculation doesn't converge.\n"
+            cond["cal_result"] = -1
+            break
+        
         # 一番最初の変化量に対して、最新の変化量が十分小さければ終了
         v = np.abs((err[-1] - err[-2]) / (err[1] - err[0]))
         if v < 10 ** (-5):
