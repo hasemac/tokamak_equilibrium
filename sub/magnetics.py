@@ -2,7 +2,6 @@ from cmath import inf
 import numpy as np
 from scipy.special import *
 from scipy import constants as sc
-import sub.functions as sfn
 
 # 全ての定数の表示
 #sc.find()
@@ -37,7 +36,15 @@ def flux(r, z, rc, zc, ic):
     return fx
 
 def br(r, z, rc, zc, ic):
-    if 0 == r or 0 == rc:
+    # 小数点10桁以下を無視
+    r = np.round(r, 10)
+    z = np.round(z, 10)
+    rc = np.round(rc, 10)
+    zc = np.round(zc, 10)
+        
+    if r == rc and z == zc:
+        return 0.0
+    if r <= 0.0 or rc <= 0.0:
         return 0.0    
     k= 4*r*rc/((r+rc)**2+(z-zc)**2)
     d = (r-rc)**2+(z-zc)**2
@@ -46,42 +53,24 @@ def br(r, z, rc, zc, ic):
     return br
 
 def bz(r, z, rc, zc, ic):
+    # 小数点10桁以下を無視
+    r = np.round(r, 10)
+    z = np.round(z, 10)
+    rc = np.round(rc, 10)
+    zc = np.round(zc, 10)
+    
+    if r == rc and z == zc:
+        return 0.0
+    # zero divisionを避ける
+    if r <= 0.0:
+        r = 10**(-7)
+    if rc <= 0.0:
+        rc = 10**(-7)
+    
     k= 4*r*rc/((r+rc)**2+(z-zc)**2)
     d = (r-rc)**2+(z-zc)**2
     bz = (u0*ic/4/pi)*k**0.5/(r*rc)**0.5
     bz *= ellipk(k)-(r**2-rc**2+(z-zc)**2)*ellipe(k)/d
     return bz
 
-class Magnetic:
-    
-    def __init__(self, dm_flux, dm_polcur):
-        self.dm_flux = dm_flux
-        self.dm_polcur = dm_polcur
-        self.dm_br = sfn.get_dm_br(dm_flux)
-        self.dm_bz = sfn.get_dm_bz(dm_flux)
-        self.dm_bt = sfn.get_dm_bt(dm_polcur)
-        
-    def get_br(self, r, z):
-        return sfn.linval(r, z, self.dm_br)
-    
-    def get_bz(self, r, z):
-        return sfn.linval(r, z, self.dm_bz)
-    
-    def get_bt(self, r, z):
-        return sfn.linval(r, z, self.dm_bt)
-    
-    def get_mag(self, p3):
-        x, y, z = p3
-        r = np.sqrt(x**2 + y**2)
-        cos = x/r
-        sin = y/r
-        
-        br = self.get_br(r, z)
-        bz = self.get_bz(r, z)
-        bt = self.get_bt(r, z)
-        
-        bx = br*cos - bt*sin
-        by = br*sin + bt*cos
-        
-        return (bx, by, bz)
         

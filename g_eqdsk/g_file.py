@@ -1,5 +1,5 @@
 import numpy as np
-import sub.functions as sfu
+import sub.emat as emat
 
 # formatの説明
 # https://w3.pppl.gov/ntcc/TORAY/G_EQDSK.pdf
@@ -234,7 +234,7 @@ def arg_closest_point(pt, pts):
     return np.argmin(dist)
 
 def get_boundary_points(dmat):
-    g = sfu.dm_array(dmat)
+    g = emat.dm_array(dmat)
     ir = g.ir
     iz = g.iz
     nr = g.nr
@@ -272,7 +272,7 @@ def get_boundary_points(dmat):
 
 def convert_to_g_parm(cond):
     
-    da = sfu.dm_array(cond['domain'])
+    da = emat.dm_array(cond['domain'])
     
     pr = {}
     pr['case'] = 'comment'

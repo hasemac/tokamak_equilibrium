@@ -1,205 +1,14 @@
-import coils.cmat as cmat
 import numpy as np
 import copy
+import coils.cmat as cmat
 import plasma.pmat as pmat
 import vessel.vmat as vmat
+import sub.emat as emat
 from global_variables import gparam
 from scipy.interpolate import interp1d
 from scipy import constants as sc
 import sub.plot as pl
 import sub.sub_func as ssf
-class dm_array:
-    def __init__(self, dmat):
-        self.rmin, self.rmax, self.dr = dmat["rmin"], dmat["rmax"], dmat["dr"]
-        self.zmin, self.zmax, self.dz = dmat["zmin"], dmat["zmax"], dmat["dz"]
-        self.nr = int((self.rmax - self.rmin) / self.dr + 1)
-        self.nz = int((self.zmax - self.zmin) / self.dz + 1)
-        
-        ir = [[e for e in range(self.nr)] for f in range(self.nz)]
-        self.ir = np.array(ir).reshape(-1)
-        
-        iz = [[f for e in range(self.nr)] for f in range(self.nz)]
-        self.iz = np.array(iz).reshape(-1)
-        
-        self.r = self.rmin + self.ir * self.dr
-        self.z = self.zmin + self.iz * self.dz
-
-# 同じ構造のdmatを取得
-def get_dmat_dim(dmat):
-    rmin, rmax, dr = dmat["rmin"], dmat["rmax"], dmat["dr"]
-    zmin, zmax, dz = dmat["zmin"], dmat["zmax"], dmat["dz"]
-    a = {
-        "rmin": rmin,
-        "rmax": rmax,
-        "dr": dr,
-        "zmin": zmin,
-        "zmax": zmax,
-        "dz": dz,
-    }
-    return a
-
-# q[nr, nz], r, z が与えられたときに近傍３点の値から線形補間
-def linval(r, z, d_mat):
-    # 近傍３点の近似式について
-    # 4点の値をld(左下), lu(左上), rd(右下), ru(右上)とする。
-    # z = ax+by+cとしたとき、
-    # それぞれの点で
-    # ld = c
-    # rd = a+c
-    # lu = b+c
-    # ru = a+b+c
-    #
-    # 左下に近いときはruの値を使わないでa,b,cを求めていく。
-    # z = (rd-ld)x +(ru-ld)y +ld
-    # 右下: luの値を使わない
-    # z = (rd-ld)x +(ru-rd)y +ld
-    # 左上： rdの値を使わない
-    # z = (ru-lu)x +(lu-ld)y +ld
-    # 右上: ldの値を使わない
-    # z = (ru-lu)x +(ru-rd)y +(lu+rd-ru)
-    mat = d_mat["matrix"]
-    rmin = d_mat["rmin"]
-    zmin = d_mat["zmin"]
-    dr = d_mat["dr"]
-    dz = d_mat["dz"]
-
-    nz, nr = mat.shape
-
-    fr = (r - rmin) / dr  # [0,1)
-    ir = int(np.floor(fr))
-    fr -= ir
-
-    fz = (z - zmin) / dz  # [0, 1)
-    iz = int(np.floor(fz))
-    fz -= iz
-
-    ir1 = ir + 1
-    iz1 = iz + 1
-
-    # 境界からはみ出る場合は一つ戻す。
-    if nr == ir + 1:
-        ir1 = ir
-    if nz == iz + 1:
-        iz1 = iz
-
-    # print(ir, ir1, iz, iz1)
-
-    ld = mat[iz, ir]
-    rd = mat[iz, ir1]
-    lu = mat[iz1, ir]
-    ru = mat[iz1, ir1]
-
-    v = 0
-    if fr <= 0.5 and fz <= 0.5:  # 左下
-        v = (rd - ld) * fr + (ru - ld) * fz + ld
-
-    elif fr <= 1.0 and fz <= 0.5:  # 右下
-        v = (rd - ld) * fr + (ru - rd) * fz + ld
-
-    elif fr <= 0.5 and fz <= 1.0:  # 左上
-        v = (ru - lu) * fr + (lu - ld) * fz + ld
-
-    else:  # 右上
-        v = (ru - lu) * fr + (ru - rd) * fz + (lu + rd - ru)
-
-    return v
-
-# 再サンプリング
-def resampling(d_mat0, d_mat1):
-    # d_mat0: 作成したい行列
-    # d_mat1: もとの行列
-    # 作成したい行列の情報を取得
-    rmin = d_mat0["rmin"]
-    zmin = d_mat0["zmin"]
-    rmax = d_mat0["rmax"]
-    zmax = d_mat0["zmax"]
-    dr = d_mat0["dr"]
-    dz = d_mat0["dz"]
-    nr = int((rmax - rmin) / dr)
-    nz = int((zmax - zmin) / dz)
-
-    # nz, nr = d_mat1['matrix'].shape
-
-    mat = [
-        [linval(rmin + i * dr, zmin + j * dz, d_mat1) for i in range(nr + 1)]
-        for j in range(nz + 1)
-    ]
-    d_mat0["matrix"] = np.array(mat)
-    return d_mat0
-
-# 加算
-def dm_add(dmat0, dmat1):
-    mat = dmat0["matrix"] + dmat1["matrix"]
-    dmat2 = get_dmat_dim(dmat0)
-    dmat2["matrix"] = mat
-    return dmat2
-    
-# R方向の微分
-def dm_diff_r(dmat):
-    v = dmat['matrix']
-    d = np.diff(v, axis = 1) # r方向に差分を取る。
-    c = d[:,0]-(d[:, 1]-d[:,0]) # 勾配を維持した値で付加するカラム作成
-    c = c.reshape(-1, 1) # ２次元に変換
-    d = np.hstack((c, d))/dmat['dr']
-    
-    return d
-
-# z方向の微分
-def dm_diff_z(dmat):
-    # iz = 0はzminの場所
-    v = dmat['matrix']
-    d = np.diff(v, axis = 0) # z方向に差分を取る
-    c = d[0,:]-(d[1,:]-d[0,:]) # 勾配を維持した値で付加するカラム作成
-    c = c.reshape(1, -1)
-    d = np.vstack((c, d))/dmat['dz']
-    
-    return d
-
-def dm_2pir(dmat):
-    # 1/(2piR)のマトリックスを返す。
-    g = dm_array(dmat)
-    r = g.r
-    r = r.reshape((g.nz, -1))
-    
-    # rmin=0のとき発散する。
-    # これを避けるために、その隣の値を使用する。
-    if 0 == g.rmin:
-        r[:,0] = r[:,1]
-    
-    m = 1/(2*np.pi*r)
-
-    return m
-
-# Brの計算
-def get_dm_br(dm_flux):
-    r1 = dm_2pir(dm_flux)
-    r2 = dm_diff_z(dm_flux)
-    r3 = -r1*r2
-    dm = get_dmat_dim(dm_flux)
-    dm['matrix'] = r3
-    return dm
-
-# Bzの計算
-def get_dm_bz(dm_flux):
-    r1 = dm_2pir(dm_flux)
-    r2 = dm_diff_r(dm_flux)
-    r3 = r1*r2
-    dm = get_dmat_dim(dm_flux)
-    dm['matrix'] = r3
-    return dm
-
-# Btの計算
-def get_dm_bt(dm_pol_cur):
-    """プラズマを含むポロイダル電流からBtを計算
-
-    Args:
-        dm_pol_cur (dmat): ポロイダル電流 
-    """
-    r1 = dm_2pir(dm_pol_cur)
-    r2 = (4*np.pi*10**(-7))*r1*dm_pol_cur['matrix']
-    dm= get_dmat_dim(dm_pol_cur)
-    dm['matrix'] = r2
-    return dm
 
 # 正規化フラックスの計算
 def get_normalized_flux(cond):
@@ -209,7 +18,7 @@ def get_normalized_flux(cond):
     # dm_domain: domain
     # return: dmat, normalized flux
     # 0: 磁気軸、1: 最外殻磁気面、0: 磁気面外
-    res = get_dmat_dim(dm_domain)
+    res = emat.get_dmat_dim(dm_domain)
     faxis, fsurf = cond["f_axis"], cond["f_surf"]
     d = dm_domain["matrix"]
     f = dm_flux["matrix"]
@@ -285,7 +94,7 @@ def get_dpress_press(cond):
     dm_domain = cond["domain"]
     params = cond["param_dp"]    
     
-    g = dm_array(dm_domain)
+    g = emat.dm_array(dm_domain)
     nr, nz = g.nr, g.nz
 
     f = dm_normalizedflux["matrix"].reshape(-1)
@@ -311,8 +120,8 @@ def get_dpress_press(cond):
         m_pr[j, i] = v
 
     # 圧力に関してはx=1でp=0になるようにしてある。
-    dm_dp = get_dmat_dim(dm_domain)
-    dm_pr = get_dmat_dim(dm_domain)
+    dm_dp = emat.get_dmat_dim(dm_domain)
+    dm_pr = emat.get_dmat_dim(dm_domain)
         
     dm_dp["matrix"] = m_dp
     dm_pr["matrix"] = m_pr
@@ -391,7 +200,7 @@ def get_di2_i(cond):
     dm_normalizedflux = cond["flux_normalized"]
     dm_domain = cond["domain"]
         
-    g = dm_array(dm_domain)
+    g = emat.dm_array(dm_domain)
     nr, nz = g.nr, g.nz
 
     f = dm_normalizedflux["matrix"].reshape(-1)
@@ -416,8 +225,8 @@ def get_di2_i(cond):
     # これはTFコイル電流に依存する。
     m_i[m_i == 0] = cond["cur_tf"]["tf"]*cond["cur_tf"]["turn"]
     
-    dm_di2 = get_dmat_dim(dm_domain)
-    dm_i = get_dmat_dim(dm_domain)
+    dm_di2 = emat.get_dmat_dim(dm_domain)
+    dm_i = emat.get_dmat_dim(dm_domain)
      
     dm_di2["matrix"] = m_di2
     dm_i["matrix"] = m_i
@@ -426,7 +235,7 @@ def get_di2_i(cond):
 
 # flux値の極小位置の探索
 def search_local_min(dm_flx, dm_vv):
-    g = dm_array(dm_flx)
+    g = emat.dm_array(dm_flx)
     nr, nz = g.nr, g.nz
 
     fl, vv = dm_flx["matrix"], dm_vv["matrix"]
@@ -486,13 +295,13 @@ def search_dom(cond):
     # dm_vv: 真空容器のdmat
     dm_flx = cond["flux"]
     dm_vv = cond["vessel"]
-    g = dm_array(dm_flx)
+    g = emat.dm_array(dm_flx)
     nz, nr = g.nz, g.nr
     dz, dr = g.dz, g.dr
     zmin, rmin = g.zmin, g.rmin
 
     # 返り値の作成
-    res = get_dmat_dim(dm_flx)
+    res = emat.get_dmat_dim(dm_flx)
 
     # 領域の初期化
     dm = np.zeros((nz, nr))
@@ -584,7 +393,7 @@ def search_dom(cond):
 # 体積平均の算出
 def get_volume_average(dm_val, dm_domain):
     # dm_val: 例えばプラズマ圧力など
-    g = dm_array(dm_domain)
+    g = emat.dm_array(dm_domain)
     dr, dz = g.dr, g.dz
 
     m = dm_domain["matrix"].reshape(-1)
@@ -600,7 +409,7 @@ def get_volume_average(dm_val, dm_domain):
 
 # ポロイダル断面平均の算出
 def get_cross_section_average(dm_val, dm_domain):
-    g = dm_array(dm_domain)
+    g = emat.dm_array(dm_domain)
     dr, dz = g.dr, g.dz
 
     m = dm_domain["matrix"].reshape(-1)
@@ -616,12 +425,12 @@ def get_cross_section_average(dm_val, dm_domain):
 
 # 最外殻磁気面形状
 def set_domain_params(cond):
-    dmat = cond["domain"]
-    g = dm_array(dmat)
+    d_mat = cond["domain"]
+    g = emat.dm_array(d_mat)
     rmin, dr = g.rmin, g.dr
     zmin, dz = g.zmin, g.dz
 
-    m = dmat["matrix"].reshape(-1)
+    m = d_mat["matrix"].reshape(-1)
     ir = g.ir[m == 1]
     iz = g.iz[m == 1]
     r = g.r[m == 1]
@@ -736,7 +545,7 @@ def calc_beta(cond):
 def calc_safety(cond):
     # calc toroidal flux
     # ft = Integrate_area[u0*I/(2*pi*r)]
-    g = dm_array(cond["domain"])
+    g = emat.dm_array(cond["domain"])
     d = cond["domain"]["matrix"].reshape(-1)
     f = cond["flux_normalized"]["matrix"].reshape(-1)
     p = cond["pol_current"]["matrix"].reshape(-1)
@@ -796,9 +605,9 @@ def equi_pre_process(condition, verbose=2):
     dm_vv = vmat.get_vessel(cond)
     cond["vessel"] = dm_vv
 
-    g = dm_array(dm_vv)
+    g = emat.dm_array(dm_vv)
     # ポロイダル電流
-    dm = get_dmat_dim(dm_vv)
+    dm = emat.get_dmat_dim(dm_vv)
     dm['matrix'] = np.ones((g.nz, g.nr))*cond["cur_tf"]["tf"]*cond["cur_tf"]["turn"]
     cond['pol_current'] = dm
     
@@ -815,7 +624,7 @@ def equi_pre_process(condition, verbose=2):
     cond["flux_jt"] = dm_fp
 
     # トータルのフラックス
-    dm_flux = dm_add(dm_fp, dm_fc)
+    dm_flux = emat.dm_add(dm_fp, dm_fc)
     cond["flux"] = dm_flux
 
     # 最外殻磁気面
@@ -825,7 +634,7 @@ def equi_pre_process(condition, verbose=2):
     # 領域の中心位置におけるコイルフラックスの値取得
     r = (cond["flux_coil"]["rmin"] + cond["flux_coil"]["rmax"]) / 2.0
     z = (cond["flux_coil"]["zmin"] + cond["flux_coil"]["zmax"]) / 2.0
-    f = linval(r, z, cond["flux_coil"])
+    f = emat.linval(r, z, cond["flux_coil"])
     ip = cond["cur_ip"]["ip"]
     # ipとfの積が正の場合は平衡が成り立たないので除外する。
     if 0 < f * ip:
@@ -845,7 +654,7 @@ def equi_pre_process(condition, verbose=2):
 # 平衡計算の後処理
 def equi_post_process(cond, verbose=2):
     
-    g = dm_array(cond['domain'])
+    g = emat.dm_array(cond['domain'])
     
     # 形状パラメータの計算（elongationなど）
     set_domain_params(cond)
@@ -860,7 +669,7 @@ def equi_post_process(cond, verbose=2):
         cond['fl_val'] = {}
         for k in pos.keys():
             r, z = pos[k]
-            cond['fl_val'][k] = linval(r, z, cond['flux'])
+            cond['fl_val'][k] = emat.linval(r, z, cond['flux'])
 
     # 圧力微分dp/dfと圧力pの計算
     dm_dp, dm_pr = get_dpress_press(cond)
@@ -922,7 +731,7 @@ def equi_fit_and_evaluate_error(condition):
     #
     # out: dmat_jt
 
-    g = dm_array(dm_domain)
+    g = emat.dm_array(dm_domain)
 
     # 1メッシュの面積を計算
     ds = g.dr*g.dz
@@ -984,7 +793,7 @@ def equi_fit_and_evaluate_error(condition):
     j_new = np.zeros((g.nz, g.nr))
     for i, j, v in zip(ir, iz, j0):
         j_new[j, i] = v
-    res = get_dmat_dim(dm_jt)
+    res = emat.get_dmat_dim(dm_jt)
     res["matrix"] = j_new
     cond['jt'] = res
     
@@ -993,7 +802,7 @@ def equi_fit_and_evaluate_error(condition):
     j_pres = np.zeros((g.nz, g.nr))
     for i, j, v in zip(ir, iz, j0_p):
         j_pres[j, i] = v
-    res = get_dmat_dim(dm_jt)
+    res = emat.get_dmat_dim(dm_jt)
     res['matrix'] = j_pres * jtotal / jsum
     cond['jt_dp'] = res
 
@@ -1002,7 +811,7 @@ def equi_fit_and_evaluate_error(condition):
     j_di2 = np.zeros((g.nz, g.nr))
     for i, j, v in zip(ir, iz, j0_d):
         j_di2[j, i] = v
-    res = get_dmat_dim(dm_jt)
+    res = emat.get_dmat_dim(dm_jt)
     res['matrix'] = j_di2 * jtotal / jsum
     cond['jt_di2'] = res
     
@@ -1033,7 +842,7 @@ def equi_calc_one_step(condition, verbose=2):
     cond["flux_jt"] = dm_fp
 
     # トータルのフラックス
-    dm_flux = dm_add(cond["flux_jt"], cond["flux_coil"])
+    dm_flux = emat.dm_add(cond["flux_jt"], cond["flux_coil"])
     cond["flux"] = dm_flux
 
     # 最外殻磁気面の探索

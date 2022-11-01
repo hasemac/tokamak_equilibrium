@@ -4,8 +4,8 @@ import sys
 sys.path.append("..")
 import copy
 import numpy as np
-import sub.electromagnetics as mag
-import sub.functions as sb
+import sub.magnetics as mag
+import sub.emat as emat
 import sub.sub_func as ssf
 from global_variables import gparam
 
@@ -60,10 +60,10 @@ def cal_plasma_flux(dmat):
     """
     # 粗いメッシュにする。
     dm = gl.get_dmat_coarse()
-    dm = sb.resampling(dm, dmat)
+    dm = emat.resampling(dm, dmat)
     dm["matrix"] = cflux(dm["matrix"])
-    r = sb.get_dmat_dim(dmat)
-    r = sb.resampling(r, dm)
+    r = emat.get_dmat_dim(dmat)
+    r = emat.resampling(r, dm)
     
     r['matrix'] *= r['dr']*r['dz'] # jtを電流密度とする場合
     
