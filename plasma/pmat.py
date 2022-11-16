@@ -146,7 +146,7 @@ def shift_plasma_profile(cond):
     rmin, dr = dmat["rmin"], dmat["dr"]
     zmin, dz = dmat["zmin"], dmat["dz"]
     
-    dm = cond["domain"]["matrix"]
+    vs = cond["vessel"]["matrix"]
     jt = cond["jt"]["matrix"]
     
     # トータルipを保持
@@ -166,14 +166,15 @@ def shift_plasma_profile(cond):
     ir = round((cond["cur_ip"]["r0"]-cond["r_ax"])/dr)
     iz = round((cond["cur_ip"]["z0"]-cond["z_ax"])/dz)
     #print(ir, iz)
+
     njt = ssf.shift_x( jt, ir, 0.0)
     njt = ssf.shift_y(njt, iz, 0.0)    
     
-    # domain外のjtはゼロにする。
-    njt *= dm
-    ip1 = np.sum(njt)
+    # vessel外のjtはゼロにする。
+    njt *= vs
     
     # トータルipになるように調整
+    ip1 = np.sum(njt)
     njt *= ip0/ip1
     
     res["matrix"] = njt
