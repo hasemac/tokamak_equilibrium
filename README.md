@@ -8,6 +8,7 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 - Supports output of calculation results to relational database.
 - Supports output to g eqdsk format.
+- [Tracing guiding center orbit](doc/tracing_guiding_center_orbit.md)
 
 [g eqdsk format](https://w3.pppl.gov/ntcc/TORAY/G_EQDSK.pdf): Format of equilibrium information used by efit.
 
@@ -23,6 +24,8 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 [Tracing magnetic field lines](doc/tracing_mag_lines.md)
 
+[Tracing guiding center orbit](doc/tracing_guiding_center_orbit.md)
+
 ## Getting started
 
 "Plotly" is used to draw the graph. Therefore, **Node.js** must be installed in order to display the graph.
@@ -37,6 +40,12 @@ This repository provides a tokamak equilibrium calculation code, especially cust
    - Be aware of whether or not you use a virtual environment.
    - When using it, execute the above command under a virtual environment.
 3. Execute 'equalibrium.ipynb' in the root directory in order from the top.
+
+### For othe functions
+
+If you would like to use other functions such as the tracing of guiding center, you need to make othe matrix for the functions.  
+Please execute "1_make_fundamental_matrix.py" in root directory.  
+Although this run take a long time, this only needs to be done once.  
 
 ## How to set calculation conditions
 

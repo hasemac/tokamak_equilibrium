@@ -78,13 +78,13 @@ class Magnetic:
         self.dm_bt = get_dm_bt(dm_polcur)
         
     def get_br(self, r, z):
-        return emat.linval(r, z, self.dm_br)
+        return emat.linval2(r, z, self.dm_br)
     
     def get_bz(self, r, z):
-        return emat.linval(r, z, self.dm_bz)
+        return emat.linval2(r, z, self.dm_bz)
     
     def get_bt(self, r, z):
-        return emat.linval(r, z, self.dm_bt)
+        return emat.linval2(r, z, self.dm_bt)
     
     def get_mag(self, p3):
         x, y, z = p3

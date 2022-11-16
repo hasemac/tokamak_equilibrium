@@ -28,15 +28,15 @@ class Magnetic:
             self.bt = self.get_tor_bt(cond)
 
     def get_br(self, r, z):
-        return emat.linval(r, z, self.br)
+        return emat.linval2(r, z, self.br)
     
     def get_bz(self, r, z):
-        return emat.linval(r, z, self.bz)
+        return emat.linval2(r, z, self.bz)
     
     def get_bt(self, r, z):
-        return emat.linval(r, z, self.bt)
+        return emat.linval2(r, z, self.bt)
     
-    # 磁場の計算
+    # 磁場ベクトルの取得
     def get_mag(self, p3):
         x, y, z = p3
         r = np.sqrt(x**2 + y**2)
@@ -50,8 +50,44 @@ class Magnetic:
         bx = br*cos - bt*sin
         by = br*sin + bt*cos
         
-        return (bx, by, bz)
-                        
+        return np.array((bx, by, bz))
+    
+    # 磁場強度(スカラー)の取得
+    def get_abs_mag(self, p3):
+        """get_abs_mag
+
+        Args:
+            p3 (tuple): position (x, y, z) to calculate
+
+        Returns:
+            float: abs value of B
+        """
+        b = self.get_mag(p3)
+        return np.sqrt(np.sum(b**2))
+    
+    # 磁場方向の単位ベクトルの取得
+    def get_unit_mag(self, p3):
+        """get unit vector of B
+
+        Args:
+            p3 (tuple): position (x, y, z) to calculate
+
+        Returns:
+            np.array: unit vector (bx0, by0, bz0)
+        """
+        absb = self.get_abs_mag(p3)
+        b = self.get_mag(p3)
+        return b/absb
+    
+    def get_grad_mag(self, p3):
+        w = 1.0e-7
+        p = np.array(p3) # tupleどうしの加算は要素が増える。どっちかはnumpyに変換する必要。
+        abmag = self.get_abs_mag
+        dbx = (abmag(p+(w/2, 0, 0)) - abmag(p-(w/2, 0, 0)))/w
+        dby = (abmag(p+(0, w/2, 0)) - abmag(p-(0, w/2, 0)))/w
+        dbz = (abmag(p+(0, 0, w/2)) - abmag(p-(0, 0, w/2)))/w
+        return np.array((dbx, dby, dbz))
+        
     def dm_2pir(self, d_mat):
         # 1/(2piR)のマトリックスを返す。
         g = emat.dm_array(d_mat)

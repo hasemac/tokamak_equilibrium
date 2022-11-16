@@ -238,3 +238,15 @@ def plot_val(cond, name):
     df = pd.DataFrame(data=np.array([x, y]).T, columns=['norm flux', name])
     fig2 = px.line(df, x='norm flux', y=name, width=600, height=400)
     fig2.show()
+
+def plot_gc(cond, name, time=True):
+    if time:
+        dat = np.array([cond['time'], cond[name]]).T
+        df = pd.DataFrame(dat, columns=['time', name])
+        fig = px.line(df, x='time', y=name, width=600, height=400)
+    else:
+        d0 = cond[name]
+        dat = np.array([np.arange(0, len(d0)), d0]).T
+        df = pd.DataFrame(dat, columns=['num', name])
+        fig = px.line(df, x='num', y=name, width=600, height=400)
+    fig.show()

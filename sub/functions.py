@@ -634,7 +634,7 @@ def equi_pre_process(condition, verbose=2):
     # 領域の中心位置におけるコイルフラックスの値取得
     r = (cond["flux_coil"]["rmin"] + cond["flux_coil"]["rmax"]) / 2.0
     z = (cond["flux_coil"]["zmin"] + cond["flux_coil"]["zmax"]) / 2.0
-    f = emat.linval(r, z, cond["flux_coil"])
+    f = emat.linval2(r, z, cond["flux_coil"])
     ip = cond["cur_ip"]["ip"]
     # ipとfの積が正の場合は平衡が成り立たないので除外する。
     if 0 < f * ip:
@@ -669,7 +669,7 @@ def equi_post_process(cond, verbose=2):
         cond['fl_val'] = {}
         for k in pos.keys():
             r, z = pos[k]
-            cond['fl_val'][k] = emat.linval(r, z, cond['flux'])
+            cond['fl_val'][k] = emat.linval2(r, z, cond['flux'])
 
     # 圧力微分dp/dfと圧力pの計算
     dm_dp, dm_pr = get_dpress_press(cond)

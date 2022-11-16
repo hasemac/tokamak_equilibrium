@@ -3,6 +3,8 @@ import numpy as np
 from scipy.special import *
 from scipy import constants as sc
 
+#https://docs.scipy.org/doc/scipy/reference/constants.html#module-scipy.constants
+
 # 全ての定数の表示
 #sc.find()
 # 特定の値の表示 (value, unit, uncertainty)
@@ -11,6 +13,8 @@ from scipy import constants as sc
 #u0 = 4*np.pi*1.0e-7 # [N/A**2]: 真空の透磁率
 #e0 = 8.8541878128e-12 # : 真空の誘電率
 #c0 = 1/(u0*e0)**(0.5) # [m/sec]: 光速
+# 素電荷e: sc.e
+# 電子の質量me: sc.m_e
 
 u0 = sc.mu_0 # 真空の透磁率
 e0 = sc.epsilon_0 # 真空の誘電率

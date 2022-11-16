@@ -49,6 +49,9 @@ def linval(r, z, d_mat):
     # z = (ru-lu)x +(lu-ld)y +ld
     # 右上: ldの値を使わない
     # z = (ru-lu)x +(ru-rd)y +(lu+rd-ru)
+    # 
+    # ただし、この方法は領域を移動するときに、ごくわずかに不連続になる。
+    #
     mat = d_mat["matrix"]
     rmin = d_mat["rmin"]
     zmin = d_mat["zmin"]
@@ -82,19 +85,109 @@ def linval(r, z, d_mat):
     ru = mat[iz1, ir1]
 
     v = 0
+    #print(fr, fz)
     if fr <= 0.5 and fz <= 0.5:  # 左下
+        #print('ld')
         v = (rd - ld) * fr + (ru - ld) * fz + ld
 
     elif fr <= 1.0 and fz <= 0.5:  # 右下
+        #print('rd')
         v = (rd - ld) * fr + (ru - rd) * fz + ld
 
     elif fr <= 0.5 and fz <= 1.0:  # 左上
+        #print('lu')
         v = (ru - lu) * fr + (lu - ld) * fz + ld
 
     else:  # 右上
+        #print('ru')
         v = (ru - lu) * fr + (ru - rd) * fz + (lu + rd - ru)
 
     return v
+
+# q[nr, nz], r, z が与えられたときに、周囲４点の中心点と他の２点の計３点で線形補間
+def linval2(r, z, d_mat):
+    # これはlinvalと異なり、不連続の値を出さない。
+    mat = d_mat["matrix"]
+    rmin = d_mat["rmin"]
+    zmin = d_mat["zmin"]
+    dr = d_mat["dr"]
+    dz = d_mat["dz"]
+
+    nz, nr = mat.shape
+
+    fr = (r - rmin) / dr  # [0,1)
+    ir = int(np.floor(fr))
+    fr -= ir
+
+    fz = (z - zmin) / dz  # [0, 1)
+    iz = int(np.floor(fz))
+    fz -= iz
+
+    ir1 = ir + 1
+    iz1 = iz + 1
+
+    # 境界からはみ出る場合は一つ戻す。
+    if nr == ir + 1:
+        ir1 = ir
+    if nz == iz + 1:
+        iz1 = iz
+    
+    ld = mat[iz, ir]
+    rd = mat[iz, ir1]
+    lu = mat[iz1, ir]
+    ru = mat[iz1, ir1]
+    fr = fr*2 -1 # -1 <= fr < 1
+    fz = fz*2 -1 # -1 <= fz < 1
+    
+    c = (ld+lu+rd+ru)/4.0 # ４点の平均
+    # 原点でゼロになるようにオフセットを差っ引く
+    ld -= c
+    rd -= c
+    lu -= c
+    ru -= c
+    
+    # z = ax + by, c:周囲４点の平均, x = -1, 1, y = -1, 1
+    # 下の領域の場合
+    # ld = -a -b
+    # rd =  a -b より
+    # b = -(ld+rd)/2
+    # a = (rd-ld)/2
+    # 
+    # その他の式
+    # ru =  a +b
+    # lu = -a -b 
+    #
+    # 従って右の領域の場合
+    # a = (rd+ru)/2, b = (ru-rd)/2
+    # 
+    # 上の場合
+    # a = (ru-lu)/2, b = (ru+lu)/2
+    # 
+    # 左の場合
+    # a = -(lu+ld)/2, b = (lu-ld)/2
+    a, b = 0, 0
+    if fz <= fr and fz <= -fr: # 下の領域
+        a = (rd-ld)/2.0
+        b = -(ld+rd)/2.0
+        
+    elif fz <= fr and fz >= -fr: # 右の領域
+        a = (rd+ru)/2.0
+        b = (ru-rd)/2.0
+        
+    elif fz >= fr and fz >= -fr: # 上の領域
+        a = (ru-lu)/2.0
+        b = (ru+lu)/2.0
+        
+    elif fz >= fr and fz <= -fr: # 左の領域
+        a = -(lu+ld)/2.0
+        b = (lu-ld)/2.0
+    else:
+        print('error linval2')
+    
+
+    # 最後に平均を足すのを忘れないように
+    return a*fr + b*fz + c
+        
 
 # 再サンプリング
 def resampling(d_mat0, d_mat1):
@@ -113,7 +206,7 @@ def resampling(d_mat0, d_mat1):
     # nz, nr = d_mat1['matrix'].shape
 
     mat = [
-        [linval(rmin + i * dr, zmin + j * dz, d_mat1) for i in range(nr + 1)]
+        [linval2(rmin + i * dr, zmin + j * dz, d_mat1) for i in range(nr + 1)]
         for j in range(nz + 1)
     ]
     d_mat0["matrix"] = np.array(mat)
