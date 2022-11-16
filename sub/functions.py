@@ -778,6 +778,11 @@ def equi_fit_and_evaluate_error(condition):
     # dd = np.min(np.abs(m0))*10**(-7)
     # m0 += np.identity(npr+ncu)*dd
 
+    # もしsingular matrixになったらそこで計算終了
+    if np.linalg.det(m0) == 0:
+        cond['cal_result'] = -1
+        cond['error_messages'] += 'Singular matrix occurs.\n'
+        return cond
     params = np.dot(np.linalg.inv(m0), m1)
 
     # エラー値の算出
@@ -826,7 +831,11 @@ def equi_calc_one_step(condition, verbose=2):
 
     # プラズマ平衡
     cond = equi_fit_and_evaluate_error(cond)
-
+    if -1 == cond['cal_result']:
+        if 1 <= verbose:
+            print(cond['error_messages'])
+        return cond
+    
     # プラズマ電流のトリミング
     # ip>0なら全ての領域でjt>0となるようにする。
     dm_jt2 = pmat.trim_plasma_current(cond)
@@ -849,7 +858,7 @@ def equi_calc_one_step(condition, verbose=2):
     dm_dm = search_domain(cond)
     cond["domain"] = dm_dm
     if -1 == cond['cal_result']:
-        if 1 == verbose:
+        if 1 <= verbose:
             print(cond['error_messages'])
         return cond
 
@@ -881,7 +890,9 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
     for i in range(iteration):
         
         cond = equi_calc_one_step(cond, verbose=verbose)
-
+        if cond["cal_result"] == -1:
+            return cond
+    
         # 少なくとも２回は計算を行う。
         err = cond["error"]
         if len(err) <= 2:
