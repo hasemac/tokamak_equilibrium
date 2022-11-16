@@ -10,8 +10,12 @@ Calculation conditions are defined as below.
 condition = {
     # mass of particle [kg]
     'mass': sc.m_e, # for electron
+    #'mass': sc.m_p, # for hydrogen
+    
     # amount of charge [coulomb]
     'charge': -sc.e, # for electron
+    #'charge': sc.e,  # for hydrogen
+    
     # total energy in [eV]
     'energy_ev':10.0e+3,
     # initial pitch angle, 0-180 degree
