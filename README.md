@@ -46,6 +46,7 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 If you would like to use other functions such as the tracing of guiding center, you need to make other matrix for the functions.  
 Please execute "1_make_fundamental_matrix.py" in root directory.  
 Although this run take a long time, this only needs to be done once.  
+It may take over 1 hour (over 30 min. for Br and over 30 min. for Bz).  
 
 ## How to set calculation conditions
 
