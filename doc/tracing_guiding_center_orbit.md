@@ -71,35 +71,6 @@ For electron, $q=-e$.
 \boldsymbol{v}_{d} = -\frac{1}{e}(2 E_{//}+E_{\perp})\frac{\boldsymbol{B} \times \nabla B}{B^{3}}
 ```
 
-### Drift in simple toroidal magnetic fields
-
-Magnetic fields of toroidal field coil.
-
-```math
-\begin{align*}
-&B_{r}=0 \\ 
-&B_{\theta}=\frac{\mu_{0} I}{2 \pi r}\\
-&B_{z}=0 
-\end{align*}
-```
-
-Thus,
-
-```math
-\begin{align*}
-\nabla B &= 
-(\frac{\partial B}{\partial r}, \frac{1}{r}\frac{\partial B}{\partial \theta}, \frac{\partial B}{\partial z})\\
-&=(-\frac{\mu_{0} I}{2 \pi r^{2}}, 0, 0)
-\end{align*}
-```
-
-Thus, 
-
-```math
-\frac{\boldsymbol{B} \times \nabla B}{B^{3}}
-= (0, 0, \frac{2 \pi r}{\mu_{0} I})
-```
-
 ## Equations to solve
 
 ```math
@@ -143,3 +114,32 @@ Other equations,
   $f_{c} = \frac{q B}{2 \pi m_{e}}$
 - Larmor radius  
   $r_{L}=v_{\perp}/2 \pi f_{c}$
+
+### Drift in simple toroidal magnetic fields
+
+Magnetic fields of toroidal field coil.
+
+```math
+\begin{align*}
+&B_{r}=0 \\ 
+&B_{\theta}=\frac{\mu_{0} I}{2 \pi r}\\
+&B_{z}=0 
+\end{align*}
+```
+
+Thus,
+
+```math
+\begin{align*}
+\nabla B &= 
+(\frac{\partial B}{\partial r}, \frac{1}{r}\frac{\partial B}{\partial \theta}, \frac{\partial B}{\partial z})\\
+&=(-\frac{\mu_{0} I}{2 \pi r^{2}}, 0, 0)
+\end{align*}
+```
+
+Thus, 
+
+```math
+\frac{\boldsymbol{B} \times \nabla B}{B^{3}}
+= (0, 0, \frac{2 \pi r}{\mu_{0} I})
+```

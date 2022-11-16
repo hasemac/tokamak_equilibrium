@@ -43,7 +43,7 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 ### For othe functions
 
-If you would like to use other functions such as the tracing of guiding center, you need to make othe matrix for the functions.  
+If you would like to use other functions such as the tracing of guiding center, you need to make other matrix for the functions.  
 Please execute "1_make_fundamental_matrix.py" in root directory.  
 Although this run take a long time, this only needs to be done once.  
 

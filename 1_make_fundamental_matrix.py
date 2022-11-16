@@ -108,6 +108,10 @@ def combine(dir):
         np.save(wf, mat)
         
 if __name__ == "__main__":
+    if not os.path.exists(dir_br):
+        os.makedirs(dir_br)
+    if not os.path.exists(dir_bz):
+        os.makedirs(dir_bz)
     
     make_fl()
     combine(dir_fl)
