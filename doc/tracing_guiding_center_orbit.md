@@ -25,13 +25,13 @@ condition = {
 }
 ```
 
-## Calculation precedure
+## Calculation procedure
 
 1. get $\boldsymbol{B}$
 2. calculate $E_{\perp}$ and $E_{//}$ from $\mu$ and $E$
-3. calculate $v_{\perp}$ and $v_{//}$ from $E_{\perp}$ and $E_{//}$
+3. (calculate $v_{\perp}$ and $v_{//}$ from $E_{\perp}$ and $E_{//}$)
 4. (calculate $\alpha$ from $v_{//}$)
-5. calculate $\boldsymbol{v}_{//}$ and $\boldsymbol{v}_{d}$
+5. calculate $\boldsymbol{v}_{d}$
 6. Solve the equation with Rungekutta.
 
 ## $\nabla B$ drift and curvature drift
