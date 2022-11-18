@@ -7,13 +7,21 @@ import sub.runge_kutta as ruku
 
 class Guiding_center:
     
+    cond = None # dict: calculation info and result
+    mag = None # Magnetic
     direction = 1 # direction of guiding center (1: same to B, -1: opposite)
     negative_energy = False # negative energy in epara occurs
     prms = {} # dictionary for tentative global
     
     def __init__(self, eqcond, calcond):
-        self.mag = smc.Magnetic(eqcond)
         self.cond = copy.deepcopy(calcond)
+        cond = self.cond
+                
+        self.mag = smc.Magnetic(eqcond)
+        cond['flux'] = self.mag.fl
+        cond['br'] = self.mag.br
+        cond['bz'] = self.mag.bz
+
         self.set_initial_params()
         
     def set_initial_params(self):

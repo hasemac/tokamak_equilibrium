@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 from plotly.subplots import make_subplots
 
-def line_plot(points, shapes = vd.vac):
+def line_plot(points, d_mat = None, shapes = vd.vac):
     aspect = 2.0
     margin = 50
     width = 250
@@ -23,7 +23,23 @@ def line_plot(points, shapes = vd.vac):
         yaxis=dict(title='z(m)', scaleanchor='x'),
         shapes = vd.vac
         )
-    fig = go.Figure(data=data, layout=layout)
+    fig = go.Figure(layout = layout)
+    fig.add_trace(data)
+    
+    if d_mat != None:
+        xmin = d_mat['rmin']
+        ymin = d_mat['zmin']
+        dx, dy = d_mat['dr'], d_mat['dz']
+        data=go.Contour(z = d_mat['matrix'],
+                        x0 = xmin, y0=ymin, dx=dx, dy=dy, 
+                        showscale=False,
+                        contours_coloring='lines',
+                        #autocontour=True,
+                        ncontours=100,
+                        )
+        fig.add_trace(data)
+        
+    #fig = go.Figure(data=data, layout=layout)
     fig.show()    
 
 def line_plot3d(points):

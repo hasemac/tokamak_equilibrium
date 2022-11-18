@@ -1,24 +1,34 @@
 import numpy as np
 import copy
+import coils.cmat as cfl
 import coils.cmat_br as cbr
 import coils.cmat_bz as cbz
+import plasma.pmat as pfl
 import plasma.pmat_br as pbr
 import plasma.pmat_bz as pbz
 import sub.emat as emat
 
 class Magnetic:
     
+    fl = None # flux
+    br = None # br
+    bz = None # bz
+    
     def __init__(self, cond):
+        self.fl_c = cfl.get_flux_of_coil(cond)
         self.br_c = cbr.get_br_of_coil(cond)
         self.bz_c = cbz.get_bz_of_coil(cond)
         
         if 'jt' in cond:
+            self.fl_p = pfl.cal_plasma_flux(cond['jt'])
             self.br_p = pbr.cal_plasma_br(cond['jt'])
             self.bz_p = pbz.cal_plasma_bz(cond['jt'])
+            self.fl = emat.dm_add(self.fl_c, self.fl_p)
             self.br = emat.dm_add(self.br_c, self.br_p)
             self.bz = emat.dm_add(self.bz_c, self.bz_p)
             
         else:
+            self.fl = self.fl_c
             self.br = self.br_c
             self.bz = self.bz_c
             

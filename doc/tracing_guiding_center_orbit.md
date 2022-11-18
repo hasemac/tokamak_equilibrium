@@ -25,6 +25,16 @@ condition = {
 }
 ```
 
+## Example of calculation result
+
+![example_trace](tracing_guiding_center.png)
+
+for electron  
+pf35_12: 3 kA  
+total energy: 100 keV  
+initial pitch angle: 45 degree  
+initial position: (x, y, z) = (1.2, 0.0, 0.0)  
+
 ## Calculation procedure
 
 1. get $\boldsymbol{B}$
