@@ -24,6 +24,8 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 [Introducig QUEST](doc/introducing_quest.md)
 
+[Magnetics Calculation](doc/magnetics_cal.md)
+
 [Tracing magnetic field lines](doc/tracing_mag_lines.md)
 
 [Tracing guiding center orbit](doc/tracing_guiding_center_orbit.md)
@@ -77,17 +79,23 @@ condition = {
 
     # flag to fix magnetic axis at initial plasma profile (r0, z0) 
     #'fix_pos': True,
-        
+
     # calculate flux (r, z): result is set to 'fl_val'.
     'fl_pos':{'flc8':(0.1985, 0.450), 'f_im':(0.1985, 0.0), 'flc17':(0.1985, -0.450),
               'fls1':(1.374, 0.450), 'fls5':(1.374, 0.0), 'fls9':(1.374, -0.481)},
+    # calculate Br(r, z): result is set to 'br_val'
+    #'br_pos':{'r1000z0':(1.0, 1.0)},
+    # calculate Bz(r, z): result is set to 'bz_val'
+    #'bz_pos':{'r0z0':(0.0, 0.0)},
     
     'resolution': gl.get_dmat_coarse(),
     }
 ```
 
 Calculation conditions are described in python dictionary type.
-Namely, 'parameter name':value, etc.
+Namely, 'parameter name':value, etc.  
+
+The fl_pos, br_pos, and bz_pos are the positions to calculate flux, Br, and Bz, respectively after finishing the equilibrium calculation.
 
 The specifiable PF coil name can be found in '/colis/data_npy/'.
 

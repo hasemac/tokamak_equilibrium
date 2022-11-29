@@ -125,6 +125,23 @@ A^{T}Ax=A^{T}b
 Here, $`b_{i}`$ assumes each point of $`j_{t0}`$. And, $`x_{j}`$ assumes the coefficient of the polynomial represented by the magnetic surface function.
 Therefore, $`a_{ij} x_{j}`$ is a linear combination of coefficients of $`j_{t1}`$ at the $`i`$ point.
 
+## Evaluation of error
+
+There are several ways to evaluate errors.
+
+1. Calculate the average of the original current densities.
+1. Find the maximum difference between the new current density and the original current density.
+1. When the ratio is less than a given value, the convergence occurs and the equilibrium calculation stops.
+
+Expressed in Python, it becomes the following formula.
+
+```python
+error = np.max(np.abs(j0-j))/np.average(np.abs(j))
+```
+
+j0: New current density profile  
+j: Original current density profile
+
 ## Handling of poloidal current
 
 Poloidal currents include those derived from plasma and those derived from toroidal coils.  
