@@ -1,5 +1,11 @@
 # Tracing guiding center orbit
 
+## Setup
+
+This calculation needs Br, Bz matrix due to plasma and PF coils.  
+Execute "1_make_fundamental_matrix.py" in the root directory just once before running this calculation.  
+It may take over 1 hour to buid the matrix.  
+
 ## How to calculate
 
 Please execute "trace_guiding_center.ipynb" in root directory as an example.  
