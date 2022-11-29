@@ -46,6 +46,9 @@ class Magnetic:
     def get_bt(self, r, z):
         return emat.linval2(r, z, self.bt)
     
+    def get_fl(self, r, z):
+        return emat.linval2(r, z, self.fl)
+    
     # 磁場ベクトルの取得
     def get_mag(self, p3):
         x, y, z = p3

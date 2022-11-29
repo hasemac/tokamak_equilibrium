@@ -9,6 +9,7 @@ from scipy.interpolate import interp1d
 from scipy import constants as sc
 import sub.plot as pl
 import sub.sub_func as ssf
+import sub.magnetics_cond as smc
 
 # 正規化フラックスの計算
 def get_normalized_flux(cond):
@@ -670,7 +671,27 @@ def equi_post_process(cond, verbose=2):
         for k in pos.keys():
             r, z = pos[k]
             cond['fl_val'][k] = emat.linval2(r, z, cond['flux'])
-
+    
+    # 与えられた位置におけるBrの計算
+    if 'br_pos' in cond.keys():
+        mag = smc.Magnetic(cond)
+        cond['br'] = mag.br
+        pos = cond['br_pos']
+        cond['br_val'] = {}
+        for k in pos.keys():
+            r, z = pos[k]
+            cond['br_val'][k] = emat.linval2(r, z, cond['br'])
+    
+    # 与えられた位置におけるBzの計算
+    if 'bz_pos' in cond.keys():
+        mag = smc.Magnetic(cond)
+        cond['bz'] = mag.bz
+        pos = cond['bz_pos']
+        cond['bz_val'] = {}
+        for k in pos.keys():
+            r, z = pos[k]
+            cond['bz_val'][k] = emat.linval2(r, z, cond['bz'])
+            
     # 圧力微分dp/dfと圧力pの計算
     dm_dp, dm_pr = get_dpress_press(cond)
     cond["diff_pre"] = dm_dp
@@ -790,9 +811,16 @@ def equi_fit_and_evaluate_error(condition):
     jsum = np.sum(j0)
     j0 *= jtotal / jsum  # トータルの電流値が維持されるように調整
     # この時点で、１メッシュ内に流れるトータルの電流に正規化される。
-    
-    errest = np.sum((j0 - j) ** 2) / 2
-    # 評価方法はいくつか考えられる。単位メッシュ当たりのエラーに直すとか。
+
+    # 評価方法はいくつか考えられる。単位メッシュ当たりのエラーに直すとか。    
+    # これは単純な二乗残差、domainが大きい場合はエラーが大きくなる？
+    #errest = np.sum((j0 - j) ** 2) / 2
+    # 二乗残差の平均(メッシュ当たりのエラー)、domainの大きさに依存しない
+    # errest = np.average((j0 - j) ** 2) / 2
+    # メッシュ当たりのパーセンテージ絶対誤差の平均のようなもの 
+    #errest = np.average(np.abs(j0-j))/np.average(np.abs(j))
+    # メッシュの絶対誤差の最大値とメッシュの平均値の比
+    errest = np.max(np.abs(j0-j))/np.average(np.abs(j))
     
     # 新しい電流分布の作成
     j_new = np.zeros((g.nz, g.nr))
@@ -918,10 +946,14 @@ def calc_equilibrium(condition, iteration=100, verbose=1):
             break
         
         # 一番最初の変化量に対して、最新の変化量が十分小さければ終了
-        v = np.abs((err[-1] - err[-2]) / (err[1] - err[0]))
-        if v < 10 ** (-5):
-            break
+        #v = np.abs((err[-1] - err[-2]) / (err[1] - err[0]))
+        #if v < 10 ** (-5):
+        #    break
     
+        # error値が、ある値より小さくなったら終了
+        if err[-1] < 0.05:
+            break
+        
     cond = equi_post_process(cond, verbose=verbose+1)
 
     return cond

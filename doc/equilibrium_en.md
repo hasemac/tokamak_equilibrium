@@ -99,76 +99,6 @@ P(\psi)=\int d \psi \frac{dP}{d \psi}(x)=(\psi_{B}- \psi_{M}) \int dx \: (\sum_{
 \because d \psi = (\psi_{B}- \psi_{M}) \: dx
 ```
 
-## Handling of poloidal current
-
-Poloidal currents include those derived from plasma and those derived from toroidal coils.  
-The poloidal current in the equilibrium code also includ those derived from toroidal coils.  
-Here, we represent the integral of $`dI^{2}/d\psi`$ as $`K(x)`$, and  K is adjusted so that $`K(x)=0`$ at $`x=1`$ (boundary). Thus,  
-
-```math
-I^{2}(x)=K(x)+I_{0}^{2}
-```
-
-$`I_{0}`$ : Derived from toroidal coil current  
-
-$`I^{2}(x)`$ should be positive in the interval where x is from 0 (axis) to 1 (boundary).
-
-```math
-I(x) = 
-\left \{ \begin{array}{ll}
-+\sqrt{K(x)+I_{0}^{2}} &(I_{0}>0)\\
--\sqrt{K(x)+I_{0}^{2}} &(I_{0}<0)
-\end{array} \right.
-```
-
-
------ Wrong description from here -----
-
-Poloidal currents include those derived from plasma and those derived from toroidal coils. The process of expressing the poloidal current as a polynomial of x means that I in the equilibrium calculation code does not include those derived from the toroidal coil.  
-Namely, 
-$`I(x)=0`$ at x=1 (boundary).  
-If plasma current is positive, poloidal current is also positive, and vice versa. Thus,
-
-```math
-I(x) = 
-\left \{ \begin{array}{ll}
-+\sqrt{I^{2}(x)} &(I_{p}>0)\\
--\sqrt{I^{2}(x)} &(I_{p}<0)
-\end{array} \right.
-```
-
-Total poloidal currents is denoted as below.
-
-```math
-I_{total} = I(x) + I_{0}
-```
-
-$`I_{0}`$ : Derived from toroidal coil current  
-
-```math
-\frac{d I_{total}^{2}}{d \psi} = \frac{dI^{2}}{d \psi}(x)+2I_{0}\frac{dI(x)}{d \psi}
-```
-
-The second term of right hand side can be transformed as below.
-
-```math
-\frac{dI(x)}{d \psi}
-= \pm \frac{1}{2} \frac{dI^{2}/d \psi}{\sqrt{I^{2}(x)}}
-=\frac{1}{2} \frac{1}{I(x)} \frac{d I^{2}}{d \psi}
-```
-
-Thus,  
-
-```math
-\frac{d I_{total}^{2}}{d \psi} = \frac{dI^{2}}{d \psi}(x)
-+I_{0} \left \{ \frac{d I^{2}}{d \psi}/I(x)) \right \}
-```
-
-When $`x \rightarrow 1`$, $`dI^{2}/d \psi \rightarrow 0`$ and $`I(x) \rightarrow 0`$.  
-However, the 2nd term of right hand side has a value in limit of $`x \rightarrow 1`$.  
- For example, the l'Hôpital's rule can be used to calculate the value.  
-
------ Wrong description so far -----
 ## The least squares method
 
 ```math
@@ -195,84 +125,27 @@ A^{T}Ax=A^{T}b
 Here, $`b_{i}`$ assumes each point of $`j_{t0}`$. And, $`x_{j}`$ assumes the coefficient of the polynomial represented by the magnetic surface function.
 Therefore, $`a_{ij} x_{j}`$ is a linear combination of coefficients of $`j_{t1}`$ at the $`i`$ point.
 
-## Grad-Shafranov equation
+## Handling of poloidal current
 
-### Each components of magnetic field
-
-```math
-\begin{align*}
-&B_{r}=-\frac{1}{2 \pi r}\frac{\partial \Phi}{\partial z} \\ 
-&B_{\theta}=\frac{\mu_{0} I}{2 \pi r}\\
-&B_{z}=\frac{1}{2 \pi r}\frac{\partial \Phi}{\partial r} 
-\end{align*}
-```
-
-$`I`$: poloidal current
-
-### Each components of $`j`$
+Poloidal currents include those derived from plasma and those derived from toroidal coils.  
+The poloidal current in the equilibrium code also includ those derived from toroidal coils.  
+Here, we represent the integral of $`dI^{2}/d\psi`$ as $`K(x)`$, and  K is adjusted so that $`K(x)=0`$ at $`x=1`$ (boundary). Thus,  
 
 ```math
-\begin{align*}
-&j_{r}=-\frac{1}{\mu_{0}}\frac{\partial B_{\theta}}{\partial z}\\
-&j_{\theta}=\frac{1}{\mu_{0}}(\frac{\partial B_{r}}{\partial z}-\frac{\partial B_{z}}{\partial r})\\
-&j_{z}=\frac{1}{\mu_{0}}\frac{1}{r}\frac{\partial (r B_{\theta})}{\partial r}
-\end{align*}
+I^{2}(x)=K(x)+I_{0}^{2}
 ```
+
+$`I_{0}`$ : Derived from toroidal coil current  
+
+$`I^{2}(x)`$ should be positive in the interval where x is from 0 (axis) to 1 (boundary).
 
 ```math
-\because \mu_0 j= \operatorname{rot} \boldsymbol{B}
-=-\frac{\partial B_{\theta}}{\partial z} e_{r}+(\frac{\partial B_{r}}{\partial z}-\frac{\partial B_{z}}{\partial r}) e_{\theta}+\frac{1}{r}\frac{\partial (r B_{\theta})}{\partial r} e_{z}\\
+I(x) = 
+\left \{ \begin{array}{ll}
++\sqrt{K(x)+I_{0}^{2}} &(I_{0}>0)\\
+-\sqrt{K(x)+I_{0}^{2}} &(I_{0}<0)
+\end{array} \right.
 ```
-
-,where $`\space \partial/\partial \theta=0`$
-
-### Equilibrium
-
-r component of$`\boldsymbol{j}\times\boldsymbol{B}=\nabla p`$ is
-
-```math
-j_{\theta}B_{z}-j_{z}B_{\theta}=\frac{\partial p}{\partial r}
-```
-
-, where
-
-```math
-\begin{align*}
-j_{z}B_{\theta} &= 
-\frac{1}{\mu_{0}}\frac{1}{r}\frac{\partial (r B_{\theta})}{\partial r} B_{\theta}\\
-&=\frac{1}{\mu_{0}}\frac{1}{r^{2}}\frac{\partial (r B_{\theta})}{\partial r} (r B_{\theta})\\
-&=\frac{1}{2 \mu_{0}}\frac{1}{r^{2}}\frac{\partial (r B_{\theta})^{2}}{\partial r} \\
-&=\frac{\mu_{0}}{8 \pi^{2}}\frac{1}{r^{2}}\frac{\partial I^{2}}{\partial r}
-\end{align*}
-```
-
-Thus,
-
-```math
-j_{\theta}\frac{1}{2 \pi r}\frac{\partial \Phi}{\partial r}-\frac{\mu_{0}}{8 \pi^{2}}\frac{1}{r^{2}}\frac{\partial I^{2}}{\partial r}=\frac{\partial p}{\partial r}
-```
-
-Notice,
-
-```math
-\frac{\partial p}{\partial r}=\frac{dP}{d\Phi}\frac{\partial \Phi}{\partial r}
-```
-
-and,
-
-```math
-\frac{\partial I^{2}}{\partial r}=\frac{d I^{2}}{d \Phi} \frac{\partial \Phi}{\partial r}
-```
-
-Thus, finally,
-
-```math
-j_{\theta}=2 \pi r \frac{dP}{d\Phi}+\frac{\mu_{0}}{4 \pi r}\frac{dI^{2}}{d\Phi}
-```
-
-You can get the same equation from z-component.
-
-The $`\theta`$-component becomes 0 = 0.  
 
 ## Reference
 

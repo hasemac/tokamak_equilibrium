@@ -16,6 +16,8 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 [Equations of magnetics](doc/magnetics_en.md)
 
+[Grad-Shafranov equation](doc/grad_shafranov_eq.md)
+
 [Procedure of equilibrium calculation](doc/equilibrium_en.md)
 
 [Definition of parameters](doc/def_of_params.md)
@@ -41,7 +43,7 @@ This repository provides a tokamak equilibrium calculation code, especially cust
    - When using it, execute the above command under a virtual environment.
 3. Execute 'equalibrium.ipynb' in the root directory in order from the top.
 
-### For othe functions
+### For other functions
 
 If you would like to use other functions such as the tracing of guiding center, you need to make other matrix for the functions.  
 Please execute "1_make_fundamental_matrix.py" in root directory.  

@@ -1,6 +1,6 @@
 # Tracing magnetic field lines
 
-See 'mag_trace.ipynb' in root directory.
+See 'trace_mag.ipynb' in root directory.
 
 ## Runge-kutta 4th order method
 
