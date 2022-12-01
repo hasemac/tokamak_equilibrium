@@ -117,7 +117,7 @@ E = \frac{1}{2}\sum_{i}(j_{1i}-j_{0i})^{2}
 ```
 
 ```math
-E = \frac{1}{2}\sum_{i}(\sum_{j}f_{ij}a_{j}-j_{i})^{2}
+E = \frac{1}{2}\sum_{i}(\sum_{j}f_{ij}a_{j}-j_{0i})^{2}
 ```
 
 Find $a_{j}$ to minimize $E$ with the least mean square method.
