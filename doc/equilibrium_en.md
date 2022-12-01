@@ -101,29 +101,41 @@ P(\psi)=\int d \psi \frac{dP}{d \psi}(x)=(\psi_{B}- \psi_{M}) \int dx \: (\sum_{
 
 ## The least squares method
 
+$j_{0i}$ : Initial current profile  
+$j_{1i}$ : New current profile with coefficiencies
+
 ```math
-E = \frac{1}{2}\sum_{i}(\sum_{j}a_{ij}x_{j}-b_{i})^{2}
+j_{1i} = \sum_{j}f_{ij}a_{j}
 ```
 
-Find $`x`$ that minimizes $`E`$.
+$a_{j}$ : coefficiencies of polynominal function $dp/d\psi$,  $dI^{2}/d\psi$
+, which should be determined with the least square method.  
+$f_{ij}$ :  values calculated from normalized flux.
+
+```math
+E = \frac{1}{2}\sum_{i}(j_{1i}-j_{0i})^{2}
+```
+
+```math
+E = \frac{1}{2}\sum_{i}(\sum_{j}f_{ij}a_{j}-j_{i})^{2}
+```
+
+Find $a_{j}$ to minimize $E$ with the least mean square method.
 
 ```math
 \begin{align}
-\frac{\partial E}{\partial x_{k}}
-&=\sum_{i}(\sum_{j}a_{ij}x_{j}-b_{i})a_{ik}\\
-&=\sum_{i,j}a_{ik}a_{ij}x_{j}-\sum_{i}a_{ik}b_{i}\\
+\frac{\partial E}{\partial a_{k}}
+&=\sum_{i}(\sum_{j}f_{ij}a_{j}-b_{i})f_{ik}\\
+&=\sum_{i,j}f_{ik}f_{ij}a_{j}-\sum_{i}f_{ik}j_{0i}\\
 &=0
 \end{align}
 ```
 
-If you rewrite it in the form of a matrix, it becomes $`x`$ that satisfies the following equation.
+If you rewrite it in the form of a matrix, the $\boldsymbol{a}$ satisfies the following equation.
 
 ```math
-A^{T}Ax=A^{T}b
+F^{T}F\boldsymbol{a}=F^{T}\boldsymbol{j}_{0}
 ```
-
-Here, $`b_{i}`$ assumes each point of $`j_{t0}`$. And, $`x_{j}`$ assumes the coefficient of the polynomial represented by the magnetic surface function.
-Therefore, $`a_{ij} x_{j}`$ is a linear combination of coefficients of $`j_{t1}`$ at the $`i`$ point.
 
 ## Evaluation of error
 
