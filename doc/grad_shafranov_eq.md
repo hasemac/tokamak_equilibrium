@@ -59,7 +59,7 @@ j_{\theta}\frac{1}{2 \pi r}\frac{\partial \Phi}{\partial r}-\frac{\mu_{0}}{8 \pi
 Notice,
 
 ```math
-\frac{\partial p}{\partial r}=\frac{dP}{d\Phi}\frac{\partial \Phi}{\partial r}
+\frac{\partial p}{\partial r}=\frac{dp}{d\Phi}\frac{\partial \Phi}{\partial r}
 ```
 
 and,
@@ -71,7 +71,7 @@ and,
 Thus, finally,
 
 ```math
-j_{\theta}=2 \pi r \frac{dP}{d\Phi}+\frac{\mu_{0}}{4 \pi r}\frac{dI^{2}}{d\Phi}
+j_{\theta}=2 \pi r \frac{dp}{d\Phi}+\frac{\mu_{0}}{4 \pi r}\frac{dI^{2}}{d\Phi}
 ```
 
 You can get the same equation from z-component.
