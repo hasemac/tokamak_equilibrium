@@ -14,21 +14,14 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 ## Other documents
 
-[Equations of magnetics](doc/magnetics_en.md)
-
-[Grad-Shafranov equation](doc/grad_shafranov_eq.md)
-
-[Procedure of equilibrium calculation](doc/equilibrium_en.md)
-
-[Definition of parameters](doc/def_of_params.md)
-
-[Introducig QUEST](doc/introducing_quest.md)
-
-[Magnetics Calculation](doc/magnetics_cal.md)
-
-[Tracing magnetic field lines](doc/tracing_mag_lines.md)
-
-[Tracing guiding center orbit](doc/tracing_guiding_center_orbit.md)
+- [Equations of magnetics](doc/magnetics_en.md)
+- [Grad-Shafranov equation](doc/grad_shafranov_eq.md)
+- [Procedure of equilibrium calculation](doc/equilibrium_en.md)
+- [Definition of parameters](doc/def_of_params.md)
+- [Introducig QUEST](doc/introducing_quest.md)
+- [Magnetics Calculation](doc/magnetics_cal.md)
+- [Tracing magnetic field lines](doc/tracing_mag_lines.md)
+- [Tracing guiding center orbit](doc/tracing_guiding_center_orbit.md)
 
 ## Getting started
 
