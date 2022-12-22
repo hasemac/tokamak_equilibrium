@@ -62,13 +62,36 @@ If you want the position of the magnetic axis to be the initial position of the 
     'fix_pos': True,
 ```
 
+### Description of calculation conditiion
+
+- cur_ip : setting of initial plasma  
+  - ip : float  
+    plasma current
+  - r0 : float  
+    major radius of initial plasma  
+  - z0 : float  
+    vertical position of initial plasma
+  - radius : float  
+    minor radius of initial plasma
+  - degree : float, default 2, optional  
+    degree of initial plasma profile, ex. parabolic profile when degree = 2
+![flux](doc/fig_jt_profile.png)
+- fix_pos : boolean [True or False], optional  
+  Whether to fix the position of the magnetic axis to the plasma initial position
+- num_dpr : int  
+  polynomial degree of the pressure gradient
+- num_di2 : int  
+  polynomial degree of the gradient of square poloidal current
+
+### Example of calculation condition
+
 ```python:
 condition = {
     # TF current
     'cur_tf':{'tf': +50.0e+3, 'turn': 16},
     
     # initial plasma profile
-    'cur_ip':{'ip':+100.0e+3, 'r0':0.65, 'z0':0.0, 'radius':0.3},
+    'cur_ip':{'ip':+100.0e+3, 'r0':0.65, 'z0':0.0, 'radius':0.3, 'degree': 2.0},
     
     # PF currents
     'cur_pf':{'hcult16':0.0,'pf17t12':-1.0e+3, 'pf26t36':-1.0e+3,'pf4_1ab3_cc2':0.0,'pf35_2':0.0, },

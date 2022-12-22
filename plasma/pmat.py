@@ -71,34 +71,35 @@ def cal_plasma_flux(dmat):
 
 
 # パラボリックな電流分布
-def d_plasma_cur_parabolic(dmat, r0, z0, ip, radius):
+def d_plasma_cur_parabolic(dmat, r0, z0, ip, radius, degree = 2):
     rmin, rmax, dr = dmat["rmin"], dmat["rmax"], dmat["dr"]
     zmin, zmax, dz = dmat["zmin"], dmat["zmax"], dmat["dz"]
     rpos = np.arange(rmin, rmax + 0.9 * dr, dr)
     zpos = np.arange(zmin, zmax + 0.9 * dz, dz)
 
-    m1 = plasma_cur_parabolic(r0, z0, ip, radius, rpos, zpos)
+    m1 = plasma_cur_parabolic(r0, z0, ip, radius, rpos, zpos, degree)
     dmat["matrix"] = m1
     dmat['matrix'] /= (dr*dz) # jtを電流密度とする場合
     return dmat
 
 
 # パラボリックな電流分布: 合計i [A], r=r0の範囲でパラボリックに分布
-def plasma_cur_parabolic(r0, z0, ip, radius, r_pos, z_pos):
+def plasma_cur_parabolic(r0, z0, ip, radius, r_pos, z_pos, degree = 2):
     # (r0, z0): プラズマ電流の位置
     # ip: プラズマ電流
     # r_pos, z_pos: メッシュ位置
     # このとき分布は(2*i/pi/r0**4) (r0**2-r**2)に従う。
     # (2*i/pi/r0**4) (r0**2-r**2) はr=r0でゼロになる。また２次元で面積積分したときiになる。
     # だけど、ここではとりあえずパラボリックに分布させて、最後に総和を調整する。
-    def v(r, z, r0, z0, radius):
-        d = ((r - r0) ** 2 + (z - z0) ** 2) ** 0.5
-        if d < radius:
-            return r0**2 - d**2
+    def v(r, z, r0, z0, radius, degree = 2):
+        d = ((r - r0) ** 2 + (z - z0) ** 2) ** 0.5 # distance from plasma center
+        x = d/radius # [0, 1], normalized minor radius
+        if x < 1.0:
+            return 1-x**degree
         else:
             return 0.0
 
-    mat = np.array([[v(r, z, r0, z0, radius) for r in r_pos] for z in z_pos])
+    mat = np.array([[v(r, z, r0, z0, radius, degree) for r in r_pos] for z in z_pos])
     mat = mat / np.sum(mat) * ip
 
     return mat
@@ -110,8 +111,11 @@ def d_set_plasma_parabolic(cond):
     r0 = cond["cur_ip"]["r0"]
     z0 = cond["cur_ip"]["z0"]
     radius = cond["cur_ip"]["radius"]
+    degree = 2.0
+    if "degree" in cond["cur_ip"]:
+        degree = cond["cur_ip"]["degree"]
 
-    return d_plasma_cur_parabolic(res, r0, z0, ip, radius)
+    return d_plasma_cur_parabolic(res, r0, z0, ip, radius, degree)
 
 
 def trim_plasma_current(cond):
