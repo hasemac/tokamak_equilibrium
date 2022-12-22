@@ -74,8 +74,8 @@ If you want the position of the magnetic axis to be the initial position of the 
   - radius : float  
     minor radius of initial plasma
   - degree : float, default 2, optional  
-    degree of initial plasma profile, ex. parabolic profile when degree = 2
-![flux](doc/fig_jt_profile.png)
+    degree of initial plasma profile, ex. parabolic profile when degree = 2  
+![flux](doc/fig_jt_profile.png)  
 - fix_pos : boolean [True or False], optional  
   Whether to fix the position of the magnetic axis to the plasma initial position
 - num_dpr : int  
