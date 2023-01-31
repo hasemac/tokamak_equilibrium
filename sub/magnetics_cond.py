@@ -49,6 +49,18 @@ class Magnetic:
     def get_fl(self, r, z):
         return emat.linval2(r, z, self.fl)
     
+    def get_bz_c(self, r, z):
+        return emat.linval2(r, z, self.bz_c)
+    
+    def get_decay_index(self, r, z):
+        # decay indexはコイルの磁場から計算
+        # プラズマによる磁場は含まない
+        w = 1.0e-7
+        delbz = (self.get_bz_c(r + w/2, z) - self.get_bz_c(r - w/2, z))/w
+        bz = self.get_bz_c(r, z)
+        print('r', r, 'bz', bz, 'delbz', delbz)
+        return -(r/bz)*delbz
+    
     # 磁場ベクトルの取得
     def get_mag(self, p3):
         x, y, z = p3

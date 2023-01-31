@@ -1,5 +1,10 @@
 # Definition of parameters
 
+## Decay index
+
+```math
+n = -\frac{R}{B_{z}} \frac{\partial B_{z}}{\partial R}
+```
 
 ## Definitions of beta
 
@@ -97,7 +102,7 @@ Finally,
 q =\frac{1}{\psi_{B}- \psi_{M}}\frac{\mu_{0}}{4 \pi} \int dS \frac{1}{IR} \frac{dI^{2}}{dx}
 ```
 
-## magnetic shear and normalized pressure gradient
+## Magnetic shear and normalized pressure gradient
 
 ```math
 S = \frac{\partial q}{\partial \psi}, \quad \alpha = \frac{\partial p}{\partial \psi}
@@ -111,7 +116,7 @@ S=\frac{r}{q} \frac{\partial q}{\partial r}, \quad \alpha = \frac{2 \mu_{0}Rq^{2
 
 ref: <https://www.jstage.jst.go.jp/article/ieejfms/124/5/124_5_393/_pdf>
 
-## internal inductance
+## Internal inductance
 
 ```math
 l_{i} = \frac{<B_{\theta}^{2}>_{p}}{B_{\theta}(a)^{2}}

@@ -28,7 +28,7 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 "Plotly" is used to draw the graph. Therefore, **Node.js** must be installed in order to display the graph.
 
 1. Clone this project using VS code etc.
-2. Go to the cloned directory, and execute below to install required modules.
+1. Go to the cloned directory, and execute below to install required modules.
 
    ```shell
    > python -m pip install -r requirements.txt
@@ -36,14 +36,26 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
    - Be aware of whether or not you use a virtual environment.
    - When using it, execute the above command under a virtual environment.
-3. Execute 'equalibrium.ipynb' in the root directory in order from the top.
+1. Excecute "1_make_fundamental_matrix.py" in root directory.  
+   Please run it only once after cloning.  
+   This create fundamental magnetic matrix of coils and plasmas.  
+   The calculation may take an hour or more.  
+   (Of course you can also copy and paste from elsewhere.)
+1. Execute 'equalibrium.ipynb' in the root directory in order from the top as an example.
 
-### For other functions
+## Edit and execute your file
 
-If you would like to use other functions such as the tracing of guiding center, you need to make other matrix for the functions.  
-Please execute "1_make_fundamental_matrix.py" in root directory.  
-Although this run take a long time, this only needs to be done once.  
-It may take over 1 hour (over 30 min. for Br and over 30 min. for Bz).  
+Editing files managed by Git can cause conflicts and make it impossible to pull.  
+In this case, it is better to edit after changing the file name.  
+In particular, file names or directory names starting with "0_" are out of Git's control.  
+If you execute the equilibrium code in a subdirectory, the current directory must be the root directory.  
+So put the following at the beginning of the file:  
+
+```python
+import os
+os.chdir('..') 
+# current working directory can be get by os.getcwd()
+```
 
 ## How to set calculation conditions
 

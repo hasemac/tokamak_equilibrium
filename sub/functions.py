@@ -672,9 +672,11 @@ def equi_post_process(cond, verbose=2):
             r, z = pos[k]
             cond['fl_val'][k] = emat.linval2(r, z, cond['flux'])
     
+    # 磁場に関する計算
+    mag = smc.Magnetic(cond)
+    
     # 与えられた位置におけるBrの計算
     if 'br_pos' in cond.keys():
-        mag = smc.Magnetic(cond)
         cond['br'] = mag.br
         pos = cond['br_pos']
         cond['br_val'] = {}
@@ -684,13 +686,15 @@ def equi_post_process(cond, verbose=2):
     
     # 与えられた位置におけるBzの計算
     if 'bz_pos' in cond.keys():
-        mag = smc.Magnetic(cond)
         cond['bz'] = mag.bz
         pos = cond['bz_pos']
         cond['bz_val'] = {}
         for k in pos.keys():
             r, z = pos[k]
             cond['bz_val'][k] = emat.linval2(r, z, cond['bz'])
+    
+    # decay index on magnetic acis
+    cond['decay_index_on_axis'] = mag.get_decay_index(cond['r_ax'], cond['z_ax'])
             
     # 圧力微分dp/dfと圧力pの計算
     dm_dp, dm_pr = get_dpress_press(cond)
