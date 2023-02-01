@@ -503,6 +503,7 @@ def set_domain_params(cond):
     r0 = (r_rmax + r_rmin) / 2.0
     cond["major_radius"] = r0
     cond["minor_radius"] = a0
+    cond["aspect_ratio"] = r0/a0
     cond["elongation"] = (z_zmax - z_zmin) / (r_rmax - r_rmin)
     cond["triangularity"] = (r0 - r_zmax) / a0
     cond["volume"] = np.sum(2 * np.pi * r * dr * dz)

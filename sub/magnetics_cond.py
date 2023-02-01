@@ -58,7 +58,8 @@ class Magnetic:
         w = 1.0e-7
         delbz = (self.get_bz_c(r + w/2, z) - self.get_bz_c(r - w/2, z))/w
         bz = self.get_bz_c(r, z)
-        print('r', r, 'bz', bz, 'delbz', delbz)
+        if bz == 0.0:
+            bz = 1.0e-7
         return -(r/bz)*delbz
     
     # 磁場ベクトルの取得
