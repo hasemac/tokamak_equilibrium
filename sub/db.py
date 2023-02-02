@@ -2,6 +2,7 @@ import os
 import contextlib
 import mysql.connector
 import numpy as np
+import pandas as pd
 
 column_comments = {
     "cur_tf_tf": "current of toroidal field coil",
@@ -101,8 +102,9 @@ class DB:
     tableName = None  # tableName
     keyName = None  # keyName, ex. shotNumber, fileName, etc.
 
-    def __init__(self):
+    def __init__(self, tableName='none'):
         self.dcur = Db_cur()
+        self.tableName = tableName
 
     # 現在のカラム一覧を取得
     def getColumnNames(self):
@@ -144,6 +146,9 @@ class DB:
     def setTable(self, tableName, keyName):
         self.tableName = tableName
         self.keyName = keyName
+    
+    def set_table(self, tableName):
+        self.tableName = tableName
 
     # テーブルの新規作成
     def makeNewTable(self, tableName, keyName, keyType):
@@ -223,6 +228,22 @@ class DB:
             res = cur.fetchall()
 
         return res
+    
+    def select_df(self, array_col, condition, array_val):
+        ar_col = array_col[:] # 浅いコピー
+        if 0 == len(ar_col):
+            ar_col = self.getColumnNames()
+        
+        # カラムの文字列作成
+        sc = ""
+        for e in ar_col:
+            sc += e+', '
+        sc = sc[:-2]
+        
+        dat = self.select(sc, condition, array_val)
+        df = pd.DataFrame(dat, columns=ar_col)
+        
+        return df
 
 
 class DB_equilibrium(DB):
