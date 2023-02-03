@@ -74,7 +74,7 @@ def contour(data, xmin, ymin, dx, dy, shapes = vd.vac):
     margin = 50
     width = 250    
     
-    data=go.Contour(z = data,
+    cdata=go.Contour(z = data,
                     x0 = xmin, y0=ymin, dx=dx, dy=dy, 
                     showscale=False,
                     contours_coloring='lines',
@@ -101,9 +101,69 @@ def contour(data, xmin, ymin, dx, dy, shapes = vd.vac):
                         #shapes = [dict(type="line", x0=0,y0=0.0,x1=1.0,y1=1.83), dict(type="line", x0=1.5,y0=0.0,x1=1.0,y1=1.83)],
                         shapes = shapes
                         )
-    fig = go.Figure(data=data, layout=layout)
+    fig = go.Figure(data=cdata, layout=layout)
     fig.show()
 
+def double_contour(d_mat: dict, d_mat2: dict):
+    dbl_contour(d_mat['matrix'], d_mat2['matrix'], d_mat['rmin'], d_mat['zmin'], d_mat['dr'], d_mat['dz'])
+    
+def dbl_contour(data1, data2, xmin, ymin, dx, dy, shapes = vd.vac):
+    """contour plot
+
+    Args:
+        data (2d array of float): data
+        xmin (float): xmin
+        ymin (float): ymin
+        dx (foat): dx
+        dy (float): dy
+        shapes (lines, optional): _description_. Defaults to vd.vac.
+    """
+    (h, w)=data1.shape
+    h *=dy
+    w *= dx
+    #print(height, ' ', width)
+    aspect = h/w
+    margin = 50
+    width = 250    
+    
+    cdata1=go.Contour(z = data1,
+                    x0 = xmin, y0=ymin, dx=dx, dy=dy, 
+                    showscale=False,
+                    contours_coloring='lines',
+                    #autocontour=True,
+                    ncontours=100,
+                    )
+    
+    cdata2=go.Contour(z = data2,
+                    x0 = xmin, y0=ymin, dx=dx, dy=dy, 
+                    showscale=False,
+                    contours_coloring='none',
+                    #autocontour=True,
+                    ncontours=100,
+                    )
+
+    layout = go.Layout( 
+                        width = width+2*margin,
+                        height = width*aspect+2*margin,
+                        margin = dict(l=margin, r=margin, t=margin, b=margin, autoexpand=False),
+                        xaxis=dict(
+                            title='R(m)',
+                            #range=(0, 1.8),
+                            #scaleanchor='y',
+                            #scaleratio = 1.0,
+                            ),
+                        yaxis=dict(
+                            title='z(m)',
+                            #range=(-1.8, 1.8), 
+                            scaleanchor='x', 
+                            #scaleratio = 1.0
+                            ),
+                        #shapes = [dict(type="line", x0=0,y0=0.0,x1=1.0,y1=1.83), dict(type="line", x0=1.5,y0=0.0,x1=1.0,y1=1.83)],
+                        shapes = shapes
+                        )
+    fig = go.Figure(data=[cdata1, cdata2], layout=layout)
+    fig.show()
+    
 def d_heatmap(d_mat: dict, shapes=vd.vac):
     heatmap(d_mat['matrix'], d_mat['rmin'], d_mat['zmin'], d_mat['dr'], d_mat['dz'], shapes=shapes)
          

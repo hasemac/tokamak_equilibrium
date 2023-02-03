@@ -814,6 +814,12 @@ def equi_fit_and_evaluate_error(condition):
     # エラー値の算出
     j0 = np.dot(a, params)  # 新しい電流
     jsum = np.sum(j0)
+    
+    if jsum == 0.0:
+        cond['cal_result'] = -1
+        cond['error_messages'] += 'Sum of jt become zero.\n'
+        return cond
+            
     j0 *= jtotal / jsum  # トータルの電流値が維持されるように調整
     # この時点で、１メッシュ内に流れるトータルの電流に正規化される。
 
