@@ -178,10 +178,10 @@ I(x) =
 
 ## Reference
 
-Lao, L. L.; John, H. S.; Stambaugh, R.; Kellman, A. & Pfeiffer, W.; Reconstruction of current profile parameters and plasma shapes in tokamaks; Nuclear Fusion, 1985, 25, 1611
+- L.L. Lao, H.S. John, R.D. Stambaugh, A.G. Kellman, W. Pfeiffer, Reconstruction of current profile parameters and plasma shapes in tokamaks, Nucl. Fusion. 25 (1985) 1611. <https://doi.org/10.1088/0029-5515/25/11/007>.
 
-<https://www.jstage.jst.go.jp/article/ieejfms/124/5/124_5_393/_pdf>
+- <https://www.jstage.jst.go.jp/article/ieejfms/124/5/124_5_393/_pdf>
 
-<https://www.jstage.jst.go.jp/article/jspf/79/2/79_2_123/_pdf>
+- <https://www.jstage.jst.go.jp/article/jspf/79/2/79_2_123/_pdf>
 
-<http://www.jspf.or.jp/Journal/PDF_JSPF/jspf2003_02/jspf2003_02-121.pdf>
+- <http://www.jspf.or.jp/Journal/PDF_JSPF/jspf2003_02/jspf2003_02-121.pdf>

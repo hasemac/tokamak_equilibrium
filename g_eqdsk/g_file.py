@@ -126,15 +126,15 @@ def read_g_file(absfile):
     prm = {}
     # original
     prm['case'] = case
-    prm['nw'] = nw
-    prm['nh'] = nh
-    prm['rdim'], prm['zdim'] = rdim, zdim
-    prm['rcentr'] = rcentr
-    prm['rleft'], prm['zmid'] = rleft, zmid
-    prm['rmaxis'], prm['zmaxis'] = rmaxis, zmaxis
-    prm['simag'], prm['sibry'] = simag, sibry
-    prm['bcentr'] = bcentr
-    prm['current'] = current
+    prm['nw'] = nw # 水平方向のグリッドポイント数
+    prm['nh'] = nh # 垂直方向のグリッドポイント数
+    prm['rdim'], prm['zdim'] = rdim, zdim # 水平・垂直方向の計算領域[meter]
+    prm['rcentr'] = rcentr # bcenterで定義されるトロイダル磁場のR位置
+    prm['rleft'], prm['zmid'] = rleft, zmid # 計算領域の左位置と垂直方向の真ん中の位置
+    prm['rmaxis'], prm['zmaxis'] = rmaxis, zmaxis # 磁気軸位置
+    prm['simag'], prm['sibry'] = simag, sibry # 磁気軸と最外殻におけるポロイダルフラックス[Weber/rad]
+    prm['bcentr'] = bcentr # 真空のトロイダル磁場 [Tesla]
+    prm['current'] = current #
     # x=0 on axis, x=1 on boundary with normalized flux
     prm['fpol'] = fpol      # [meter tesla]  磁気軸から最外殻磁気面までのポロイダル電流
     prm['pres'] = pres
