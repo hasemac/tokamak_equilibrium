@@ -81,6 +81,13 @@ If you want the position of the magnetic axis to be the initial position of the 
   - degree : float, default 2, optional  
     degree of initial plasma profile, ex. parabolic profile when degree = 2  
 ![flux](doc/fig_jt_profile.png)  
+- cur_tf: setting of toroidal coil
+  - tf : float  
+    toroidal coil current
+  - turn : int  
+    number of toroidal coils
+  - rewind: boolean, optional  
+    presence or absence of rewind
 - fix_pos : boolean [True or False], optional  
   Whether to fix the position of the magnetic axis to the plasma initial position
 - num_dpr : int  

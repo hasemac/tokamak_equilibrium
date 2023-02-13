@@ -134,20 +134,20 @@ def read_g_file(absfile):
     prm['rmaxis'], prm['zmaxis'] = rmaxis, zmaxis # 磁気軸位置
     prm['simag'], prm['sibry'] = simag, sibry # 磁気軸と最外殻におけるポロイダルフラックス[Weber/rad]
     prm['bcentr'] = bcentr # 真空のトロイダル磁場 [Tesla]
-    prm['current'] = current #
+    prm['current'] = current # プラズマ電流 [A]
     # x=0 on axis, x=1 on boundary with normalized flux
     prm['fpol'] = fpol      # [meter tesla]  磁気軸から最外殻磁気面までのポロイダル電流
-    prm['pres'] = pres
+    prm['pres'] = pres # プラズマ圧力 [nt/m^2]
     prm['ffprim'] = ffprim
     prm['pprime'] = pprime
     prm['psizr'] = psizr
-    prm['qpsi'] = qpsi
-    prm['nbbs'] = nbbbs
-    prm['limitr'] = limitr
-    prm['rbbbs'] = bbbs[:, 0]
-    prm['zbbbs'] = bbbs[:, 1]
-    prm['rlim'] = lim[:, 0]
-    prm['zlim'] = lim[:, 1]
+    prm['qpsi'] = qpsi # 磁気軸から最外殻までの安全係数
+    prm['nbbs'] = nbbbs # 最外殻のポイント数
+    prm['limitr'] = limitr # リミターのポイント数
+    prm['rbbbs'] = bbbs[:, 0] # 最外殻のポイントのR位置
+    prm['zbbbs'] = bbbs[:, 1] # 最外殻のポイントのz位置
+    prm['rlim'] = lim[:, 0] # リミターのポイントのR位置
+    prm['zlim'] = lim[:, 1] # リミターのポイントのz位置
     
     # additional
     prm['bbbs'] = bbbs

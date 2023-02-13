@@ -613,6 +613,11 @@ def equi_pre_process(condition, verbose=2):
     dm['matrix'] = np.ones((g.nz, g.nr))*cond["cur_tf"]["tf"]*cond["cur_tf"]["turn"]
     cond['pol_current'] = dm
     
+    # TFコイルの巻き戻し
+    if 'rewind' in cond['cur_tf']:
+        if cond['cur_tf']['rewind']:
+            cond['cur_pf']['tf_rewind'] = cond['cur_tf']['tf']
+    
     # コイルによるフラックス
     dm_fc = cmat.get_flux_of_coil(cond)
     cond["flux_coil"] = dm_fc
