@@ -1,6 +1,6 @@
 # Magnetics Calculation
 
-See 'magnetics_calculation.ipynb' in the root directory as an example.  
+See 'examples/magnetics/magnetics_calculation.ipynb' as an example.  
 The magnetic field can be calculated by entering the magnetic field information in the Magnetic class.  
 When the equilibrium calculation result is input, the magnetic field in the equilibrium state is calculated.  
 

@@ -8,7 +8,7 @@ It may take over 1 hour to buid the matrix.
 
 ## How to calculate
 
-Please execute "trace_guiding_center.ipynb" in root directory as an example.  
+Please execute "examples/guiding_center/trace_guiding_center.ipynb" as an example.  
 Calculation conditions are defined as below.
 
 ```python
