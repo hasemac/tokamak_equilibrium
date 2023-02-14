@@ -142,3 +142,12 @@ def shift_y(mat, num: int, val: float):
     elif num < 0:
         o[num:,:] = val
     return o
+
+def check_tf_rewind(cond):
+    # TFコイルの巻き戻し
+    # 巻き戻しを考慮する場合、cur_pfにtf_rewindコイルを追加
+    if 'rewind' in cond['cur_tf']:
+        if cond['cur_tf']['rewind']:
+            cond['cur_pf']['tf_rewind'] = cond['cur_tf']['tf']
+    
+    return cond

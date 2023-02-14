@@ -7,6 +7,7 @@ import plasma.pmat as pfl
 import plasma.pmat_br as pbr
 import plasma.pmat_bz as pbz
 import sub.emat as emat
+import sub.sub_func as ssf
 
 class Magnetic:
     
@@ -15,6 +16,8 @@ class Magnetic:
     bz = None # bz
     
     def __init__(self, cond):
+        cond = ssf.check_tf_rewind(cond)
+        
         self.fl_c = cfl.get_flux_of_coil(cond)
         self.br_c = cbr.get_br_of_coil(cond)
         self.bz_c = cbz.get_bz_of_coil(cond)

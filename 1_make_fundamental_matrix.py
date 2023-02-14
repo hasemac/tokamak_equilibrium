@@ -35,6 +35,7 @@ inf = {
     'hcult6':[('hcut6', 1), ('hclt6', -1)],
     'hcult16':[('hcut16', 1), ('hclt16', -1)],
     'pf4_ab_cc2':[('pf42a', 1), ('pf42b', 1), ('cct2', 1)], 
+    'tf_rewind':[('tf_rewind_1', -1), ('tf_rewind_2', 1)],
     }
 
 # 初期変数の取得
