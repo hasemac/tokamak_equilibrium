@@ -57,17 +57,10 @@ os.chdir('..')
 # current working directory can be get by os.getcwd()
 ```
 
-## How to set calculation conditions
+### Calculation condition
 
-An example of the calculation conditions can be found in the conditions of'equilibrium.ipynb'.  
+An example of the calculation conditions can be found in the condition of'equilibrium.ipynb'.  
 The unit used in the parameter is the MKSA system of units. For example, the parameter of 'ip':-100.0e+3 means -100.0 [kA] of plasma current.  
-If you want the position of the magnetic axis to be the initial position of the plasma, please set the fix_pos flag to be True in the calculation condition.
-
-```python
-    'fix_pos': True,
-```
-
-### Description of calculation conditiion
 
 - cur_ip : setting of initial plasma  
   - ip : float  

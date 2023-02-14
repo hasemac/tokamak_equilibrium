@@ -1,7 +1,7 @@
 
 # Grad-Shafranov equation
 
-## Each components of magnetic field
+## Each component of magnetic field
 
 ```math
 \begin{align*}
@@ -13,7 +13,7 @@
 
 $`I`$: poloidal current
 
-## Each components of $`j`$
+## Each component of $`j`$
 
 ```math
 \begin{align*}
