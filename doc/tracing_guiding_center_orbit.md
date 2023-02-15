@@ -115,14 +115,14 @@ conserved values:
 
 Other equations,
 
-- pitch angle $\alpha$: $0^{\circ} \leqq \alpha \leqq 180^{\circ}$
+- pitch angle $`\alpha`$: $`0^{\circ} \leqq \alpha \leqq 180^{\circ}`$
 
 - velocity $v$[m/s]  
   $v=\sqrt{2E/m_{e}}$  
 
 - velocity parallel to B  
-  $v_{//}=v \cos \alpha$  
-  $\boldsymbol{v}_{//}=(v \cos \alpha) \boldsymbol{b}_{0}$  
+  $`v_{//}=v \cos \alpha`$  
+  $`\boldsymbol{v}_{//}=(v \cos \alpha) \boldsymbol{b}_{0}`$  
 
 - energy parallel to B  
   $E_{//} = \frac{1}{2}m_{e} v_{//}^{2}$
