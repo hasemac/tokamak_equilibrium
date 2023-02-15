@@ -104,7 +104,7 @@ Therefore, let us solve the following equation, in which the moving distance is 
 \frac{d \boldsymbol{x}}{ds} = \boldsymbol{v}_{0}
 ```
 
-, where the $\boldsymbol{v}_{0}$ is a unit-vector of $\boldsymbol{v}_{//} + \boldsymbol{v}_{d}$.
+, where the $`\boldsymbol{v}_{0}`$ is a unit-vector of $`\boldsymbol{v}_{//} + \boldsymbol{v}_{d}`$.
 
 conserved values:
 
@@ -115,14 +115,14 @@ conserved values:
 
 Other equations,
 
-- pitch angle $\alpha$: $0^{\circ} \leqq \alpha \leqq 180^{\circ}$
+- pitch angle $`\alpha`$: $`0^{\circ} \leqq \alpha \leqq 180^{\circ}`$
 
 - velocity $v$[m/s]  
   $v=\sqrt{2E/m_{e}}$  
 
 - velocity parallel to B  
-  $v_{//}=v \cos \alpha$  
-  $\boldsymbol{v}_{//}=(v \cos \alpha) \boldsymbol{b}_{0}$  
+  $`v_{//}=v \cos \alpha`$  
+  $`\boldsymbol{v}_{//}=(v \cos \alpha) \boldsymbol{b}_{0}`$  
 
 - energy parallel to B  
   $E_{//} = \frac{1}{2}m_{e} v_{//}^{2}$
