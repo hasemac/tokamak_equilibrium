@@ -104,7 +104,7 @@ Therefore, let us solve the following equation, in which the moving distance is 
 \frac{d \boldsymbol{x}}{ds} = \boldsymbol{v}_{0}
 ```
 
-, where the $\boldsymbol{v}_{0}$ is a unit-vector of $\boldsymbol{v}_{//} + \boldsymbol{v}_{d}$.
+, where the $`\boldsymbol{v}_{0}`$ is a unit-vector of $`\boldsymbol{v}_{//} + \boldsymbol{v}_{d}`$.
 
 conserved values:
 
