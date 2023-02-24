@@ -30,12 +30,21 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 1. Clone this project using VS code etc.
 1. Go to the cloned directory, and execute below to install required modules.
 
+   windows
+  
    ```shell
    > python -m pip install -r requirements.txt
    ```
 
-   - Be aware of whether or not you use a virtual environment.
+   Mac
+
+   ```shell
+   > python3 -m pip install -r requirements.txt
+   ```
+
+   - Be aware of whether or not you use a virtual environment.  
    - When using it, execute the above command under a virtual environment.
+
 1. Excecute "1_make_fundamental_matrix.py" in root directory.  
    Please run it only once after cloning.  
    This create fundamental magnetic matrix of coils and plasmas.  
