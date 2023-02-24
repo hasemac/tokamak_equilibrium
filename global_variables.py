@@ -12,9 +12,9 @@ class gparam:
 
     # coarse mesh(cの文字を付加)
 
-    cname = "f0"
-    cr_min, cr_max, cdel_r = 0.0, 1.4, 0.02
-    cz_min, cz_max, cdel_z = -1.1, 1.1, 0.02
+    # cname = "f0"
+    # cr_min, cr_max, cdel_r = 0.0, 1.4, 0.02
+    # cz_min, cz_max, cdel_z = -1.1, 1.1, 0.02
 
     #cname = 'f1'
     #cr_min, cr_max, cdel_r = 0.0, 1.8, 0.02
@@ -23,6 +23,10 @@ class gparam:
     #cname = "f2"
     #cr_min, cr_max, cdel_r = 0.0, 1.4, 0.01
     #cz_min, cz_max, cdel_z = -1.1, 1.1, 0.01
+    
+    cname = "f3"
+    cr_min, cr_max, cdel_r = 0.0, 1.5, 0.02
+    cz_min, cz_max, cdel_z = -1.1, 1.1, 0.02    
     
     cnr, cnz = None, None
     cr_pos, cz_pos = [], []
