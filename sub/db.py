@@ -245,6 +245,15 @@ class DB:
         
         return df
 
+    def get_next_id(self):
+        sql = f'SHOW TABLE STATUS LIKE "{self.tableName}"'
+        #print(sql)
+        with self.dcur.get_cursor() as cur:
+            cur.execute(sql)
+            s = cur.fetchall()
+        id = s[0][10] # ('tablename', engine, ,,,)でauto_incrementは10番目
+        return id
+
 
 class DB_equilibrium(DB):
     def set_table(self, tableName, comment=''):
