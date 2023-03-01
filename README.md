@@ -262,7 +262,7 @@ Before running this file, copy '.env_example' in the same directory, rename it t
 ## Licence
 
 When publishing a paper using this equilibrium code, please post the link appropriately.  
-<https://gitlab.com/hasemac/tokamak_equilibirum>
+<https://gitlab.com/hasemac/tokamak_equilibrium>
 
 ## Support
 

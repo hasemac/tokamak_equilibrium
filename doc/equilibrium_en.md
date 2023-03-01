@@ -86,7 +86,7 @@ This is a differentiated formula and actually needs to be integrated to calculat
 Integrating each term and setting it to zero at x = 1, each term becomes the following equation.
 
 ```math
-\frac{x^{n+t}-1}{n+1} - \frac{x^{p+1}-1}{p+1}
+\frac{x^{n+1}-1}{n+1} - \frac{x^{p+1}-1}{p+1}
 ```
 
 Note that a coefficient is applied when integrating by $`\psi`$.
@@ -97,6 +97,10 @@ P(\psi)=\int d \psi \frac{dP}{d \psi}(x)=(\psi_{B}- \psi_{M}) \int dx \: (\sum_{
 
 ```math
 \because d \psi = (\psi_{B}- \psi_{M}) \: dx
+```
+
+```math
+P(\psi)=(\psi_{B}- \psi_{M}) \sum_{n=0}^{n_{p}} a_{n} (\frac{x^{n+1}-1}{n+1} - \frac{x^{p+1}-1}{p+1})
 ```
 
 ## The least squares method

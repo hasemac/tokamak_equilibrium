@@ -784,9 +784,12 @@ def equi_fit_and_evaluate_error(condition):
     # (1-x^3) *a0 + (x^1-x^3)*a1 + (x^2-x^3)*a2
     # という形になることに注意すること
 
-    # 圧力に関する行列作成
+    # 圧力に関する行列作成 [npr+1, ポイント数]
+    # 圧力由来のjt = 2*pi*r * (dp/df)
     p0 = np.array([2 * np.pi * r * (f**i - f**npr) for i in range(npr)])
-    # I^2に関する行列作成
+    
+    # I^2に関する行列作成 [ncu+1, ポイント数]
+    # ポロイダル電流由来: jt = 10**(-7)/r * (di^2/df)
     p1 = np.array(
         [10 ** (-7) / (r + 10 ** (-7)) * (f**i - f**ncu) for i in range(ncu)]
     )
