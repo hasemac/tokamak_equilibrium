@@ -100,7 +100,7 @@ P(\psi)=\int d \psi \frac{dP}{d \psi}(x)=(\psi_{B}- \psi_{M}) \int dx \: (\sum_{
 ```
 
 ```math
-P(\psi)=(\psi_{B}- \psi_{M}) \sum_{n=0}^{n_{p}} a_{n} (\frac{x^{n+1}-1}{n+1} - \frac{x^{p+1}-1}{p+1})
+P(\psi)=(\psi_{B}- \psi_{M}) \sum_{n=0}^{n_{p}} a_{n} (\frac{x^{n+1}-1}{n+1} - \frac{x^{np+1}-1}{n_{p}+1})
 ```
 
 ## The least squares method
@@ -129,7 +129,7 @@ Find $a_{j}$ to minimize $E$ with the least mean square method.
 ```math
 \begin{align}
 \frac{\partial E}{\partial a_{k}}
-&=\sum_{i}(\sum_{j}f_{ij}a_{j}-b_{i})f_{ik}\\
+&=\sum_{i}(\sum_{j}f_{ij}a_{j}-j_{0i})f_{ik}\\
 &=\sum_{i,j}f_{ik}f_{ij}a_{j}-\sum_{i}f_{ik}j_{0i}\\
 &=0
 \end{align}
@@ -140,6 +140,41 @@ If you rewrite it in the form of a matrix, the $\boldsymbol{a}$ satisfies the fo
 ```math
 F^{T}F\boldsymbol{a}=F^{T}\boldsymbol{j}_{0}
 ```
+
+When weighting factors are present, the evaluation equation becomes:
+
+```math
+E = \frac{1}{2}\sum_{i}w_{i}^{2}(j_{1i}-j_{0i})^{2}
+```
+```math
+\begin{align}
+\frac{\partial E}{\partial a_{k}}
+&=\sum_{i,j}w_{i}^{2}f_{ik}f_{ij}a_{j}-\sum_{i}w_{i}^{2}f_{ik}j_{0i}\\
+&=0
+\end{align}
+```
+And, in the matrix form,
+```math
+F^{T}WF\boldsymbol{a}=(WF)^{T}\boldsymbol{j}_{0}
+```
+
+Here, the matrix W is a diagonal matrix of squared weighting factors.
+```math
+W = 
+\begin{pmatrix}
+w_{1}^{2} & \cdots & 0 & \cdots & 0\\
+\vdots & \ddots & & & \vdots \\
+0 & & w_{i}^{2} & & 0 \\
+\vdots & & & \ddots & \vdots \\
+0 & \cdots & 0 & \cdots & w_{nc}^{2}
+\end{pmatrix}
+```
+
+Note, the shape of matrix:  
+W[nc, nc]  
+F[nc, np]  
+a[np]  
+nc: number of conditions, np: number of parameters.
 
 ## Evaluation of error
 

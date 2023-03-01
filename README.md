@@ -90,6 +90,13 @@ The unit used in the parameter is the MKSA system of units. For example, the par
     number of toroidal coils
   - rewind: boolean, optional  
     presence or absence of rewind
+- constraints_pressure: setting for plasma pressure constraints, optional
+  - name: dict  
+    name of constrain
+    - position: (float, float)
+    - pressure: float
+    - weight: float  
+      weighting factor relative to satisfy Grad-Shafranov eq.
 - fix_pos : boolean [True or False], optional  
   Whether to fix the position of the magnetic axis to the plasma initial position
 - num_dpr : int  
@@ -102,7 +109,9 @@ The unit used in the parameter is the MKSA system of units. For example, the par
 ```python:
 condition = {
     # TF current
-    'cur_tf':{'tf': +50.0e+3, 'turn': 16},
+    'cur_tf':{'tf': +50.0e+3, 'turn': 16, 
+    #'rewind': True, # rewind of tf coil
+    },
     
     # initial plasma profile
     'cur_ip':{'ip':+100.0e+3, 'r0':0.65, 'z0':0.0, 'radius':0.3, 'degree': 2.0},
@@ -113,6 +122,12 @@ condition = {
     # number of coefficients
     'num_dpr':1, # dp/df
     'num_di2':1, # di2/df
+
+    # 'constraints_pressure':{
+    #     'name1':{'point':(0.3, 0.0), 'pressure':20, 'weight':1},
+    #     'name2':{'point':(0.4, 0.0), 'pressure':30, 'weight':1},  
+    #     'name3':{'point':(0.6, 0.0), 'pressure':40, 'weight':3},
+    # },
 
     # flag to fix magnetic axis at initial plasma profile (r0, z0) 
     #'fix_pos': True,

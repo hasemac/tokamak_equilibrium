@@ -665,8 +665,8 @@ def equi_post_process(cond, verbose=2):
     set_domain_params(cond)
 
     # 正規化フラックスの計算
-    dm_nfl = get_normalized_flux(cond)
-    cond["flux_normalized"] = dm_nfl
+    # dm_nfl = get_normalized_flux(cond)
+    # cond["flux_normalized"] = dm_nfl
 
     # fluxループの位置におけるフラックスの計算    
     if 'fl_pos' in cond.keys():
@@ -723,6 +723,13 @@ def equi_post_process(cond, verbose=2):
     cond = calc_beta(cond)  # ベータ値の計算
     cond = calc_safety(cond)  # safety factorの計算
 
+    # 拘束条件の再現度
+    if 'constraints_pressure' in cond.keys():
+        cpr = cond['constraints_pressure']
+        for e in cpr.keys():
+            rp, zp = cpr[e]['point']
+            cpr[e]['pressure_calc'] = emat.linval2(rp, zp, cond['pressure'])
+
     # 計算結果の確認
     # 圧力分布の正負の確認
     a = [e <0 for e in cond["pressure_norm"]]
@@ -747,11 +754,6 @@ def equi_post_process(cond, verbose=2):
 # 平衡計算(１回)
 def equi_fit_and_evaluate_error(condition):
     cond = copy.deepcopy(condition)
-    
-    dm_jt = cond["jt"]
-    dm_domain = cond["domain"]
-    npr = cond["num_dpr"]
-    ncu = cond["num_di2"]
 
     # dm_jt: プラズマ電流
     # dm_domain: 最外殻磁気面のdmat
@@ -759,19 +761,30 @@ def equi_fit_and_evaluate_error(condition):
     # ncu: poloidal電流に関するパラメータの個数
     #
     # out: dmat_jt
+    
+    # 各matrixの取得
+    dm_jt = cond["jt"]
+    dm_domain = cond["domain"]
+    dm_nf = get_normalized_flux(cond) # 正規化flux
+
+    # 正規化フラックスの保存
+    cond["flux_normalized"] = dm_nf
+
+    # 時数の取得
+    npr = cond["num_dpr"]
+    ncu = cond["num_di2"]
 
     g = emat.dm_array(dm_domain)
 
     # 1メッシュの面積を計算
     ds = g.dr*g.dz
     
-    # fluxの正規化
-    dm_nf = get_normalized_flux(cond)
+    # 一次元化
     f = dm_nf["matrix"].reshape(-1)
     j = dm_jt["matrix"].reshape(-1)
-    jtotal = np.sum(j)  # 全電流を保持しておく
-
     d = dm_domain["matrix"].reshape(-1)
+
+    jtotal = np.sum(j)  # 全電流を保持しておく
 
     # 最外殻磁気面の内部のみ取り出す。
     ir = g.ir[d == 1]
@@ -795,16 +808,43 @@ def equi_fit_and_evaluate_error(condition):
     )
     
     # 結合させて転置、この時点で[point数, パラメータ数]の形
-    a = np.vstack([p0, p1]).transpose()
+    a = np.vstack([p0, p1]).transpose() # matrix
     
+    # a1, v1, w1: including other constrains (ex. pressure)
+    a1 = a.copy()
+    v1 = j.copy() # value v[point数]
+    w1 = np.array([1.0]*len(v1)) # weighting factor w[point数]
+    num_points = len(v1)
+
+    if 'constraints_pressure' in cond.keys():
+        mat, val, wgt = ssf.constraints_pressure(cond)
+        # wgt: squared values
+        #print('a', a.shape, 'mat', mat.shape)
+        #print('v', v.shape, 'val', val.shape)
+        #print('w', w.shape, 'wgt', wgt.shape) 
+        wgt *= (num_points**2) # 二乗の値なので、ポイント数でも二乗の必要
+        a1 = np.vstack((a1, mat)) 
+        v1 = np.append(v1, val)
+        w1 = np.append(w1, wgt)
+        #print(a.shape, v.shape, w.shape)
+
+    # weighting matrixの作成
+    w1 = np.diag(w1)
+    #print(w.shape)
+
     # 次にAbs(a x -j)を最小とするxを求めればよい。
     # A[p, n] x[n] = j[p]
     # このときのxは、At.A x = At.jを満たすxである。
 
+    # a[nc, np] (nc:ポイント数、np:パラメータ数)
+    # w[nc, nc]
+    # v[nc]
     # フィッティングする場合は電流密度の値を用いる。
-    m0 = np.dot(a.transpose(), a)
+    m0 = np.dot(a1.transpose(), w1) # [np, nc]
+    m0 = np.dot(m0, a1) # [np, np]
     #m1 = np.dot(a.transpose(), j/ds)
-    m1 = np.dot(a.transpose(), j) # jtを電流密度とする場合
+    m1 = np.dot(w1, a1).transpose() # [np, nc]
+    m1 = np.dot(m1, v1) # jtを電流密度とする場合 [np]
 
     # m0にほんのわずかな値を加算してsingular matrixになるのを避ける
     # dd = np.min(np.abs(m0))*10**(-7)
@@ -825,7 +865,7 @@ def equi_fit_and_evaluate_error(condition):
         cond['cal_result'] = -1
         cond['error_messages'] += 'Sum of jt become zero.\n'
         return cond
-            
+    
     j0 *= jtotal / jsum  # トータルの電流値が維持されるように調整
     # この時点で、１メッシュ内に流れるトータルの電流に正規化される。
 
