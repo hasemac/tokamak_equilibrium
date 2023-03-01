@@ -4,6 +4,10 @@
 
 This repository provides a tokamak equilibrium calculation code, especially customized to QUEST tokamak.  
 
+## New features
+
+- Equilibrium calculation can now be performed by adding the plasma pressure at a certain location as a constraint condition.
+
 ## Features of this equilibrium calculation code
 
 - Supports output of calculation results to relational database.
