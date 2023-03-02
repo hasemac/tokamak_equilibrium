@@ -1,7 +1,7 @@
 import numpy as np
 import warnings
 from scipy.optimize import curve_fit
-import sub.emat as sem
+import sub.emat as emat
 
 def fitting_quad_func(data_array2d):
     """fitting関数の係数を返す。
@@ -169,11 +169,11 @@ def constraints_pressure(cond):
         rp,zp = copr[e]['point']
         
         # domainの外は無視
-        if 0 == sem.linval2(rp, zp, dm_domain):
+        if 0 == emat.linval2(rp, zp, dm_domain):
             continue
 
         # pointにおけるnormalized flux
-        nfp = sem.linval2(rp, zp, dm_nf) 
+        nfp = emat.linval2(rp, zp, dm_nf) 
         # onp[npr]の形
         onp = [(fsurf-faxis)*((nfp**(i+1)-1)/(i+1) - (nfp**(npr+1)-1)/(npr+1)) for i in range(npr)]
         onp += [0]*ncu # onp[npr + ncu] :パラメータの数
