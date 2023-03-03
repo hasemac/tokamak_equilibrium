@@ -1,7 +1,11 @@
 import numpy as np
 import copy
 import coils.cmat as cmat
+import coils.cmat_br as cmat_br
+import coils.cmat_bz as cmat_bz
 import plasma.pmat as pmat
+import plasma.pmat_br as pmat_br
+import plasma.pmat_bz as pmat_bz
 import vessel.vmat as vmat
 import sub.emat as emat
 from global_variables import gparam
@@ -595,6 +599,207 @@ def calc_safety(cond):
     
     return cond
 
+# 束縛条件_圧力
+def constraints_pressure(cond):
+    faxis, fsurf = cond["f_axis"], cond["f_surf"]
+    npr = cond["num_dpr"]
+    ncu = cond["num_di2"]
+    dm_nf = cond['flux_normalized']
+    dm_domain = cond['domain']
+
+    array_cf = [] # array of coef
+    array_pr = [] # array of pressure
+    array_wt = [] # array of weighting factor
+
+    copr = cond['constraints_pressure']
+    for e in copr.keys():
+        rp,zp = copr[e]['point']
+        
+        # domainの外は無視
+        if 0 == emat.linval2(rp, zp, dm_domain):
+            continue
+
+        # pointにおけるnormalized flux
+        nfp = emat.linval2(rp, zp, dm_nf) 
+        # onp[npr]の形
+        onp = [(fsurf-faxis)*((nfp**(i+1)-1)/(i+1) - (nfp**(npr+1)-1)/(npr+1)) for i in range(npr)]
+        onp += [0]*ncu # onp[npr + ncu] :パラメータの数
+
+        array_cf.append(onp)
+        array_pr.append(copr[e]['pressure'])
+        array_wt.append(copr[e]['weight']**2) # squared
+    
+    # np arrayに変換。この時点で、[point数、パラメータ数]
+    array_cf = np.array(array_cf)
+    array_pr = np.array(array_pr)
+    array_wt = np.array(array_wt)
+    #print('cf', array_cf.shape, array_pr.shape, array_wt.shape)
+    #print(array_wt)
+
+    return array_cf, array_pr, array_wt
+
+# 束縛条件_flux, br, bz
+def constraints_mag(cond, arr_f, syurui):
+    #arr_f[num of plasma points, num of fitting param]
+    # syurui: 'flux', 'br', 'bz'
+
+    # 最初に種類に応じて変数をセット
+    if syurui == 'flux':
+        cofl = cond['constraints_flux']
+        d_mat = cond['flux_coil']
+        basemat = pmat
+    elif syurui == 'br':
+        cofl = cond['constraints_br']
+        d_mat = cond['br_coil']
+        basemat = pmat_br
+    elif syurui == 'bz':
+        cofl = cond['constraints_bz']
+        d_mat = cond['bz_coil']
+        basemat = pmat_bz
+
+    dm_domain = cond['domain']
+    d = dm_domain['matrix'].reshape(-1)
+
+    g = emat.dm_array(dm_domain)
+    ir = g.ir[d == 1]
+    iz = g.iz[d == 1]
+    ds = g.dr * g.dz # メッシュ面積
+
+    arr = []
+    val = []
+    wgt = []
+    for e in cofl.keys():
+        rf, zf = cofl[e]['point']
+        # コイル由来の値
+        fxc = emat.linval2(rf, zf, d_mat)
+        #print('fxc', fxc)
+        # 拘束条件位置のメッシュ番号
+        nrf, nzf = emat.coarse_grid_num(rf, zf)
+        hmat = [
+            basemat.cget(nzp, nrp)[nzf, nrf] for nrp, nzp in zip(ir, iz)
+        ]
+        # jは電流密度を想定しているのに対して、pmat.cgetは単位電流
+        # 電流密度に変更するためにdsをかけておく必要がある。
+        hmat = np.array(hmat)
+        hmat = np.diag(hmat)
+        b = np.sum(np.dot(hmat, arr_f), axis=0)
+        arr.append(b)
+        val.append(cofl[e][syurui]-fxc) # コイル由来の値は除いておくこと
+        
+        wgt.append(cofl[e]['weight']**2) # squared
+    arr = np.array(arr)*ds
+    val = np.array(val)
+    wgt = np.array(wgt)
+    #print('arr', arr)
+    #print(arr.shape, val.shape, wgt.shape)
+    return arr, val, wgt
+
+# フィッティング係数を求めるためのプラズマ電流密度のマトリックスを作成
+def make_initial_matrix(cond):
+
+    # 下の式の、Fとj0を作成する。
+    # j1 = F c
+    # j0
+
+    # 各matrixの取得
+    dm_jt = cond["jt"]
+    dm_nf = cond["flux_normalized"]
+    dm_domain = cond["domain"]
+
+    # 時数の取得
+    npr = cond["num_dpr"]
+    ncu = cond["num_di2"]
+
+    g = emat.dm_array(dm_domain)
+
+    # 一次元化
+    f = dm_nf["matrix"].reshape(-1)
+    j = dm_jt["matrix"].reshape(-1)
+    d = dm_domain["matrix"].reshape(-1)
+
+    # 最外殻磁気面の内部のみ取り出す。
+    r = g.r[d == 1]
+    j = j[d == 1]
+    f = f[d == 1]
+
+    # 例えばパラメータ数が３の場合の時
+    # (1-x^3) *a0 + (x^1-x^3)*a1 + (x^2-x^3)*a2
+    # という形になることに注意すること
+
+    # 圧力に関する行列作成 [npr+1, ポイント数]
+    # 圧力由来のjt = 2*pi*r * (dp/df)
+    p0 = np.array([2 * np.pi * r * (f**i - f**npr) for i in range(npr)])
+    
+    # I^2に関する行列作成 [ncu+1, ポイント数]
+    # ポロイダル電流由来: jt = 10**(-7)/r * (di^2/df)
+    p1 = np.array(
+        [10 ** (-7) / (r + 10 ** (-7)) * (f**i - f**ncu) for i in range(ncu)]
+    )
+    
+    # 結合させて転置、この時点で[point数, パラメータ数]の形
+    a = np.vstack([p0, p1]).transpose() # matrix
+
+    return a, j    
+
+# 束縛条件のマトリックスをオリジナルにスタックしていく
+def const_stack_matrix(mat0, val0, wgt0, mat1, val1, wgt1, j0):
+    # mat0, val0, wgt0: original
+    # mat1, val1, wgt1: additional_constraints
+    # trimming weight with j0 (initial plasma current)
+
+    j0_ave = np.average(np.abs(j0))
+    num = len(j0)
+    val1_ave = np.average(np.abs(val1))
+    tw = (j0_ave/val1_ave)**2 # trimming factor for weitht_squared
+    wgt1 *= tw # 値が同等になるためのweightの補正
+    wgt1 *= num # j0は式の数が多いので、式の数に対する補正
+
+    a1 = np.vstack((mat0, mat1)) 
+    v1 = np.append(val0, val1)
+    w1 = np.append(wgt0, wgt1)
+    
+    return a1, v1, w1
+
+def constraints_procedure(cond, mat0, val0, wgt0, mat_jt, jt):
+    # mat_jt : matrix derived from only jt. [num of plasma points, num of coefs]
+    # jt : jt
+    a1 = copy.copy(mat0)
+    v1 = copy.copy(val0)
+    w1 = copy.copy(wgt0)
+
+    if 'constraints_pressure' in cond.keys():
+        mat, val, wgt = constraints_pressure(cond)
+        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt)
+
+    if 'constraints_flux' in cond.keys():
+        mat, val, wgt = constraints_mag(cond, mat_jt, 'flux')
+        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt)
+   
+    if 'constraints_br' in cond.keys():
+        mat, val, wgt = constraints_mag(cond, mat_jt, 'br')
+        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt)
+
+    if 'constraints_bz' in cond.keys():
+        mat, val, wgt = constraints_mag(cond, mat_jt, 'bz')
+        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt)
+
+    return a1, v1, w1
+
+# 1次元配列をd_matに変換
+def conv_1d_array_to_dmat(cond, array):
+    dm_domain = cond['domain']
+    g = emat.dm_array(dm_domain)
+    d = dm_domain["matrix"].reshape(-1)
+    ir = g.ir[d == 1]
+    iz = g.iz[d == 1]
+
+    mat = np.zeros((g.nz, g.nr))
+    for i, j, v in zip(ir, iz, array):
+        mat[j, i] = v
+    res = emat.get_dmat_dim(dm_domain)
+    res['matrix'] = mat
+    return res
+
 # 平衡計算の前処理
 def equi_pre_process(condition, verbose=2):
     cond = copy.deepcopy(condition)
@@ -616,21 +821,26 @@ def equi_pre_process(condition, verbose=2):
     # TFコイル巻き戻しのチェック
     cond = ssf.check_tf_rewind(cond)
     
-    # コイルによるフラックス
-    dm_fc = cmat.get_flux_of_coil(cond)
-    cond["flux_coil"] = dm_fc
-
     # プラズマ電流
-    dm_jt = pmat.d_set_plasma_parabolic(cond)
-    cond["jt"] = dm_jt
+    cond["jt"] = pmat.d_set_plasma_parabolic(cond)
 
-    # プラズマ電流によるフラックス
-    dm_fp = pmat.cal_plasma_flux(dm_jt)
-    cond["flux_jt"] = dm_fp
+    # 磁場クラスの作成
+    mag = smc.Magnetic(cond)
 
-    # トータルのフラックス
-    dm_flux = emat.dm_add(dm_fp, dm_fc)
-    cond["flux"] = dm_flux
+    # コイルによるフラックス, br, bz
+    cond["flux_coil"] = mag.fl_c
+    cond["br_coil"] = mag.br_c
+    cond["bz_coil"] = mag.bz_c
+
+    # プラズマ電流によるフラックス,br, bz
+    cond["flux_jt"] = mag.fl_p
+    cond["br_jt"] = mag.br_p
+    cond["bz_jt"] = mag.bz_p
+
+    # トータルのフラックス, br, bz
+    cond["flux"] = mag.fl
+    cond["br"] = mag.br
+    cond["bz"] = mag.bz
 
     # 最外殻磁気面
     dm_dm = search_domain(cond)
@@ -665,8 +875,17 @@ def equi_post_process(cond, verbose=2):
     set_domain_params(cond)
 
     # 正規化フラックスの計算
-    # dm_nfl = get_normalized_flux(cond)
-    # cond["flux_normalized"] = dm_nfl
+    # 最期、ドメインの探索をして終わっているので、
+    # まれにドメインと実際がずれているときがある。
+    # 従って、再度normalized_fluxを計算する必要がある。
+    dm_nfl = get_normalized_flux(cond)
+    cond["flux_normalized"] = dm_nfl
+
+    # 磁場に関する計算
+    mag = smc.Magnetic(cond)
+
+    cond['br'] = mag.br
+    cond['bz'] = mag.bz
 
     # fluxループの位置におけるフラックスの計算    
     if 'fl_pos' in cond.keys():
@@ -674,28 +893,23 @@ def equi_post_process(cond, verbose=2):
         cond['fl_val'] = {}
         for k in pos.keys():
             r, z = pos[k]
-            cond['fl_val'][k] = emat.linval2(r, z, cond['flux'])
-    
-    # 磁場に関する計算
-    mag = smc.Magnetic(cond)
+            cond['fl_val'][k] = mag.get_fl(r, z)
     
     # 与えられた位置におけるBrの計算
     if 'br_pos' in cond.keys():
-        cond['br'] = mag.br
         pos = cond['br_pos']
         cond['br_val'] = {}
         for k in pos.keys():
             r, z = pos[k]
-            cond['br_val'][k] = emat.linval2(r, z, cond['br'])
+            cond['br_val'][k] = mag.get_br(r, z)
     
     # 与えられた位置におけるBzの計算
     if 'bz_pos' in cond.keys():
-        cond['bz'] = mag.bz
         pos = cond['bz_pos']
         cond['bz_val'] = {}
         for k in pos.keys():
             r, z = pos[k]
-            cond['bz_val'][k] = emat.linval2(r, z, cond['bz'])
+            cond['bz_val'][k] = mag.get_bz(r, z)
     
     # decay index on magnetic acis
     cond['decay_index_on_axis'] = mag.get_decay_index(cond['r_ax'], cond['z_ax'])
@@ -724,11 +938,13 @@ def equi_post_process(cond, verbose=2):
     cond = calc_safety(cond)  # safety factorの計算
 
     # 拘束条件の再現度
-    if 'constraints_pressure' in cond.keys():
-        cpr = cond['constraints_pressure']
-        for e in cpr.keys():
-            rp, zp = cpr[e]['point']
-            cpr[e]['pressure_calc'] = emat.linval2(rp, zp, cond['pressure'])
+    for s in ['pressure', 'flux', 'br', 'bz']:
+        n = f'constraints_{s}'
+        if n in cond.keys():
+            cpr = cond[n]
+            for e in cpr.keys():
+                rp, zp = cpr[e]['point']
+                cpr[e][f'{s}_calc'] = emat.linval2(rp, zp, cond[s])
 
     # 計算結果の確認
     # 圧力分布の正負の確認
@@ -754,91 +970,31 @@ def equi_post_process(cond, verbose=2):
 # 平衡計算(１回)
 def equi_fit_and_evaluate_error(condition):
     cond = copy.deepcopy(condition)
-
-    # dm_jt: プラズマ電流
-    # dm_domain: 最外殻磁気面のdmat
-    # npr: pressureに関するパラメータの個数
-    # ncu: poloidal電流に関するパラメータの個数
-    #
-    # out: dmat_jt
     
-    # 各matrixの取得
-    dm_jt = cond["jt"]
-    dm_domain = cond["domain"]
+    # 正規化フラックスの作成と保存
     dm_nf = get_normalized_flux(cond) # 正規化flux
-
-    # 正規化フラックスの保存
     cond["flux_normalized"] = dm_nf
-
-    # 時数の取得
-    npr = cond["num_dpr"]
-    ncu = cond["num_di2"]
-
-    g = emat.dm_array(dm_domain)
-
     # 1メッシュの面積を計算
-    ds = g.dr*g.dz
-    
-    # 一次元化
-    f = dm_nf["matrix"].reshape(-1)
-    j = dm_jt["matrix"].reshape(-1)
-    d = dm_domain["matrix"].reshape(-1)
+    #ds = g.dr*g.dz
 
+    a, j = make_initial_matrix(cond)
     jtotal = np.sum(j)  # 全電流を保持しておく
 
-    # 最外殻磁気面の内部のみ取り出す。
-    ir = g.ir[d == 1]
-    iz = g.iz[d == 1]
-    r = g.r[d == 1]
-    j = j[d == 1]
-    f = f[d == 1]
-
-    # 例えばパラメータ数が３の場合の時
-    # (1-x^3) *a0 + (x^1-x^3)*a1 + (x^2-x^3)*a2
-    # という形になることに注意すること
-
-    # 圧力に関する行列作成 [npr+1, ポイント数]
-    # 圧力由来のjt = 2*pi*r * (dp/df)
-    p0 = np.array([2 * np.pi * r * (f**i - f**npr) for i in range(npr)])
-    
-    # I^2に関する行列作成 [ncu+1, ポイント数]
-    # ポロイダル電流由来: jt = 10**(-7)/r * (di^2/df)
-    p1 = np.array(
-        [10 ** (-7) / (r + 10 ** (-7)) * (f**i - f**ncu) for i in range(ncu)]
-    )
-    
-    # 結合させて転置、この時点で[point数, パラメータ数]の形
-    a = np.vstack([p0, p1]).transpose() # matrix
-    
     # a1, v1, w1: including other constrains (ex. pressure)
     a1 = a.copy()
     v1 = j.copy() # value v[point数]
     w1 = np.array([1.0]*len(v1)) # weighting factor w[point数]
-    num_points = len(v1)
 
-    if 'constraints_pressure' in cond.keys():
-        mat, val, wgt = ssf.constraints_pressure(cond)
-        # wgt: squared values
-        #print('a', a.shape, 'mat', mat.shape)
-        #print('v', v.shape, 'val', val.shape)
-        #print('w', w.shape, 'wgt', wgt.shape) 
-        wgt *= (num_points**2) # 二乗の値なので、ポイント数でも二乗の必要
-        a1 = np.vstack((a1, mat)) 
-        v1 = np.append(v1, val)
-        w1 = np.append(w1, wgt)
-        #print(a.shape, v.shape, w.shape)
+    # 束縛条件の追加
+    a1, v1, w1 = constraints_procedure(cond, a1, v1, w1, a, j)
 
-    # weighting matrixの作成
-    w1 = np.diag(w1)
-    #print(w.shape)
+    w1 = np.diag(w1) # weighting matrixの作成
 
-    # 次にAbs(a x -j)を最小とするxを求めればよい。
-    # A[p, n] x[n] = j[p]
-    # このときのxは、At.A x = At.jを満たすxである。
-
-    # a[nc, np] (nc:ポイント数、np:パラメータ数)
-    # w[nc, nc]
-    # v[nc]
+    # 重み付きの式の時、下の式を満たすcを求めればよい。
+    # A_t W A c = (W A)_t v0 
+    # A[nt, nc] (nt:ポイント数、nc:パラメータ数)
+    # w[nt, nt]
+    # v[nt]
     # フィッティングする場合は電流密度の値を用いる。
     m0 = np.dot(a1.transpose(), w1) # [np, nc]
     m0 = np.dot(m0, a1) # [np, np]
@@ -857,7 +1013,6 @@ def equi_fit_and_evaluate_error(condition):
         return cond
     params = np.dot(np.linalg.inv(m0), m1)
 
-    # エラー値の算出
     j0 = np.dot(a, params)  # 新しい電流
     jsum = np.sum(j0)
     
@@ -865,45 +1020,35 @@ def equi_fit_and_evaluate_error(condition):
         cond['cal_result'] = -1
         cond['error_messages'] += 'Sum of jt become zero.\n'
         return cond
-    
-    j0 *= jtotal / jsum  # トータルの電流値が維持されるように調整
+
+    # 次数の取得
+    npr = cond["num_dpr"]
+
+    # 新しい電流分布の作成と保存
     # この時点で、１メッシュ内に流れるトータルの電流に正規化される。
+    j0 *= jtotal / jsum  # トータルの電流値が維持されるように調整
+    cond['jt'] = conv_1d_array_to_dmat(cond, j0)
 
-    # 評価方法はいくつか考えられる。単位メッシュ当たりのエラーに直すとか。    
-    # これは単純な二乗残差、domainが大きい場合はエラーが大きくなる？
-    #errest = np.sum((j0 - j) ** 2) / 2
-    # 二乗残差の平均(メッシュ当たりのエラー)、domainの大きさに依存しない
-    # errest = np.average((j0 - j) ** 2) / 2
-    # メッシュ当たりのパーセンテージ絶対誤差の平均のようなもの 
-    #errest = np.average(np.abs(j0-j))/np.average(np.abs(j))
-    # メッシュの絶対誤差の最大値とメッシュの平均値の比
+    # 新しい圧力由来電流分布の作成と保存
+    j0_p = np.dot(a[:, 0:npr], params[0:npr]) * (jtotal/jsum)
+    cond['jt_dp'] = conv_1d_array_to_dmat(cond, j0_p)
+
+    # 新しいポロイダル電流由来電流分布の作成と保存
+    j0_d = np.dot(a[:, npr:], params[npr:]) * (jtotal/jsum)
+    cond['jt_di2'] = conv_1d_array_to_dmat(cond, j0_d)
+
+    # エラー値の算出_エラーの評価方法の幾つか    
+    # 1. 単純な二乗残差
+    #   domainが大きい場合はエラーが大きくなる？
+    #   errest = np.sum((j0 - j) ** 2) / 2
+    # 2. 二乗残差の平均(メッシュ当たりのエラー）
+    #   domainの大きさに依存しないが、電流の大小に影響を受ける
+    #   errest = np.average((j0 - j) ** 2) / 2
+    # 3. メッシュ当たりのパーセンテージ絶対誤差の平均のようなもの 
+    #   domain, 電流の値に依存しない
+    #   errest = np.average(np.abs(j0-j))/np.average(np.abs(j))
+    # 4. メッシュの絶対誤差の最大値とメッシュの平均値の比
     errest = np.max(np.abs(j0-j))/np.average(np.abs(j))
-    
-    # 新しい電流分布の作成
-    j_new = np.zeros((g.nz, g.nr))
-    for i, j, v in zip(ir, iz, j0):
-        j_new[j, i] = v
-    res = emat.get_dmat_dim(dm_jt)
-    res["matrix"] = j_new
-    cond['jt'] = res
-    
-    # 新しい圧力由来電流分布の作成
-    j0_p = np.dot(a[:, 0:npr], params[0:npr])
-    j_pres = np.zeros((g.nz, g.nr))
-    for i, j, v in zip(ir, iz, j0_p):
-        j_pres[j, i] = v
-    res = emat.get_dmat_dim(dm_jt)
-    res['matrix'] = j_pres * jtotal / jsum
-    cond['jt_dp'] = res
-
-    # 新しいポロイダル電流由来電流分布の作成
-    j0_d = np.dot(a[:, npr:], params[npr:])
-    j_di2 = np.zeros((g.nz, g.nr))
-    for i, j, v in zip(ir, iz, j0_d):
-        j_di2[j, i] = v
-    res = emat.get_dmat_dim(dm_jt)
-    res['matrix'] = j_di2 * jtotal / jsum
-    cond['jt_di2'] = res
     
     cond["error"].append(errest)
     cond["param_dp"] = params[0:npr]
@@ -930,14 +1075,17 @@ def equi_calc_one_step(condition, verbose=2):
     if ('fix_pos' in cond) and cond['fix_pos']:
         dm_jt = pmat.shift_plasma_profile(cond)
         cond["jt"] = dm_jt
-    
-    # プラズマ電流によるフラックス
-    dm_fp = pmat.cal_plasma_flux(cond["jt"])
-    cond["flux_jt"] = dm_fp
 
-    # トータルのフラックス
-    dm_flux = emat.dm_add(cond["flux_jt"], cond["flux_coil"])
-    cond["flux"] = dm_flux
+    # プラズマ電流によるフラックス,br, bz
+    # ここの箇所は計算時間がかかるので必要最小限に。
+    cond["flux_jt"] = pmat.cal_plasma_flux(cond["jt"])
+    # cond["br_jt"] = pmat_br.cal_plasma_br(cond["jt"])
+    # cond["bz_jt"] = pmat_bz.cal_plasma_bz(cond["jt"])
+
+    # トータルのフラックス, br, bz
+    cond["flux"] = emat.dm_add(cond["flux_jt"], cond["flux_coil"])
+    #cond["br"] = emat.dm_add(cond["br_jt"], cond["br_coil"])
+    #cond["bz"] = emat.dm_add(cond["bz_jt"], cond["bz_coil"])
 
     # 最外殻磁気面の探索
     dm_dm = search_domain(cond)
