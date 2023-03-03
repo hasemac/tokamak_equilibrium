@@ -1,4 +1,24 @@
 import numpy as np
+from global_variables import gparam
+
+gl = gparam()
+
+def coarse_grid_num(r, z):
+    rmin, dr = gl.cr_min, gl.cdel_r
+    zmin, dz = gl.cz_min, gl.cdel_z
+    fr = (r - rmin)/dr
+    ir = int(np.floor(fr))
+    fr -= ir
+    if fr > 0.5:
+        ir += 1
+    
+    fz = (z - zmin)/dz
+    iz = int(np.floor(fz))
+    fz -= iz
+    if fz > 0.5:
+        iz += 1
+    
+    return (ir, iz)
 
 class dm_array:
     def __init__(self, dmat):

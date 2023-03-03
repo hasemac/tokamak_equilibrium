@@ -103,13 +103,113 @@ P(\psi)=\int d \psi \frac{dP}{d \psi}(x)=(\psi_{B}- \psi_{M}) \int dx \: (\sum_{
 P(\psi)=(\psi_{B}- \psi_{M}) \sum_{n=0}^{n_{p}} a_{n} (\frac{x^{n+1}-1}{n+1} - \frac{x^{np+1}-1}{n_{p}+1})
 ```
 
+## Representation with matrix
+
+$`\boldsymbol{j}_{1} [np] = F [np, nc] \ \boldsymbol{c}[nc]`$  
+$`\boldsymbol{j}_1`$ : new current profile  
+$`\boldsymbol{c}`$ : array of fitting coefficients := [$`a_{n}`$, $`b_{n}`$]  
+$`np`$ : number of plasma points  
+$`nc`$ : number of fitting coefficients : = len($`a_n`$)+len($`b_n`$)    
+
+
+## Constraint of pressure
+Calculate pressure with Eq. 
+```math
+P(\psi)=(\psi_{B}- \psi_{M}) \sum_{n=0}^{n_{p}} a_{n} (\frac{x^{n+1}-1}{n+1} - \frac{x^{np+1}-1}{n_{p}+1})
+```
+And, get the matrix,  
+
+$`P[np, nc]`$  
+$`npr`$ : number of constraint points  
+$`nc`$ : number of fitting coefficients
+
+Then, stack to F, and get new F
+
+```math
+\begin{pmatrix}
+\boldsymbol{j}_1\\
+\boldsymbol{p}_1
+\end{pmatrix}
+=
+\begin{pmatrix}
+F\\
+P
+\end{pmatrix}
+[np+npr, nc]
+\boldsymbol{c}[nc]
+```
+## Constraint of flux
+
+$`\boldsymbol{j}_{1} [np] = F [np, nc] \boldsymbol{c} [n_{c}]`$  
+$`np`$ : number of plasma points
+
+Calculate flux of the flux loop position with each plasma current points with unit current.    
+Then, make diagonal matrix.
+
+```math
+H[n_{p}, n_{p}] = 
+\begin{pmatrix}
+h_{1} & \cdots & 0 & \cdots & 0\\
+\vdots & \ddots & & & \vdots \\
+0 & & h_{i} & & 0 \\
+\vdots & & & \ddots & \vdots \\
+0 & \cdots & 0 & \cdots & h_{np}
+\end{pmatrix}
+```
+Calculate $`HF`$, the shape is $`(HF)[np, nc]`$.  
+Then take sum in column to calculate the total flux, and its shape is [1, nc].  
+With other constraints, the matrix can be get as below.  
+$`Fl[nfl, nc]`$ : each flux of constrains  
+$`nfl`$ : number of constrain points  
+
+And, stack to F, and get new F.
+
+```math
+\begin{pmatrix}
+\boldsymbol{j}_1\\
+\boldsymbol{p}_1\\
+\boldsymbol{fl}_1
+\end{pmatrix}
+=
+\begin{pmatrix}
+F\\
+P\\
+Fl
+\end{pmatrix}
+[np+npr+nfl, nc]
+\boldsymbol{c}[nc]
+```
+## Constraint of Br and Bz
+
+Same to the flux, then the equation can be get as below.
+
+```math
+\begin{pmatrix}
+\boldsymbol{j}_1\\
+\boldsymbol{p}_1\\
+\boldsymbol{fl}_1\\
+\boldsymbol{br}_1\\
+\boldsymbol{bz}_1
+\end{pmatrix}
+=
+\begin{pmatrix}
+F\\
+P\\
+Fl\\
+Br\\
+Bz
+\end{pmatrix}
+[np+npr+nfl+nbr+nbz, nc]
+\boldsymbol{c}[nc]
+```
+
 ## The least squares method
 
 $j_{0i}$ : Initial current profile  
 $j_{1i}$ : New current profile with coefficiencies
 
 ```math
-j_{1i} = \sum_{j}f_{ij}a_{j}
+j_{1i} = \sum_{j}f_{ij}c_{j}
 ```
 
 $a_{j}$ : coefficiencies of polynominal function $dp/d\psi$,  $dI^{2}/d\psi$
@@ -121,16 +221,16 @@ E = \frac{1}{2}\sum_{i}(j_{1i}-j_{0i})^{2}
 ```
 
 ```math
-E = \frac{1}{2}\sum_{i}(\sum_{j}f_{ij}a_{j}-j_{0i})^{2}
+E = \frac{1}{2}\sum_{i}(\sum_{j}f_{ij}c_{j}-j_{0i})^{2}
 ```
 
 Find $a_{j}$ to minimize $E$ with the least mean square method.
 
 ```math
 \begin{align}
-\frac{\partial E}{\partial a_{k}}
-&=\sum_{i}(\sum_{j}f_{ij}a_{j}-j_{0i})f_{ik}\\
-&=\sum_{i,j}f_{ik}f_{ij}a_{j}-\sum_{i}f_{ik}j_{0i}\\
+\frac{\partial E}{\partial c_{k}}
+&=\sum_{i}(\sum_{j}f_{ij}c_{j}-j_{0i})f_{ik}\\
+&=\sum_{i,j}f_{ik}f_{ij}c_{j}-\sum_{i}f_{ik}j_{0i}\\
 &=0
 \end{align}
 ```
@@ -141,21 +241,46 @@ If you rewrite it in the form of a matrix, the $\boldsymbol{a}$ satisfies the fo
 F^{T}F\boldsymbol{a}=F^{T}\boldsymbol{j}_{0}
 ```
 
+## The least squares method with constraints
+
+A weighting factor is set so that each constraint has an equal effect.  
+The equation is rewrite as below.
+
+```math
+\boldsymbol{v}_1 = M[nt, nc] \boldsymbol{c}[nc]
+```
+Here, 
+```math
+\boldsymbol{v}_1 =[\boldsymbol{j}_{1}, \boldsymbol{p}_1, \boldsymbol{fl}_1, \boldsymbol{br}_1, \boldsymbol{bz}_1]
+```
+
+```math
+M = \begin{pmatrix}
+F\\
+P\\
+Fl\\
+Br\\
+Bz
+\end{pmatrix}
+```
+
+$`nt`$ : total number of equation = np+npr+nfl+nbr+nbz  
+
 When weighting factors are present, the evaluation equation becomes:
 
 ```math
-E = \frac{1}{2}\sum_{i}w_{i}^{2}(j_{1i}-j_{0i})^{2}
+E = \frac{1}{2}\sum_{i}w_{i}^{2}(v_{1i}-v_{0i})^{2}
 ```
 ```math
 \begin{align}
-\frac{\partial E}{\partial a_{k}}
-&=\sum_{i,j}w_{i}^{2}f_{ik}f_{ij}a_{j}-\sum_{i}w_{i}^{2}f_{ik}j_{0i}\\
+\frac{\partial E}{\partial c_{k}}
+&=\sum_{i,j}w_{i}^{2}m_{ik}m_{ij}c_{j}-\sum_{i}w_{i}^{2}m_{ik}v_{0i}\\
 &=0
 \end{align}
 ```
 And, in the matrix form,
 ```math
-F^{T}WF\boldsymbol{a}=(WF)^{T}\boldsymbol{j}_{0}
+M^{T}WM\boldsymbol{c}=(WM)^{T}\boldsymbol{v}_{0}
 ```
 
 Here, the matrix W is a diagonal matrix of squared weighting factors.
@@ -166,15 +291,16 @@ w_{1}^{2} & \cdots & 0 & \cdots & 0\\
 \vdots & \ddots & & & \vdots \\
 0 & & w_{i}^{2} & & 0 \\
 \vdots & & & \ddots & \vdots \\
-0 & \cdots & 0 & \cdots & w_{nc}^{2}
+0 & \cdots & 0 & \cdots & w_{nt}^{2}
 \end{pmatrix}
 ```
 
 Note, the shape of matrix:  
-W[nc, nc]  
-F[nc, np]  
-a[np]  
-nc: number of conditions, np: number of parameters.
+W[nt, nt]  
+M[nt, nc]  
+c[nc]  
+nt: total number of equations  
+nc: number of fitting coefficients.
 
 ## Evaluation of error
 

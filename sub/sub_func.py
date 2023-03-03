@@ -1,7 +1,9 @@
+# ここには標準モジュールで記述できるものを加える。
+# これは循環参照を避ける意味合いがある。
+
 import numpy as np
 import warnings
 from scipy.optimize import curve_fit
-import sub.emat as emat
 
 def fitting_quad_func(data_array2d):
     """fitting関数の係数を返す。
@@ -152,41 +154,3 @@ def check_tf_rewind(cond):
             cond['cur_pf']['tf_rewind'] = cond['cur_tf']['tf']
     
     return cond
-
-def constraints_pressure(cond):
-    faxis, fsurf = cond["f_axis"], cond["f_surf"]
-    npr = cond["num_dpr"]
-    ncu = cond["num_di2"]
-    dm_nf = cond['flux_normalized']
-    dm_domain = cond['domain']
-
-    array_cf = [] # array of coef
-    array_pr = [] # array of pressure
-    array_wt = [] # array of weighting factor
-
-    copr = cond['constraints_pressure']
-    for e in copr.keys():
-        rp,zp = copr[e]['point']
-        
-        # domainの外は無視
-        if 0 == emat.linval2(rp, zp, dm_domain):
-            continue
-
-        # pointにおけるnormalized flux
-        nfp = emat.linval2(rp, zp, dm_nf) 
-        # onp[npr]の形
-        onp = [(fsurf-faxis)*((nfp**(i+1)-1)/(i+1) - (nfp**(npr+1)-1)/(npr+1)) for i in range(npr)]
-        onp += [0]*ncu # onp[npr + ncu] :パラメータの数
-
-        array_cf.append(onp)
-        array_pr.append(copr[e]['pressure'])
-        array_wt.append(copr[e]['weight']**2) # squared
-    
-    # np arrayに変換。この時点で、[point数、パラメータ数]
-    array_cf = np.array(array_cf)
-    array_pr = np.array(array_pr)
-    array_wt = np.array(array_wt)
-    #print('cf', array_cf.shape, array_pr.shape, array_wt.shape)
-    #print(array_wt)
-
-    return array_cf, array_pr, array_wt

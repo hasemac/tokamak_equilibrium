@@ -6,7 +6,7 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 ## New features
 
-- Equilibrium calculation can now be performed by adding the plasma pressure at a certain location as a constraint condition.
+- Equilibrium calculation can now be performed by adding the constraints condition of plasma pressure, flux, br, and bz at a certain location.
 
 ## Features of this equilibrium calculation code
 
@@ -112,6 +112,7 @@ The unit used in the parameter is the MKSA system of units. For example, the par
 
 ```python:
 condition = {
+condition = {
     # TF current
     'cur_tf':{'tf': +50.0e+3, 'turn': 16, 
     #'rewind': True, # rewind of tf coil
@@ -122,15 +123,33 @@ condition = {
     
     # PF currents
     'cur_pf':{'hcult16':0.0,'pf17t12':-1.0e+3, 'pf26t36':-1.0e+3,'pf4_1ab3_cc2':0.0,'pf35_2':0.0, },
-        
+    
     # number of coefficients
     'num_dpr':1, # dp/df
     'num_di2':1, # di2/df
 
     # 'constraints_pressure':{
-    #     'name1':{'point':(0.3, 0.0), 'pressure':20, 'weight':1},
-    #     'name2':{'point':(0.4, 0.0), 'pressure':30, 'weight':1},  
-    #     'name3':{'point':(0.6, 0.0), 'pressure':40, 'weight':3},
+    #     'name1':{'point':(0.3, 0.0), 'pressure':20.0, 'weight':1.0},
+    #     'name2':{'point':(0.4, 0.0), 'pressure':30.0, 'weight':1.0},  
+    #     'name3':{'point':(0.6, 0.0), 'pressure':40.0, 'weight':1.0},
+    # },
+
+    # 'constraints_flux':{
+    #     'flc08':{'point':(0.1985,  0.450), 'flux':0.003, 'weight':1.0},
+    #     'f_im0':{'point':(0.1985,  0.0  ), 'flux':0.007, 'weight':1.0},
+    #     'flc17':{'point':(0.1985, -0.450), 'flux':0.003, 'weight':1.0},
+    # },
+
+    # 'constraints_br':{
+    #     'name1':{'point':(0.2, 0.4), 'br': 0.01, 'weight':0.0},
+    #     'name2':{'point':(0.2, 0.0), 'br': 0.00, 'weight':0.0},  
+    #     'name3':{'point':(0.2,-0.4), 'br':-0.01, 'weight':0.0},
+    # },
+
+    # 'constraints_bz':{
+    #     'name1':{'point':(0.0, 0.4), 'bz':0.036, 'weight':0.0},
+    #     'name2':{'point':(0.0, 0.0), 'bz':0.060, 'weight':10.0},  
+    #     'name3':{'point':(0.0,-0.4), 'bz':0.036, 'weight':0.0},
     # },
 
     # flag to fix magnetic axis at initial plasma profile (r0, z0) 
