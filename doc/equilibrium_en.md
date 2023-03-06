@@ -119,7 +119,7 @@ P(\psi)=(\psi_{B}- \psi_{M}) \sum_{n=0}^{n_{p}} a_{n} (\frac{x^{n+1}-1}{n+1} - \
 ```
 And, get the matrix,  
 
-$`P[np, nc]`$  
+$`P[npr, nc]`$  
 $`npr`$ : number of constraint points  
 $`nc`$ : number of fitting coefficients
 
