@@ -750,7 +750,11 @@ def const_stack_matrix(mat0, val0, wgt0, mat1, val1, wgt1, j0):
     j0_ave = np.average(np.abs(j0))
     num = len(j0)
     val1_ave = np.average(np.abs(val1))
-    tw = (j0_ave/val1_ave)**2 # trimming factor for weitht_squared
+    
+    if 0.0 == val1_ave:
+        val1_ave = 1.0
+    
+    tw = (j0_ave/val1_ave)**2 # trimming factor for weight_squared
     wgt1 *= tw # 値が同等になるためのweightの補正
     wgt1 *= num # j0は式の数が多いので、式の数に対する補正
 

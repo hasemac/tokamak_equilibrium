@@ -109,7 +109,7 @@ $`\boldsymbol{j}_{1} [np] = F [np, nc] \ \boldsymbol{c}[nc]`$
 $`\boldsymbol{j}_1`$ : new current profile  
 $`\boldsymbol{c}`$ : array of fitting coefficients := [$`a_{n}`$, $`b_{n}`$]  
 $`np`$ : number of plasma points  
-$`nc`$ : number of fitting coefficients : = len($`a_n`$)+len($`b_n`$)    
+$`nc`$ : number of fitting coefficients : = len($` a_n `$)+len($` b_n `$)    
 
 
 ## Constraint of pressure
