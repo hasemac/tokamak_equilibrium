@@ -112,7 +112,6 @@ The unit used in the parameter is the MKSA system of units. For example, the par
 
 ```python:
 condition = {
-condition = {
     # TF current
     'cur_tf':{'tf': +50.0e+3, 'turn': 16, 
     #'rewind': True, # rewind of tf coil
@@ -173,6 +172,24 @@ Namely, 'parameter name':value, etc.
 The fl_pos, br_pos, and bz_pos are the positions to calculate flux, Br, and Bz, respectively after finishing the equilibrium calculation.
 
 The specifiable PF coil name can be found in '/colis/data_npy/'.
+
+### Constrains
+
+Constraint conditions can be set for pressure, magnetic flux, Br, and Bz.  
+Please refer to the calculation condition example for how to set the binding conditions.  
+Adjust the weight factor to 1, 10, 100, etc. to adjust the degree of constraint enforcement.  
+The result of applying the constraint is added to the input condition.  
+In the example below, when the pressure is set to 40Pa, the calculated result is 40.179Pa.  
+
+```python:
+cond['constraints_pressure']
+```
+```python:
+{'name3': {'point': (0.6, 0.0),
+  'pressure': 40.0,
+  'weight': 1.0,
+  'pressure_calc': 40.178728138256936}}
+```
 
 ## How to check the calculation result
 
