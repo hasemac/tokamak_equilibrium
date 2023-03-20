@@ -78,6 +78,7 @@ def contour(data, xmin, ymin, dx, dy, shapes = vd.vac):
                     x0 = xmin, y0=ymin, dx=dx, dy=dy, 
                     showscale=False,
                     contours_coloring='lines',
+                    #contours_coloring='none',
                     #autocontour=True,
                     ncontours=100,
                     )
@@ -104,8 +105,11 @@ def contour(data, xmin, ymin, dx, dy, shapes = vd.vac):
     fig = go.Figure(data=cdata, layout=layout)
     fig.show()
 
-def double_contour(d_mat: dict, d_mat2: dict):
-    dbl_contour(d_mat['matrix'], d_mat2['matrix'], d_mat['rmin'], d_mat['zmin'], d_mat['dr'], d_mat['dz'])
+def double_contour(d_mat: dict, d_mat2: dict, shapes = vd.vac):
+    dbl_contour(d_mat['matrix'], d_mat2['matrix'], 
+                d_mat['rmin'], d_mat['zmin'], d_mat['dr'], d_mat['dz'],
+                shapes = shapes,
+                )
     
 def dbl_contour(data1, data2, xmin, ymin, dx, dy, shapes = vd.vac):
     """contour plot
