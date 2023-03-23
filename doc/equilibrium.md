@@ -20,6 +20,10 @@ error = \frac{1}{2}\sum_{(i, j)}(j_{t1}(i, j)-j_{t0}(i, j))^{2}
 j_{\psi} = 2 \pi R \frac{dP(\psi)}{d\psi}+\frac{\mu_{0}}{4 \pi R} \frac{dI^{2}(\psi)}{d\psi}
 ```
 
+```math
+j_{t} = 2 \pi R \frac{dp(\psi)}{d\psi}+\frac{\mu_{0}}{4 \pi R} \frac{dI^{2}(\psi)}{d\psi}
+```
+
 ただし
 $P(\psi)$：プラズマ圧力
 $I(\psi)$：ポロイダル電流
