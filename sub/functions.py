@@ -547,6 +547,125 @@ def calc_beta(cond):
     
     return cond
 
+# safety factorの計算（多項式近似その１）
+def calc_safety_poly(cond):
+    # トロイダルフラックスをポロイダル電流から計算
+    # トロイダルフラックスを多項式で近似
+    # その多項式関数の微分をとって安全係数を算出
+    
+    # この方法は微分を取った後の関数が中心ピークでなかったりするのが問題
+    
+    poly = 3 # 近似する多項式の次数
+
+    g = emat.dm_array(cond["domain"])
+    d = cond["domain"]["matrix"].reshape(-1)
+    f = cond["flux_normalized"]["matrix"].reshape(-1)
+    p = cond["pol_current"]["matrix"].reshape(-1)
+
+    # domainの場所だけ取り出す。
+    f = f[d == 1]
+    p = p[d == 1]
+    r = g.r[d == 1]
+    ir = g.ir[d == 1]
+    iz = g.iz[d == 1]
+    nr, nz = g.nr, g.nz
+
+    # bfの磁気面内の面積分を行う。
+    # bf: トロイダル方向の磁束密度
+    # 2 pi r bf = u0 I, thus bf = 2.0e-7 * I / r
+    func = 2.0 * 10 ** (-7) * p / r
+    func *= (g.dr*g.dz) # 面積積分なのでメッシュ面積をかける。
+
+    x = np.linspace(0, 1, 11)
+    y = [np.sum(func[f <= e]) for e in x]
+    cond['toroidal_flux'] = y
+    
+    coef = np.polyfit(x, y, poly) # [3次の係数, 2次係数, 1次係数, 0次係数]
+    val = [poly-e for e in range(poly+1)] # [3, 2, 1, 0]
+    coef *= val
+    coef = coef[:-1] # 多項式関数を微分した係数
+    
+    cond['toroidal_flux_diff'] = np.poly1d(coef)(x)
+    
+    # 安全係数(分布)の計算
+    fax, fbn = cond["f_axis"], cond["f_surf"]
+    q = np.poly1d(coef)(f)/(fbn - fax)
+    
+    qmat = np.zeros((nz, nr))
+    for v, i, j in zip(q, ir, iz):
+        qmat[j, i] = v
+        
+    safety = copy.deepcopy(cond["resolution"])
+    safety["matrix"] = qmat
+    cond["safety_factor"] = safety        
+    
+    # 安全係数（正規化フラックス）の計算
+    f0 = np.linspace(0.0, 1.0, nr)
+    q0 = np.poly1d(coef)(f0)/(fbn - fax)
+
+    cond["safety_factor_norm"] = q0
+    
+    return cond    
+
+# safety factorの計算（多項式近似その２）
+def calc_safety_poly2(cond):
+    # トロイダルフラックスをポロイダル電流から計算
+    # その微分を計算
+    # その微分値に対して多項式近似を行う。
+    
+    poly = 4 # 多項式の次数
+    num = 61 # 微分を算出するときのサンプリング数
+
+    g = emat.dm_array(cond["domain"])
+    d = cond["domain"]["matrix"].reshape(-1)
+    f = cond["flux_normalized"]["matrix"].reshape(-1)
+    p = cond["pol_current"]["matrix"].reshape(-1)
+
+    # domainの場所だけ取り出す。
+    f = f[d == 1]
+    p = p[d == 1]
+    r = g.r[d == 1]
+    ir = g.ir[d == 1]
+    iz = g.iz[d == 1]
+    nr, nz = g.nr, g.nz
+
+    # bfの磁気面内の面積分を行う。
+    # bf: トロイダル方向の磁束密度
+    # 2 pi r bf = u0 I, thus bf = 2.0e-7 * I / r
+    func = 2.0 * 10 ** (-7) * p / r
+    func *= (g.dr*g.dz) # 面積積分なのでメッシュ面積をかける。
+
+    x = np.linspace(0, 1, num)
+    y = [np.sum(func[f <= e]) for e in x]
+
+    cond['toroidal_flux'] = y
+    dy = np.diff(y)/(x[1]-x[0]) # 微分を計算
+    dy = np.append(dy[0], dy) # 要素数を揃える。
+    cond['toroidal_flux_diff'] = dy    
+    
+    # 微分した値に関する多項式近似
+    coef = np.polyfit(x, dy, poly) # [3次の係数, 2次係数, 1次係数, 0次係数]
+
+    # 安全係数(分布)の計算
+    fax, fbn = cond["f_axis"], cond["f_surf"]
+    q = np.poly1d(coef)(f)/(fbn - fax)
+    
+    qmat = np.zeros((nz, nr))
+    for v, i, j in zip(q, ir, iz):
+        qmat[j, i] = v
+        
+    safety = copy.deepcopy(cond["resolution"])
+    safety["matrix"] = qmat
+    cond["safety_factor"] = safety        
+    
+    # 安全係数（正規化フラックス）の計算
+    f0 = np.linspace(0.0, 1.0, nr)
+    q0 = np.poly1d(coef)(f0)/(fbn - fax)
+
+    cond["safety_factor_norm"] = q0
+    
+    return cond            
+    
 # safety factorの計算
 def calc_safety(cond):
     # calc toroidal flux
@@ -939,8 +1058,10 @@ def equi_post_process(cond, verbose=2):
     cond['pol_current_norm'] = polcur
 
     cond = calc_beta(cond)  # ベータ値の計算
-    cond = calc_safety(cond)  # safety factorの計算
-
+    #cond = calc_safety(cond)  # safety factorの計算
+    #cond = calc_safety_poly(cond)  # safety factorの計算
+    cond = calc_safety_poly2(cond)  # safety factorの計算
+        
     # 拘束条件の再現度
     for s in ['pressure', 'flux', 'br', 'bz']:
         n = f'constraints_{s}'
