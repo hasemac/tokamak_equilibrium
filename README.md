@@ -127,28 +127,22 @@ condition = {
     'num_dpr':1, # dp/df
     'num_di2':1, # di2/df
 
-    # 'constraints_pressure':{
+    # 'constraints':{
     #     'name1':{'point':(0.3, 0.0), 'pressure':20.0, 'weight':1.0},
     #     'name2':{'point':(0.4, 0.0), 'pressure':30.0, 'weight':1.0},  
     #     'name3':{'point':(0.6, 0.0), 'pressure':40.0, 'weight':1.0},
-    # },
 
-    # 'constraints_flux':{
     #     'flc08':{'point':(0.1985,  0.450), 'flux':0.003, 'weight':1.0},
     #     'f_im0':{'point':(0.1985,  0.0  ), 'flux':0.007, 'weight':1.0},
     #     'flc17':{'point':(0.1985, -0.450), 'flux':0.003, 'weight':1.0},
-    # },
 
-    # 'constraints_br':{
-    #     'name1':{'point':(0.2, 0.4), 'br': 0.01, 'weight':0.0},
-    #     'name2':{'point':(0.2, 0.0), 'br': 0.00, 'weight':0.0},  
-    #     'name3':{'point':(0.2,-0.4), 'br':-0.01, 'weight':0.0},
-    # },
-
-    # 'constraints_bz':{
-    #     'name1':{'point':(0.0, 0.4), 'bz':0.036, 'weight':0.0},
-    #     'name2':{'point':(0.0, 0.0), 'bz':0.060, 'weight':10.0},  
-    #     'name3':{'point':(0.0,-0.4), 'bz':0.036, 'weight':0.0},
+    #     'name4':{'point':(0.2, 0.4), 'br': 0.01, 'weight':0.0},
+    #     'name5':{'point':(0.2, 0.0), 'br': 0.00, 'weight':0.0},  
+    #     'name6':{'point':(0.2,-0.4), 'br':-0.01, 'weight':0.0},
+    
+    #     'name7':{'point':(0.0, 0.4), 'bz':0.036, 'weight':0.0},
+    #     'name8':{'point':(0.0, 0.0), 'bz':0.060, 'weight':10.0},  
+    #     'name9':{'point':(0.0,-0.4), 'bz':0.036, 'weight':0.0},      
     # },
 
     # flag to fix magnetic axis at initial plasma profile (r0, z0) 
@@ -182,7 +176,7 @@ The result of applying the constraint is added to the input condition.
 In the example below, when the pressure is set to 40Pa, the calculated result is 40.179Pa.  
 
 ```python:
-cond['constraints_pressure']
+cond['constraints']
 ```
 
 ```python:

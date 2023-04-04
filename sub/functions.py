@@ -719,7 +719,7 @@ def calc_safety(cond):
     return cond
 
 # 束縛条件_圧力
-def constraints_pressure(cond):
+def constraints_pressure(cond, const_pressure):
     faxis, fsurf = cond["f_axis"], cond["f_surf"]
     npr = cond["num_dpr"]
     ncu = cond["num_di2"]
@@ -730,7 +730,7 @@ def constraints_pressure(cond):
     array_pr = [] # array of pressure
     array_wt = [] # array of weighting factor
 
-    copr = cond['constraints_pressure']
+    copr = const_pressure
     for e in copr.keys():
         rp,zp = copr[e]['point']
         
@@ -758,21 +758,19 @@ def constraints_pressure(cond):
     return array_cf, array_pr, array_wt
 
 # 束縛条件_flux, br, bz
-def constraints_mag(cond, arr_f, syurui):
+def constraints_mag(cond, arr_f, syurui, constraints):
     #arr_f[num of plasma points, num of fitting param]
     # syurui: 'flux', 'br', 'bz'
 
+    cofl = constraints
     # 最初に種類に応じて変数をセット
     if syurui == 'flux':
-        cofl = cond['constraints_flux']
         d_mat = cond['flux_coil']
         basemat = pmat
     elif syurui == 'br':
-        cofl = cond['constraints_br']
         d_mat = cond['br_coil']
         basemat = pmat_br
     elif syurui == 'bz':
-        cofl = cond['constraints_bz']
         d_mat = cond['bz_coil']
         basemat = pmat_bz
 
@@ -890,22 +888,43 @@ def constraints_procedure(cond, mat0, val0, wgt0, mat_jt, jt):
     v1 = copy.copy(val0)
     w1 = copy.copy(wgt0)
 
-    if 'constraints_pressure' in cond.keys():
-        mat, val, wgt = constraints_pressure(cond)
-        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt)
+    if 'constraints' not in cond.keys():
+        return a1, v1, w1
+    
+    # constraintsを種類ごとに分ける
+    const_pressure  = {}
+    const_flux      = {}
+    const_br        = {}
+    const_bz        = {}
+    
+    dic = cond['constraints']
+    for e in dic.keys():
+        if 'pressure' in dic[e].keys():
+            const_pressure[e] = dic[e]
+        if 'flux' in dic[e].keys():
+            const_flux[e] = dic[e]
+        if 'br' in dic[e].keys():
+            const_br[e] = dic[e]
+        if 'bz' in dic[e].keys():
+            const_bz[e] = dic[e]
+    
+    # 束縛条件が存在していれば、それをスタック
+    if len(const_pressure) != 0:
+        mat, val, wgt = constraints_pressure(cond, const_pressure)
+        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt)        
+    
+    if len(const_flux) != 0:
+        mat, val, wgt = constraints_mag(cond, mat_jt, 'flux', const_flux)
+        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt)        
 
-    if 'constraints_flux' in cond.keys():
-        mat, val, wgt = constraints_mag(cond, mat_jt, 'flux')
-        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt)
-   
-    if 'constraints_br' in cond.keys():
-        mat, val, wgt = constraints_mag(cond, mat_jt, 'br')
-        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt)
-
-    if 'constraints_bz' in cond.keys():
-        mat, val, wgt = constraints_mag(cond, mat_jt, 'bz')
-        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt)
-
+    if len(const_br) != 0:
+        mat, val, wgt = constraints_mag(cond, mat_jt, 'br', const_br)
+        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt) 
+        
+    if len(const_bz) != 0:
+        mat, val, wgt = constraints_mag(cond, mat_jt, 'bz', const_bz)
+        a1, v1, w1 = const_stack_matrix(a1, v1, w1, mat, val, wgt, jt) 
+    
     return a1, v1, w1
 
 # 1次元配列をd_matに変換
@@ -1063,14 +1082,20 @@ def equi_post_process(cond, verbose=2):
     cond = calc_safety_poly2(cond)  # safety factorの計算
         
     # 拘束条件の再現度
-    for s in ['pressure', 'flux', 'br', 'bz']:
-        n = f'constraints_{s}'
-        if n in cond.keys():
-            cpr = cond[n]
-            for e in cpr.keys():
-                rp, zp = cpr[e]['point']
-                cpr[e][f'{s}_calc'] = emat.linval2(rp, zp, cond[s])
+    if 'constraints' in cond.keys():
+        dic = cond['constraints']
+        for e in dic.keys():
+            rp, zp = dic[e]['point']
+            if 'pressure' in dic[e].keys():
+                dic[e]['pressure_calc'] = emat.linval2(rp, zp, cond['pressure'])
+            if 'flux' in dic[e].keys():
+                dic[e]['flux_calc'] = emat.linval2(rp, zp, cond['flux'])
+            if 'br' in dic[e].keys():
+                dic[e]['br_calc'] = emat.linval2(rp, zp, cond['br'])
+            if 'bz' in dic[e].keys():
+                dic[e]['bz_calc'] = emat.linval2(rp, zp, cond['bz'])                            
 
+            
     # 計算結果の確認
     # 圧力分布の正負の確認
     a = [e <0 for e in cond["pressure_norm"]]
@@ -1102,7 +1127,10 @@ def equi_fit_and_evaluate_error(condition):
     # 1メッシュの面積を計算
     #ds = g.dr*g.dz
 
-    a, j = make_initial_matrix(cond)
+    # make_initial_matrix returns: 
+    # a[num of plasma points, num of coef]
+    # j[num of plasma points]
+    a, j = make_initial_matrix(cond) 
     jtotal = np.sum(j)  # 全電流を保持しておく
 
     # a1, v1, w1: including other constrains (ex. pressure)
