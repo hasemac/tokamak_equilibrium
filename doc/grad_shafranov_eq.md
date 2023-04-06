@@ -1,6 +1,9 @@
 
 # Grad-Shafranov equation
 
+Note:  
+$`B_{\theta}`$, $`j_{\theta}`$ are in toroidal direction.
+
 ## Each component of magnetic field
 
 ```math

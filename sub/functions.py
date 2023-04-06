@@ -521,6 +521,8 @@ def calc_beta(cond):
     # 圧力の体積平均
     p = get_volume_average(cond["pressure"], cond["domain"])
     cond["pressure_vol_average"] = p
+    # factor *2 means ion and electro
+    cond["stored_energy"] = (3/2)*p*cond["volume"]*2
 
     # 磁気軸におけるプラズマ込みのトロイダル磁場
     ir_ax, iz_ax = cond["ir_ax"], cond["iz_ax"]
@@ -544,6 +546,56 @@ def calc_beta(cond):
     betrper = betr*100 # unit: [%], percent
     betnor = np.abs(betrper*a*bt/ipma)
     cond["beta_normalized"] = betnor
+    
+    return cond
+
+# インダクタンスの計算
+def calc_inductance(cond):
+    g = emat.dm_array(cond["domain"])
+    d = cond["domain"]["matrix"].reshape(-1)
+    br = cond['br_jt']["matrix"].reshape(-1)
+    bz = cond['bz_jt']["matrix"].reshape(-1)
+    
+    # domainの場所だけ取り出す。
+    br = br[d == 1]
+    bz = bz[d == 1]
+    ir = g.ir[d == 1]
+    iz = g.iz[d == 1]
+    nr, nz = g.nr, g.nz
+        
+    bt2 = br*br + bz*bz
+    bt2mat = np.zeros((nz, nr))
+    for v, i, j in zip(bt2, ir, iz):
+        bt2mat[j, i] = v
+        
+    bt2jt = copy.deepcopy(cond["resolution"])
+    bt2jt["matrix"] = bt2mat
+    cond["b_theta_jt_square"] = bt2jt
+    
+    #print('volume average', get_volume_average(bt2jt, cond['domain']))
+    #print('section average', get_cross_section_average(bt2jt, cond['domain']))
+
+    # normalized internal inductance
+    # vn: <b_theta_square>_(section_average)
+    # vd: b_theta(a)^2    
+    vn = get_cross_section_average(bt2jt, cond['domain'])
+    vd = (4.0*np.pi*10**(-7)*cond['cur_ip']['ip'])**2/(4*np.pi*cond['cross_section'])
+    cond['inductance_internal_normalized'] = vn/vd
+    
+    # フラックスを算出。プラズマ由来であることに注意
+    pr, pz = cond['pts']['r_rmin'], cond['pts']['z_rmin']
+    fxe = np.abs(emat.linval2(pr, pz, cond['flux_jt'])) # 最外殻磁気面におけるフラックス
+    # ピーク位置のフラックス。磁気軸位置とは一致しないことに注意。
+    fxt = np.max(np.abs(cond['flux_jt']['matrix'])) # プラズマが存在することによる全磁束 
+    fxi = fxt - fxe # プラズマ内部に存在するフラックス
+    ip = cond['cur_ip']['ip']
+
+    cond['inductance_internal'] = fxi/ip
+    cond['inductance_self'] = fxt/ip
+    
+    vn = get_volume_average(bt2jt, cond['domain'])*cond['volume']
+    vd = (4.0*np.pi*10**(-7))*(cond['cur_ip']['ip']**2)
+    cond['inductance_internal_btheta'] = vn/vd
     
     return cond
 
@@ -1077,10 +1129,17 @@ def equi_post_process(cond, verbose=2):
     cond['pol_current_norm'] = polcur
 
     cond = calc_beta(cond)  # ベータ値の計算
-    #cond = calc_safety(cond)  # safety factorの計算
-    #cond = calc_safety_poly(cond)  # safety factorの計算
-    cond = calc_safety_poly2(cond)  # safety factorの計算
-        
+    
+    # safety factorの計算
+    #cond = calc_safety(cond)  # 微分を取って補間
+    #cond = calc_safety_poly(cond)  # 多項式近似した後に微分
+    cond = calc_safety_poly2(cond)  # 微分後に多項式近似
+    cond['q_center'] = cond['safety_factor_norm'][0]
+    cond['q_edge'] = cond['safety_factor_norm'][-1]
+    
+    # inductanceの計算
+    cond = calc_inductance(cond)
+    
     # 拘束条件の再現度
     if 'constraints' in cond.keys():
         dic = cond['constraints']
