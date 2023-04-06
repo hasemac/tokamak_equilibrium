@@ -319,12 +319,12 @@ def search_dom(cond):
     dm[l, k] = 1.0  # 探索用のシードを極小値を持つ場所にセット
 
     # 値を記録
-    cond["ir_ax"] = k
-    cond["iz_ax"] = l
+    cond["axis_ir"] = k
+    cond["axis_iz"] = l
     # 近傍9点のデータから極値の補正値を求める。
     zc, rc, fax = ssf.find_extremum_loc_and_val(dm_flx['matrix'][l-1:l+2, k-1:k+2]) # 補正
-    cond["r_ax"] = rmin + k * dr + rc * dr
-    cond["z_ax"] = zmin + l * dz + zc * dz
+    cond["axis_r"] = rmin + k * dr + rc * dr
+    cond["axis_z"] = zmin + l * dz + zc * dz
     cond['f_axis'] = fax
 
     # 磁気軸のフラックスを保存し、
@@ -525,8 +525,8 @@ def calc_beta(cond):
     cond["stored_energy"] = (3/2)*p*cond["volume"]*2
 
     # 磁気軸におけるプラズマ込みのトロイダル磁場
-    ir_ax, iz_ax = cond["ir_ax"], cond["iz_ax"]
-    r_ax = cond["r_ax"]
+    ir_ax, iz_ax = cond["axis_ir"], cond["axis_iz"]
+    r_ax = cond["axis_r"]
     # 2 pi R Bt = mu0 I
     polcur = cond["pol_current"]["matrix"][iz_ax, ir_ax]
     bt = u0 * polcur / (2 * pi * r_ax)
@@ -1106,7 +1106,7 @@ def equi_post_process(cond, verbose=2):
             cond['bz_val'][k] = mag.get_bz(r, z)
     
     # decay index on magnetic acis
-    cond['decay_index_on_axis'] = mag.get_decay_index(cond['r_ax'], cond['z_ax'])
+    cond['decay_index_on_axis'] = mag.get_decay_index(cond['axis_r'], cond['axis_z'])
             
     # 圧力微分dp/dfと圧力pの計算
     dm_dp, dm_pr = get_dpress_press(cond)
@@ -1172,7 +1172,8 @@ def equi_post_process(cond, verbose=2):
             
     if 2 <= verbose:
         print('post-process:')
-        pl.d_contour(cond['flux'])
+        #pl.d_contour(cond['flux'])
+        pl.double_contour(cond['jt'], cond['flux'])
         
     return cond
 

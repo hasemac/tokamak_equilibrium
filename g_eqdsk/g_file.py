@@ -285,8 +285,8 @@ def convert_to_g_parm(cond):
     pr['bcentr'] = (2.0*np.pi)**(0.5)*2.0*1.0e-7*total_tf/pr['rcentr']
     pr['rleft'] = da.rmin
     pr['zmid'] = (da.zmax + da.zmin)/2.0
-    pr['rmaxis'] = cond['r_ax']
-    pr['zmaxis'] = cond['z_ax']
+    pr['rmaxis'] = cond['axis_r']
+    pr['zmaxis'] = cond['axis__z']
     pr['simag'] = cond['f_axis']
     pr['sibry'] = cond['f_surf']
     pr['current'] = cond['cur_ip']['ip']

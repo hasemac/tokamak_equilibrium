@@ -85,6 +85,9 @@ $`L I = L_{i}I+L_{e}I`$
 Self inductance: $`L=\Phi/I`$  
 Internal inductance: $`L_{i}=\Phi_{i}/I`$
 
+See:  
+<http://fusionwiki.ciemat.es/wiki/Internal_inductance>
+
 ## Stored energy
 
 ```math

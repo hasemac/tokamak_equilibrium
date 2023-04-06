@@ -210,49 +210,7 @@ You can see what was calculated with '.keys()', which is a method to obtains a k
 cond.keys()
 ```
 
-```python:
-dict_keys(['cur_tf', 'cur_ip', 'cur_pf', 'num_dpr', 'num_di2', 'fl_pos', 'resolution', 'comments', 'error', 'vessel', 'flux_coil', 'jt', 'flux_jt', 'flux', 'ir_ax', 'iz_ax', 'r_ax', 'z_ax', 'conf_div', 'f_axis', 'f_surf', 'domain', 'jt_dp', 'jt_di2', 'param_dp', 'param_di2', 'iter', 'cal_result', 'pts', 'major_radius', 'minor_radius', 'elongation', 'triangularity', 'volume', 'cross_section', 'flux_normalized', 'fl_val', 'diff_pre', 'pressure', 'diff_pre_norm', 'pressure_norm', 'diff_i2', 'pol_current', 'diff_i2_norm', 'pol_current_norm', 'pressure_vol_average', 'beta_toroidal', 'toroidal_flux', 'toroidal_flux_diff', 'safety_factor', 'safety_factor_norm'])
-```
-
-|name|type|description|
-|:---|:---|:---|
-|jt | matirix | toroidal current density (jt_dp + jt_di2)|
-|jt_dp | matrix | toroidal current density due to plasma pressure|
-|jt_di2 | matrix | toroidal current density due to poloidal current|
-|flux | matrix | total flux (flux_jt + flux_coil)|
-|flux_normalized | matrix | normalized flux (0:axis -> 1:surface)|
-|flux_jt | matrix | magnetic flux due to plasma current|
-|flux_coil | matrix | magnetic flux due to PF coils|
-|vessel | matrix | vacuum vessel (1:inside, 0:outside)|
-|domain | matrix | plasma domain (1:inside, 0:outside)|
-|ir_ax, iz_ax| int | mesh number of magnetic axis|
-|r_ax, z_ax| float | position of magnetic axis|
-|conf_div| int | configuration (1:divertor, 0: limiter)|
-|f_axis, f_surf| float | flux of magnetic axis and last closed surface|
-|param_dp| array | Coefficients of the pressure-derived fitting function<br>From lower-order terms: (a0,a1,a2,....)|
-|diff_pre | matrix | matrix of dp/df|
-|diff_pre_norm| array | array of dp/df from magnetic axis to surf. |
-|pressure_norm| array | array of pressure from magnetic axis to surf.|
-|param_di2| array | Coefficients of the poloidal_current-derived fitting function<br>From lower-order terms: (a0,a1,a2,....)|
-|diff_i2| matrix | matrix of di^2/df|
-|diff_i2_norm| array | array of di^2/df from magnetic axis to surf.|
-|pol_current_norm| array | array of poloidal current from magnetic axis to surf.|
-|iter| int | number of iterations |
-|cal_result| int | 1: converged, 0: in calculation, -1: exit with error|
-|pts| dictionary | Four points that define the top, bottom, left, and right of the plasma<br>ex. z_rmin: z position of the point where r is minimum.|
-|major_radius | float | major radius|
-|minor_radius | float | minor radius|
-|elongation | float | elongation of plasma|
-|triangularity | float | triangularity of plasma|
-|volume| float | plasma volume, [$`m^{3}`$]|
-|cross_section | float | plasma cross section [$`m^{2}`$]|
-|fl_val| dictionary | flux at the position defined by fl_pos|
-|pressure_vol_average| float | volume-averaged plasma pressure|
-|beta_toroidal | float | toroidal beta|
-|toroidal_flux | array | toroidal flux from magnetic axis to surf.|
-|toroidal_flux_diff | array | derivative of toroidal flux, dphi/dx|
-|safety_factor | matrix | safety factor|
-|safety_factor_norm | array | array of sefety factor from magnetic axis to surf.|
+[Explanation of input and output parameters](doc/1_params.md)
 
 You can check the calculation result with contour map or heat map.
 

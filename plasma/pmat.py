@@ -155,20 +155,10 @@ def shift_plasma_profile(cond):
     
     # トータルipを保持
     ip0 = np.sum(jt)
-    """
-    ira = cond["ir_ax"]
-    iza = cond["iz_ax"]
-    
-    ir0 = int((cond["cur_ip"]["r0"]-rmin)/dr)
-    iz0 = int((cond["cur_ip"]["z0"]-zmin)/dz)
-    
-    print(ir0-ira, iz0-iza)
-    njt = ssf.shift_x( jt, ir0-ira, 0.0)
-    njt = ssf.shift_y(njt, iz0-iza, 0.0)
-    """
+
     # int()は切り捨てなので、round()で四捨五入する。
-    ir = round((cond["cur_ip"]["r0"]-cond["r_ax"])/dr)
-    iz = round((cond["cur_ip"]["z0"]-cond["z_ax"])/dz)
+    ir = round((cond["cur_ip"]["r0"]-cond["axis_r"])/dr)
+    iz = round((cond["cur_ip"]["z0"]-cond["axis_z"])/dz)
     #print(ir, iz)
 
     njt = ssf.shift_x( jt, ir, 0.0)
