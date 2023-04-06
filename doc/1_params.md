@@ -2,30 +2,30 @@
 
 ## Input parameters
 
-| name        | subname      | unit | type    | description                                     |
-|-------------|--------------|------|---------|-------------------------------------------------|
-| constraints |              |      |         | constraints for pressure, flux, br, and bz      |
-|             | temp_name    |      |         |                                                 |
-| br_pos      |              |      |         | positions to calculate br                       |
-|             | temp_name    | m    | tuple   |                                                 |
-| bz_pos      |              |      |         | positions to calculate bz                       |
-|             | temp_name    | m    | tuple   |                                                 |
-| cur_ip      |              |      |         | setting for plasma current                      |
-|             | ip           | A    | float   | plasma current                                  |
-|             | r0           | m    | float   | initial major radius                            |
-|             | z0           | m    | float   | initial z position                              |
-|             | radius       | m    | float   | initial minor radius                            |
-|             | degree       |      | float   | initial current profile(ex. 2: parabolic)       |
-| cur_pf      |              |      |         | setting for poloidal coils                      |
-|             | PF coil name | A    | float   | coil current                                    |
-| cur_tf      |              |      |         | setting for toroidal coils                      |
-|             | tf           |      | float   | power supply current of tf                      |
-|             | turn         |      | int     | turns of toroidal coil                          |
-|             | rewind       |      | boolean | rewinding (True: consider, False: not consider) |
-| fl_pos      |              |      |         | position to calculate flux                      |
-|             | temp_name    | m    | tuple   |                                                 |
-| num_dpr     |              |      | int     | number of terms in the polynominal for p'       |
-| num_di2     |              |      | int     | number of terms in the polynominal for ff'      |
+| name        | subname      | unit | type    | Necessary | description                                     |
+|-------------|--------------|------|---------|-----------|-------------------------------------------------|
+| constraints |              |      |         | optional  | constraints for pressure, flux, br, and bz      |
+|             | temp_name    |      |         |           |                                                 |
+| br_pos      |              |      |         | optional  | positions to calculate br                       |
+|             | temp_name    | m    | tuple   |           |                                                 |
+| bz_pos      |              |      |         | optional  | positions to calculate bz                       |
+|             | temp_name    | m    | tuple   |           |                                                 |
+| cur_ip      |              |      |         |           | setting for plasma current                      |
+|             | ip           | A    | float   |           | plasma current                                  |
+|             | r0           | m    | float   |           | initial major radius                            |
+|             | z0           | m    | float   |           | initial z position                              |
+|             | radius       | m    | float   |           | initial minor radius                            |
+|             | degree       |      | float   |           | initial current profile(ex. 2: parabolic)       |
+| cur_pf      |              |      |         |           | setting for poloidal coils                      |
+|             | PF coil name | A    | float   |           | coil current                                    |
+| cur_tf      |              |      |         |           | setting for toroidal coils                      |
+|             | tf           |      | float   |           | power supply current of tf                      |
+|             | turn         |      | int     |           | turns of toroidal coil                          |
+|             | rewind       |      | boolean |           | rewinding (True: consider, False: not consider) |
+| fl_pos      |              |      |         | optional  | position to calculate flux                      |
+|             | temp_name    | m    | tuple   |           |                                                 |
+| num_dpr     |              |      | int     |           | number of terms in the polynominal for p'       |
+| num_di2     |              |      | int     |           | number of terms in the polynominal for ff'      |
 
 ## Output parameters
 
