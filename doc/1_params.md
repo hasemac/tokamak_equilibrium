@@ -15,13 +15,13 @@
 |             | r0           | m    | float   |           | initial major radius                            |
 |             | z0           | m    | float   |           | initial z position                              |
 |             | radius       | m    | float   |           | initial minor radius                            |
-|             | degree       |      | float   |           | initial current profile(ex. 2: parabolic)       |
+|             | degree       |      | float   | optional  | initial current profile(ex. 2: parabolic)       |
 | cur_pf      |              |      |         |           | setting for poloidal coils                      |
 |             | PF coil name | A    | float   |           | coil current                                    |
 | cur_tf      |              |      |         |           | setting for toroidal coils                      |
 |             | tf           |      | float   |           | power supply current of tf                      |
 |             | turn         |      | int     |           | turns of toroidal coil                          |
-|             | rewind       |      | boolean |           | rewinding (True: consider, False: not consider) |
+|             | rewind       |      | boolean | optional  | rewinding (True: consider, False: not consider) |
 | fl_pos      |              |      |         | optional  | position to calculate flux                      |
 |             | temp_name    | m    | tuple   |           |                                                 |
 | num_dpr     |              |      | int     |           | number of terms in the polynominal for p'       |
