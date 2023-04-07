@@ -155,8 +155,6 @@ condition = {
     #'br_pos':{'r1000z0':(1.0, 1.0)},
     # calculate Bz(r, z): result is set to 'bz_val'
     #'bz_pos':{'r0z0':(0.0, 0.0)},
-    
-    'resolution': gl.get_dmat_coarse(),
     }
 ```
 

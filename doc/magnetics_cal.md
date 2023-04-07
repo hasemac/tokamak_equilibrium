@@ -13,7 +13,6 @@ eqcond = {
     'cur_tf':{'tf': +50.0e+3, 'turn': 16},
     # PF currents
     'cur_pf':{'pf26t36':1.0e+3},
-    'resolution': gl.get_dmat_coarse(),
     }
 
 mag = smc.Magnetic(eqcond)

@@ -106,7 +106,7 @@ def plasma_cur_parabolic(r0, z0, ip, radius, r_pos, z_pos, degree = 2):
 
 
 def d_set_plasma_parabolic(cond):
-    res = copy.deepcopy(cond["resolution"])
+    res = copy.deepcopy(gl.get_dmat_coarse())
     ip = cond["cur_ip"]["ip"]
     r0 = cond["cur_ip"]["r0"]
     z0 = cond["cur_ip"]["z0"]
@@ -122,7 +122,7 @@ def trim_plasma_current(cond):
     # ip>0ならjt<0の値は不自然。
     # この場合は全体を底上げした後、トータルを合わせることで
     # トリミングをかける。
-    res = copy.deepcopy(cond["resolution"])
+    res = copy.deepcopy(gl.get_dmat_coarse())
 
     dm = cond["domain"]["matrix"]
     jt = cond["jt"]["matrix"]
@@ -144,7 +144,7 @@ def trim_plasma_current(cond):
     return res
 
 def shift_plasma_profile(cond):
-    res = copy.deepcopy(cond["resolution"])
+    res = copy.deepcopy(gl.get_dmat_coarse())
     
     dmat = cond['domain']
     rmin, dr = dmat["rmin"], dmat["dr"]

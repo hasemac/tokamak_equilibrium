@@ -1,8 +1,5 @@
 import numpy as np
 import copy
-import coils.cmat as cmat
-import coils.cmat_br as cmat_br
-import coils.cmat_bz as cmat_bz
 import plasma.pmat as pmat
 import plasma.pmat_br as pmat_br
 import plasma.pmat_bz as pmat_bz
@@ -14,6 +11,8 @@ from scipy import constants as sc
 import sub.plot as pl
 import sub.sub_func as ssf
 import sub.magnetics_cond as smc
+
+gl = gparam()
 
 # 正規化フラックスの計算
 def get_normalized_flux(cond):
@@ -576,7 +575,7 @@ def calc_inductance(cond):
     for v, i, j in zip(bt2, ir, iz):
         bt2mat[j, i] = v
         
-    bt2jt = copy.deepcopy(cond["resolution"])
+    bt2jt = copy.deepcopy(gl.get_dmat_coarse())
     bt2jt["matrix"] = bt2mat
     cond["b_theta_jt_square"] = bt2jt
     
@@ -655,7 +654,7 @@ def calc_safety_poly(cond):
     for v, i, j in zip(q, ir, iz):
         qmat[j, i] = v
         
-    safety = copy.deepcopy(cond["resolution"])
+    safety = copy.deepcopy(gl.get_dmat_coarse())
     safety["matrix"] = qmat
     cond["safety_factor"] = safety        
     
@@ -714,7 +713,7 @@ def calc_safety_poly2(cond):
     for v, i, j in zip(q, ir, iz):
         qmat[j, i] = v
         
-    safety = copy.deepcopy(cond["resolution"])
+    safety = copy.deepcopy(gl.get_dmat_coarse())
     safety["matrix"] = qmat
     cond["safety_factor"] = safety        
     
@@ -766,7 +765,7 @@ def calc_safety(cond):
     for v, i, j in zip(q, ir, iz):
         qmat[j, i] = v
 
-    safety = copy.deepcopy(cond["resolution"])
+    safety = copy.deepcopy(gl.get_dmat_coarse())
     safety["matrix"] = qmat
     cond["safety_factor"] = safety
 

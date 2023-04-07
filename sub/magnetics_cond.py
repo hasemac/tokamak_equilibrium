@@ -8,6 +8,9 @@ import plasma.pmat_br as pbr
 import plasma.pmat_bz as pbz
 import sub.emat as emat
 import sub.sub_func as ssf
+from global_variables import gparam
+
+gl = gparam()
 
 class Magnetic:
     
@@ -134,7 +137,7 @@ class Magnetic:
     
     # Btの計算（プラズマ含まず）
     def get_tor_bt(self, cond):
-        dm = copy.deepcopy(cond["resolution"])
+        dm = copy.deepcopy(gl.get_dmat_coarse())
         r1 = self.dm_2pir(dm)
         val = cond['cur_tf']['tf'] * cond['cur_tf']['turn']
         r2 = (4*np.pi*10**(-7))*r1*val

@@ -38,5 +38,5 @@ def get_vessel_mat(dmat):
     return dmat
 
 def get_vessel(cond):
-    dmat = copy.deepcopy(cond['resolution'])
+    dmat = copy.deepcopy(gl.get_dmat_coarse())
     return get_vessel_mat(dmat)

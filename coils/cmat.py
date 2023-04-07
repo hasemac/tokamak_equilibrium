@@ -27,6 +27,6 @@ def get_coil_flux(dmat, coil_currents):
 
 
 def get_flux_of_coil(cond):
-    dmat = copy.deepcopy(cond["resolution"])
+    dmat = copy.deepcopy(gl.get_dmat_coarse())
     coil_currents = cond["cur_pf"]
     return get_coil_flux(dmat, coil_currents)
