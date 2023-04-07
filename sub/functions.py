@@ -519,15 +519,23 @@ def calc_beta(cond):
     pi = sc.pi
 
     # 圧力の体積平均
-    p = get_volume_average(cond["pressure"], cond["domain"])
-    cond["pressure_vol_average"] = p
+    pv = get_volume_average(cond["pressure"], cond["domain"])
+    cond["pressure_average_volume"] = pv
     # factor *2 means ion and electro
-    cond["stored_energy"] = (3/2)*p*cond["volume"]*2
-
-    # 磁気軸におけるプラズマ込みのトロイダル磁場
+    cond["stored_energy"] = (3/2)*pv*cond["volume"]*2
+    
+    # 圧力の面積平均
+    ps = get_cross_section_average(cond["pressure"], cond["domain"])
+    cond["pressure_average_section"] = ps
+    
+    # 磁気軸におけるトロイダル磁場
+    # 2 pi R Bt = mu0 I
     ir_ax, iz_ax = cond["axis_ir"], cond["axis_iz"]
     r_ax = cond["axis_r"]
-    # 2 pi R Bt = mu0 I
+    # プラズマ無しのトロイダル磁場
+    bt0 = u0 * cond["cur_tf"]['tf']*cond["cur_tf"]["turn"]
+    bt0 /= (2 * pi * r_ax)
+    # プラズマ込みのトロイダル磁場
     polcur = cond["pol_current"]["matrix"][iz_ax, ir_ax]
     bt = u0 * polcur / (2 * pi * r_ax)
 
@@ -535,16 +543,16 @@ def calc_beta(cond):
     ip = cond["cur_ip"]["ip"] # ip
     s = cond["cross_section"] # cross section area
     a = np.sqrt(s/pi) # minor radius
-    cond["beta_poloidal"] = (8*pi*p*s)/(u0*ip*ip)
+    cond["beta_poloidal"] = (8*pi*ps*s)/(u0*ip*ip) # ps: section average
 
-    # toroidal beta bet_tor = <p>/(bt^2/(2u0))
-    betr = p / (bt**2 / 2 / u0)
+    # toroidal beta bet_tor = <p>/(bt0^2/(2u0))
+    betr = pv / (bt**2 / 2 / u0) # pv: volume average
     cond["beta_toroidal"] = betr
 
     #  normalized beta
     ipma = ip/(10**6) # unit: MA
     betrper = betr*100 # unit: [%], percent
-    betnor = np.abs(betrper*a*bt/ipma)
+    betnor = np.abs(betrper*a*bt/ipma) # bt: toroidal with plasma
     cond["beta_normalized"] = betnor
     
     return cond

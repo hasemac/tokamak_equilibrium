@@ -26,17 +26,17 @@ $`L`$: self inductance
 $`L_{i}`$: internal inductance
 
 ```math
-\frac{1}{2}L_{i}I^{2} = \int_{p} \frac{B_{\theta}^{2}}{2 \mu_{0}}dv = \frac{<B_{\theta}^{2}>_{V}V}{2 \mu_{0}}
+\frac{1}{2}L_{i}I^{2} = \int_{p} \frac{B_{\theta}^{2}}{2 \mu_{0}}dv = \frac{<B_{\theta}^{2}>_{v}V}{2 \mu_{0}}
 ```
 
 $`B_{\theta}`$: poloidal magnetic field due to plasma, not including external coils.  
 $`V`$: plasma volume  
-$`<>_{V}`$: volume average
+$`<>_{v}`$: volume average
 
 Thus,  
 
 ```math
-L_{i} = \frac{<B_{\theta}^{2}>_{V}V}{\mu_{0} I^{2}}
+L_{i} = \frac{<B_{\theta}^{2}>_{v}V}{\mu_{0} I^{2}}
 ```
 
 ### Normalized internal inductance
@@ -50,13 +50,13 @@ Consider the equation:
 Normalized internal inductance $`l_{i}`$ is defined as
 
 ```math
-l_{i} = L_{i}/L_{0} = \frac{<B_{\theta}^{2}>_{V}}{B_{\theta}(a)^{2}}
+l_{i} = L_{i}/L_{0} = \frac{<B_{\theta}^{2}>_{v}}{B_{\theta}(a)^{2}}
 ```
 
 It is often defined by the following formula, using cross-section average.
 
 ```math
-l_{i} = \frac{<B_{\theta}^{2}>_{S}}{B_{\theta}(a)^{2}}
+l_{i} = \frac{<B_{\theta}^{2}>_{s}}{B_{\theta}(a)^{2}}
 ```
 
 In this equilibrium code, the normalize internal inductance is calculated as follows.
@@ -71,7 +71,7 @@ B_{\theta}(a)^{2} = \frac{\mu_{0}^{2}I^{2}}{4 \pi S}
 Thus,  
 
 ```math
-l_{i}=\frac{4 \pi S <B_{\theta}^{2}>_{S}}{\mu_{0}^{2}I^{2}}
+l_{i}=\frac{4 \pi S <B_{\theta}^{2}>_{s}}{\mu_{0}^{2}I^{2}}
 ```
 
 ### Consider with flux
@@ -91,12 +91,12 @@ See:
 ## Stored energy
 
 ```math
-W = 2 \times \frac{3}{2} \int p \: dv =3<p>_{V}V
+W = 2 \times \frac{3}{2} \int p \: dv =3<p>_{v}V
 ```
 
 Factor 2 means ion and electron.  
 $`V`$: plasma volume  
-$`<>_{V}`$: volume average  
+$`<>_{v}`$: volume average  
 See, Tokamaks SECOND EDITION, JOHN WESSON, eq 1.4.3
 
 ## Decay index
@@ -110,8 +110,10 @@ n = -\frac{R}{B_{z}} \frac{\partial B_{z}}{\partial R}
 ### poloidal beta
 
 ```math
-\beta_{p}=\frac{<p>}{B_{\theta}^{2}(a) /2 \mu_{0}}
+\beta_{p}=\frac{<p>_{s}}{B_{\theta}^{2}(a) /2 \mu_{0}}
 ```
+
+See, Tokamaks SECOND EDITION, JOHN WESSON, eq 3.5.1  
 
 where,  
 
@@ -129,14 +131,19 @@ B_{\theta}(a) = \frac{\mu_{0}I}{2 \sqrt{\pi S}}
 thus,  
 
 ```math
-\beta_{p} = \frac{8 \pi <p> S}{\mu_{0} I^{2}}
+\beta_{p} = \frac{8 \pi <p>_{s} S}{\mu_{0} I^{2}}
 ```
 
 ### toroidal beta
 
 ```math
-\beta_{t}=\frac{<p>}{B_{t}^{2}/2 \mu_{0}}
+\beta_{t}=\frac{<p>_{v}}{B_{t0}^{2}/2 \mu_{0}}
 ```
+
+$`B_{t0}`$: the vacuum toroidal magnetic ﬁeld at the magnetic axis  
+$`<>_{v}`$: volume average
+
+See: <http://www.jspf.or.jp/Journal/PDF_JSPF/jspf2003_02/jspf2003_02-121.pdf>
 
 ### normalized beta
 
@@ -145,14 +152,10 @@ thus,
 ```
 
 $`B_{t}`$: Toroidal magnetic field at the center of the plasma.  
-Note that it is not a vacuum magnetic field
-
-$`<p>`$: volume averaged pressure
-
+Note that it is not a vacuum magnetic field  
 $`a`$: minor radius
 
-See:  
-<http://www.jspf.or.jp/Journal/PDF_JSPF/jspf2003_02/jspf2003_02-121.pdf>
+See: <https://www.jstage.jst.go.jp/article/jspf/79/2/79_2_123/_pdf>
 
 ## Safety factor
 
