@@ -8,8 +8,10 @@ import plasma.pmat_br as pbr
 import plasma.pmat_bz as pbz
 import sub.emat as emat
 import sub.sub_func as ssf
-from global_variables import gparam
+import coils.check_coils as ccc
+ccc.check()
 
+from global_variables import gparam
 gl = gparam()
 
 class Magnetic:
