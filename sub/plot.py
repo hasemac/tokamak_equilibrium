@@ -1,12 +1,13 @@
 import plotly
 import plotly.graph_objects as go
-import vessel.draw as vd
 import numpy as np
 import pandas as pd
 import plotly.express as px
 from plotly.subplots import make_subplots
+from global_variables import gparam
+gl = gparam()
 
-def line_plot(points, d_mat = None, shapes = vd.vac):
+def line_plot(points, d_mat = None, shapes = gl.image_frame):
     aspect = 2.0
     margin = 50
     width = 250
@@ -21,7 +22,7 @@ def line_plot(points, d_mat = None, shapes = vd.vac):
         margin = dict(l=margin, r=margin, t=margin, b=margin, autoexpand=False),
         xaxis=dict(title='R(m)'), 
         yaxis=dict(title='z(m)', scaleanchor='x'),
-        shapes = vd.vac
+        shapes = gl.image_frame
         )
     fig = go.Figure(layout = layout)
     fig.add_trace(data)
@@ -55,7 +56,7 @@ def line_plot3d(points):
 def d_contour(d_mat: dict):
     contour(d_mat['matrix'], d_mat['rmin'], d_mat['zmin'], d_mat['dr'], d_mat['dz'])
 
-def contour(data, xmin, ymin, dx, dy, shapes = vd.vac):
+def contour(data, xmin, ymin, dx, dy, shapes = gl.image_frame):
     """contour plot
 
     Args:
@@ -64,7 +65,7 @@ def contour(data, xmin, ymin, dx, dy, shapes = vd.vac):
         ymin (float): ymin
         dx (foat): dx
         dy (float): dy
-        shapes (lines, optional): _description_. Defaults to vd.vac.
+        shapes (lines, optional): _description_. 
     """
     (h, w)=data.shape
     h *=dy
@@ -103,15 +104,26 @@ def contour(data, xmin, ymin, dx, dy, shapes = vd.vac):
                         shapes = shapes
                         )
     fig = go.Figure(data=cdata, layout=layout)
+    if gl.image_type != 'lines':
+        fig.add_layout_image(
+            dict(
+                source=gl.image_path,
+                xref="x", yref="y",
+                x=0, y=1.8,
+                sizex=1.8, sizey=3.6,
+                sizing="fill",
+                layer="below"
+            )
+        )
     fig.show()
 
-def double_contour(d_mat: dict, d_mat2: dict, shapes = vd.vac):
+def double_contour(d_mat: dict, d_mat2: dict, shapes = gl.image_frame):
     dbl_contour(d_mat['matrix'], d_mat2['matrix'], 
                 d_mat['rmin'], d_mat['zmin'], d_mat['dr'], d_mat['dz'],
                 shapes = shapes,
                 )
     
-def dbl_contour(data1, data2, xmin, ymin, dx, dy, shapes = vd.vac):
+def dbl_contour(data1, data2, xmin, ymin, dx, dy, shapes = gl.image_frame):
     """contour plot
 
     Args:
@@ -120,7 +132,7 @@ def dbl_contour(data1, data2, xmin, ymin, dx, dy, shapes = vd.vac):
         ymin (float): ymin
         dx (foat): dx
         dy (float): dy
-        shapes (lines, optional): _description_. Defaults to vd.vac.
+        shapes (lines, optional): _description_. 
     """
     (h, w)=data1.shape
     h *=dy
@@ -128,8 +140,8 @@ def dbl_contour(data1, data2, xmin, ymin, dx, dy, shapes = vd.vac):
     #print(height, ' ', width)
     aspect = h/w
     margin = 50
-    width = 250    
-    
+    width = 250
+        
     cdata1=go.Contour(z = data1,
                     x0 = xmin, y0=ymin, dx=dx, dy=dy, 
                     showscale=False,
@@ -145,7 +157,6 @@ def dbl_contour(data1, data2, xmin, ymin, dx, dy, shapes = vd.vac):
                     #autocontour=True,
                     ncontours=100,
                     )
-
     layout = go.Layout( 
                         width = width+2*margin,
                         height = width*aspect+2*margin,
@@ -166,12 +177,23 @@ def dbl_contour(data1, data2, xmin, ymin, dx, dy, shapes = vd.vac):
                         shapes = shapes
                         )
     fig = go.Figure(data=[cdata1, cdata2], layout=layout)
+    if gl.image_type != 'lines':
+        fig.add_layout_image(
+            dict(
+                source=gl.image_path,
+                xref="x", yref="y",
+                x=0, y=1.8,
+                sizex=1.8, sizey=3.6,
+                sizing="fill",
+                layer="below"
+            )
+        )
     fig.show()
     
-def d_heatmap(d_mat: dict, shapes=vd.vac):
+def d_heatmap(d_mat: dict, shapes=gl.image_frame):
     heatmap(d_mat['matrix'], d_mat['rmin'], d_mat['zmin'], d_mat['dr'], d_mat['dz'], shapes=shapes)
          
-def heatmap(data, xmin, ymin, dx, dy, shapes=vd.vac):
+def heatmap(data, xmin, ymin, dx, dy, shapes=gl.image_frame):
     (h, w)=data.shape
     h *=dy
     w *= dx
@@ -200,6 +222,17 @@ def heatmap(data, xmin, ymin, dx, dy, shapes=vd.vac):
                     shapes = shapes
                     )
     fig = go.Figure(data=data, layout=layout)
+    if gl.image_type != 'lines':
+        fig.add_layout_image(
+            dict(
+                source=gl.image_path,
+                xref="x", yref="y",
+                x=0, y=1.8,
+                sizex=1.8, sizey=3.6,
+                sizing="fill",
+                layer="below"
+            )
+        )
     fig.show()
 
 # インタラクティブプロット　共通x, 複数y: yは2次元arrayであることに注意

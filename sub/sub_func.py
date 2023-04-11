@@ -146,6 +146,64 @@ def shift_y(mat, num: int, val: float):
         o[num:,:] = val
     return o
 
+def draw_line(dm_mat, p0, p1):
+    """draw line on dm_mat
+
+    Args:
+        dm_mat (dm_mat): dm_mat to draw line
+        p0 (tuple): (x0, y0)
+        p1 (tuple): (x1, y1)
+    """
+    # equation of line:
+    # p = (p1-p0)/dist * t + p0, 0 <= t <= dist
+    
+    x0, y0 = p0
+    x1, y1 = p1
+    xmin, dx = dm_mat['rmin'], dm_mat['dr']
+    ymin, dy = dm_mat['zmin'], dm_mat['dz']
+        
+    dist = np.sqrt((x1-x0)**2 + (y1-y0)**2)
+    num = int(dist/np.min([dx, dy])*1.3) # 1.3 for fine step
+    pts = [((x1-x0)*e/dist + x0, (y1-y0)*e/dist + y0) 
+           for e in np.linspace(0, dist, num)]
+    
+    for x, y in pts:
+        ix = round((x-xmin)/dx)
+        iy = round((y-ymin)/dy)
+        dm_mat['matrix'][iy, ix] = 1
+
+def draw_paint(dm_mat, p0):
+    """paint area with initial point p0
+
+    Args:
+        dm_mat (dm_mat): dm_mat to paint
+        p0 (tuple): (x0, y0)
+    """
+    x0, y0 = p0
+    xmin, dx = dm_mat['rmin'], dm_mat['dr']
+    ymin, dy = dm_mat['zmin'], dm_mat['dz']
+    ix0 = round((x0-xmin)/dx)
+    iy0 = round((y0-ymin)/dy)
+    
+    mat = dm_mat['matrix']
+    pts = {(ix0, iy0)}
+    while len(pts) != 0:
+        ix, iy = pts.pop()
+        mat[iy, ix] = 1
+        if 0 == mat[iy, ix+1]:
+            pts.add((ix+1, iy))
+            
+        if 0 == mat[iy, ix-1]:
+            pts.add((ix-1, iy))
+            
+        if 0 == mat[iy+1, ix]:
+            pts.add((ix, iy+1))
+            
+        if 0 == mat[iy-1, ix]:
+            pts.add((ix, iy-1))
+            
+    return dm_mat
+    
 def check_tf_rewind(cond):
     # TFコイルの巻き戻し
     # 巻き戻しを考慮する場合、cur_pfにtf_rewindコイルを追加

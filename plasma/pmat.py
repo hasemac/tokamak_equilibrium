@@ -1,37 +1,42 @@
 import os
-import sys
-
-sys.path.append("..")
 import copy
 import numpy as np
 import sub.magnetics as mag
 import sub.emat as emat
 import sub.sub_func as ssf
+from tqdm import tqdm
 from global_variables import gparam
 
 gl = gparam()
+
+path = os.path.join(gl.root_dir, 'device', gl.device_name, 'plasma')
+# ディレクトリ有無の確認
+if not os.path.exists(path):
+    os.makedirs(path)
+file = f'plasma_kernel_{gl.cname}.npy'
 
 # 粗い行列
 # プラズマ電流マトリックスを作成するさいに用いる行列の計算
 # 対称性から計算していくので、定義された範囲よりもz方向に広く計算している。
 # [nr, 2*nz-1, nr]
 mat = []
-dir = os.path.join(gl.root_dir, "plasma/plasma_kernel_" + gl.cname + ".npy")
+absfile = os.path.join(path, file)
 try:
-    mat = np.load(dir)
+    mat = np.load(absfile)
 
 except Exception as e:
-    print('Making plama matrix. Please wait to finish.')
+    print(f'Making plama matrix: {file}.')
+    print('Please wait to finish.')
     cz_pos = np.arange(
         gl.cz_min - (gl.cz_max - gl.cz_min), gl.cz_max + gl.cdel_z, gl.cdel_z
     )
     mat = np.array(
         [
             [[mag.flux(r, z, rc, gl.cz_min, 1) for r in gl.cr_pos] for z in cz_pos]
-            for rc in gl.cr_pos
+            for rc in tqdm(gl.cr_pos)
         ]
     )
-    np.save(dir, mat)
+    np.save(absfile, mat)
 
 # 粗いマトリックスで(nr, nz)に単位電流が置かれた時の分布
 def cget(nz, nr):

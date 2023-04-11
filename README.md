@@ -2,11 +2,12 @@
 
 ## Overview
 
-This repository provides a tokamak equilibrium calculation code, especially customized to QUEST tokamak.  
+This repository provides general tokamak equilibrium calculation codes.
 
 ## New features
 
-- Equilibrium calculation can now be performed by adding the constraints condition of plasma pressure, flux, br, and bz at a certain location.
+- (Apr. 11, 2023) Modified the code to apply to general tokamak.
+- Constraint conditions such as pressure, flux, br, and bz can now be set in equilibrium calculations.
 
 ## Features of this equilibrium calculation code
 
@@ -18,18 +19,17 @@ This repository provides a tokamak equilibrium calculation code, especially cust
 
 ## Other documents
 
-- [Equations of magnetics](doc/magnetics_en.md)
-- [Grad-Shafranov equation](doc/grad_shafranov_eq.md)
 - [Procedure of equilibrium calculation](doc/equilibrium_en.md)
 - [Definition of parameters](doc/def_of_params.md)
+- [Input and output parameters](doc/1_params.md)
 - [Introducig QUEST](doc/introducing_quest.md)
 - [Magnetics Calculation](doc/magnetics_cal.md)
 - [Tracing magnetic field lines](doc/tracing_mag_lines.md)
 - [Tracing guiding center orbit](doc/tracing_guiding_center_orbit.md)
+- [Equations of magnetics](doc/magnetics_en.md)
+- [Derivation of the Grad-Shafranov equation](doc/grad_shafranov_eq.md)
 
 ## Getting started
-
-"Plotly" is used to draw the graph. Therefore, **Node.js** must be installed in order to display the graph.
 
 1. Clone this project using VS code etc.
 1. Go to the cloned directory, and execute below to install required modules.
@@ -211,8 +211,6 @@ cond.keys()
 [Explanation of input and output parameters](doc/1_params.md)
 
 You can check the calculation result with contour map or heat map.
-
-"Plotly" is used to draw the graph. Therefore, **Node.js** must be installed in order to display the graph.
 
 ```python:
 import sub.plot as pl
