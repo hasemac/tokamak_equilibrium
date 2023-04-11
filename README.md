@@ -31,6 +31,8 @@ This repository provides general tokamak equilibrium calculation codes.
 
 ## Getting started
 
+<https://archive.iii.kyushu-u.ac.jp/public/LSIfwKJJ2-DahDRTPVXYybO8RYcyQjtueCvJ_vEm2KgW>
+
 1. Clone this project using VS code etc.
 1. Go to the cloned directory, and execute below to install required modules.
 
