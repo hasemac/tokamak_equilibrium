@@ -5,11 +5,11 @@
 | name        | subname      | unit | type    | Necessary | description                                     |
 |-------------|--------------|------|---------|-----------|-------------------------------------------------|
 | constraints |              |      |         | optional  | constraints for pressure, flux, br, and bz      |
-|             | temp_name    |      |         |           |                                                 |
+|             | user_defined |      |         |           |                                                 |
 | br_pos      |              |      |         | optional  | positions to calculate br                       |
-|             | temp_name    | m    | tuple   |           |                                                 |
+|             | user_defined | m    | tuple   |           |                                                 |
 | bz_pos      |              |      |         | optional  | positions to calculate bz                       |
-|             | temp_name    | m    | tuple   |           |                                                 |
+|             | user_defined | m    | tuple   |           |                                                 |
 | cur_ip      |              |      |         |           | setting for plasma current                      |
 |             | ip           | A    | float   |           | plasma current                                  |
 |             | r0           | m    | float   |           | initial major radius                            |
@@ -23,7 +23,7 @@
 |             | turn         |      | int     |           | turns of toroidal coil                          |
 |             | rewind       |      | boolean | optional  | rewinding (True: consider, False: not consider) |
 | fl_pos      |              |      |         | optional  | position to calculate flux                      |
-|             | temp_name    | m    | tuple   |           |                                                 |
+|             | user_defined | m    | tuple   |           |                                                 |
 | num_dpr     |              |      | int     |           | number of terms in the polynominal for p'       |
 | num_di2     |              |      | int     |           | number of terms in the polynominal for ff'      |
 
@@ -96,7 +96,7 @@
 | q_edge                         |         |           | float  | safety factor at plasma surface                  |
 | safety_factor                  |         |           | matrix | safety factor                                    |
 | safety_factor_norm             |         |           | array  | safety factor (q[0]: axis, q[-1]: surface)       |
-| stored_energy                  |         | Joul      | float  | stored energy, W=3<p>V                           |
+| stored_energy                  |         | Joul      | float  | stored energy, W=3< p >V                           |
 | toroidal_flux                  |         |           |        |                                                  |
 | toroidal_flux_diff             |         |           |        |                                                  |
 | triangularity                  |         |           | float  | triangularity of plasma                          |

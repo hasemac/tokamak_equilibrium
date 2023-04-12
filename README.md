@@ -2,11 +2,12 @@
 
 ## Overview
 
-This repository provides general tokamak equilibrium calculation codes.
+This repository provides general tokamak equilibrium calculation code.
 
 ## New features
 
-- (Apr. 11, 2023) Modified the code to apply to general tokamak.
+- (Apr. 11, 2023) Modified the code to apply to general tokamak.  
+  [How to apply this code to new tokamak](doc/new_tokamak.md)
 - Constraint conditions such as pressure, flux, br, and bz can now be set in equilibrium calculations.
 
 ## Features of this equilibrium calculation code
@@ -19,6 +20,7 @@ This repository provides general tokamak equilibrium calculation codes.
 
 ## Other documents
 
+- [How to apply this code to new tokamak](doc/new_tokamak.md)
 - [Procedure of equilibrium calculation](doc/equilibrium_en.md)
 - [Definition of parameters](doc/def_of_params.md)
 - [Input and output parameters](doc/1_params.md)
@@ -30,8 +32,6 @@ This repository provides general tokamak equilibrium calculation codes.
 - [Derivation of the Grad-Shafranov equation](doc/grad_shafranov_eq.md)
 
 ## Getting started
-
-<https://archive.iii.kyushu-u.ac.jp/public/LSIfwKJJ2-DahDRTPVXYybO8RYcyQjtueCvJ_vEm2KgW>
 
 1. Clone this project using VS code etc.
 1. Go to the cloned directory, and execute below to install required modules.
@@ -51,12 +51,14 @@ This repository provides general tokamak equilibrium calculation codes.
    - Be aware of whether or not you use a virtual environment.  
    - When using it, execute the above command under a virtual environment.
 
-1. Excecute "1_make_fundamental_matrix.py" in root directory.  
-   Please run it only once after cloning.  
-   This create fundamental magnetic matrix of coils and plasmas.  
+1. Copy the Green's function to to your repository.  
+   Green's function can be downloaded from the link below.  
+   Copy them to ./device/(device_name)  
+   <https://archive.iii.kyushu-u.ac.jp/public/LSIfwKJJ2-DahDRTPVXYybO8RYcyQjtueCvJ_vEm2KgW>  
+   If you cannot download them, proceed to the next step.  
+   Although it takes time, it creates the Green's function in the next step.  
    The calculation may take an hour or more.  
-   (Of course you can also copy and paste from elsewhere.)
-1. Execute 'equalibrium.ipynb' in the root directory in order from the top as an example.
+2. Execute 'equalibrium.ipynb' in the root directory in order from the top as an example.  
 
 ## Edit and execute your file
 
@@ -68,7 +70,8 @@ So put the following at the beginning of the file:
 
 ```python
 import os
-os.chdir('..') 
+# abs_path: absolute root path of the repository 
+os.chdir(abs_path) 
 # current working directory can be get by os.getcwd()
 ```
 
@@ -230,7 +233,7 @@ pl.d_heatmap(cond['domain'])
 
 ## How to change resolution or calculation area
 
-To change resolution or calculation area, please edit global_variables.py in root directory.  
+To change resolution or calculation area, please edit device parameter file in "./device/(your_device)" directory.  
 Examples are shown in this file.  
 In initial execution, the plasma matrix will be created, so please wait until the calculation is finished.  
 The higher the resolution, the longer the calculation time.  

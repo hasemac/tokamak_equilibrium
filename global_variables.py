@@ -4,6 +4,7 @@ root_dir = "."
 
 import sys, os
 import numpy as np
+import pandas as pd
 path = os.path.join(root_dir, 'device', device_name)
 sys.path.append(path)
 from parameters import equi_params
@@ -83,8 +84,9 @@ class gparam(equi_params):
             dict(type='line', x0=xl, y0=yb, x1=xl, y1=yt),
         ]
         if self.image_type == 'lines':
-            import cross_section_lines
-            self.image_frame = fr + cross_section_lines.section_lines
+            df = pd.read_csv(self.image_path)
+            fr2 = [dict(type='line', x0=e[0], y0=e[1], x1=e[2], y1=e[3]) for e in df.values]
+            self.image_frame = fr + fr2
         else:
             self.image_frame = fr
 

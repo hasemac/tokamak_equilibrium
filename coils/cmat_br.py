@@ -7,13 +7,14 @@ from global_variables import gparam
 
 gl = gparam()
 
+dat_dir = os.path.join(gl.root_dir, 'device', gl.device_name, 'coils')
 # PFコイルによるフラックス
 def coil_br(data):
     # data: {'coilname': float_current, 'coilname2': float_current2,}
 
     mat = np.zeros((gl.nz, gl.nr))
     for k in data.keys():
-        dir = os.path.join(gl.root_dir, f"coils/data_npy_br/{k}.npy")
+        dir = os.path.join(dat_dir, "data_npy_br", f"{k}.npy")
         mat += data[k] * np.load(dir)
 
     return mat

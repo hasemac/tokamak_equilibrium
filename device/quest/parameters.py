@@ -2,12 +2,15 @@ class equi_params:
     
     # image of vacuum vessel and PF coils
     image_type = 'lines' # 'lines' or 'image'
-    image_path = "./device/quest/quest.png" 
+    image_path = "./device/quest/quest_lines.txt"
+    #image_path = "./device/quest/quest.png" 
     image_x0 = 0   # [m]: left x coordinate of the image
     image_y0 = 1.8 # [m]: top y coordinate of the image
     image_sizex = 1.8 # [m]: x image size
     image_sizey = 3.6 # [m]: y image size
 
+    # vessel points
+    # [(x0, y0), (x1, y1), ...., (x0, y0)]
     vessel_points = [(0.2035, 1), (0.996, 1), (1.374, 0.496), 
               (1.374, -0.496), (0.996, -1.0), (0.2035, -1.0), 
               (0.2035, 1.0)]
