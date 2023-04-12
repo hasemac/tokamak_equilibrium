@@ -134,7 +134,7 @@ Numbers have the same sign.
         'pf17t4':[('pf1t4',1), ('pf7t4', 1)],
 ```
 
-Case: connecting in the opposite direction
+Case: connecting in the opposite direction  
 Numbers have opposite signs.  
 
 ```python
