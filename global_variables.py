@@ -1,4 +1,4 @@
-device_name = "plato"
+device_name = "quest"
 root_dir = "."
 #root_dir = "c:\\home\\code\\tokamak_equilibirum\\"
 

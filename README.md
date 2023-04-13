@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository provides general tokamak equilibrium calculation code.
+This repository provide equilibrium calculation code applicable to general tokamak devices.
 
 ## New features
 
@@ -51,14 +51,14 @@ This repository provides general tokamak equilibrium calculation code.
    - Be aware of whether or not you use a virtual environment.  
    - When using it, execute the above command under a virtual environment.
 
-1. Copy the Green's function to to your repository.  
-   Green's function can be downloaded from the link below.  
+1. Copy the matrix data to to your repository.  
+   Matrix data can be downloaded from the link below.  
    Copy them to ./device/(device_name)  
    <https://archive.iii.kyushu-u.ac.jp/public/LSIfwKJJ2-DahDRTPVXYybO8RYcyQjtueCvJ_vEm2KgW>  
    If you cannot download them, proceed to the next step.  
-   Although it takes time, it creates the Green's function in the next step.  
+   Although it takes time, it creates the matrix data in the next step.  
    The calculation may take an hour or more.  
-2. Execute 'equalibrium.ipynb' in the root directory in order from the top as an example.  
+1. Execute 'equalibrium.ipynb' in the root directory in order from the top as an example.  
 
 ## Edit and execute your file
 
@@ -116,7 +116,7 @@ The unit used in the parameter is the MKSA system of units. For example, the par
 ### Example of calculation condition
 
 ```python:
-condition = {
+{
     # TF current
     'cur_tf':{'tf': +50.0e+3, 'turn': 16, 
     #'rewind': True, # rewind of tf coil
@@ -160,12 +160,11 @@ condition = {
     #'br_pos':{'r1000z0':(1.0, 1.0)},
     # calculate Bz(r, z): result is set to 'bz_val'
     #'bz_pos':{'r0z0':(0.0, 0.0)},
-    }
+}
 ```
 
 Calculation conditions are described in python dictionary type.
 Namely, 'parameter name':value, etc.  
-
 The fl_pos, br_pos, and bz_pos are the positions to calculate flux, Br, and Bz, respectively after finishing the equilibrium calculation.
 
 The specifiable PF coil name can be found in '/colis/data_npy/'.
@@ -215,6 +214,15 @@ cond.keys()
 
 [Explanation of input and output parameters](doc/1_params.md)
 
+## Examples of calculation result
+
+QUEST  
+![quest](doc/result_quest.png)
+
+PLATO  
+![plato](doc/result_plato.png)
+
+<!-- PLATO
 You can check the calculation result with contour map or heat map.
 
 ```python:
@@ -229,7 +237,7 @@ import sub.plot as pl
 pl.d_heatmap(cond['domain'])
 ```
 
-![domain](doc/domain.png)
+![domain](doc/domain.png) -->
 
 ## How to change resolution or calculation area
 
