@@ -20,7 +20,7 @@ if not os.path.isdir(dir_br):
 if not os.path.isdir(dir_bz):
     os.makedirs(dir_bz)
     
-# コイル名の取得
+# csvにあるコイル名の取得
 f_c = glob.glob(os.path.join(dir_c, '*.csv'))
 c_name = [os.path.split(e)[1].split('.')[0] for e in f_c]
 
@@ -28,17 +28,18 @@ c_name = [os.path.split(e)[1].split('.')[0] for e in f_c]
 ex_f_fl = glob.glob(os.path.join(dir_fl, '*.npy'))
 ex_f_br = glob.glob(os.path.join(dir_br, '*.npy'))
 ex_f_bz = glob.glob(os.path.join(dir_bz, '*.npy'))
-
-# 接続するコイルの情報
-inf = gl.connection_pf
+# コイル名を抽出
+ex_f_fl = [os.path.split(e)[1].split('.')[0] for e in ex_f_fl]
+ex_f_br = [os.path.split(e)[1].split('.')[0] for e in ex_f_br]
+ex_f_bz = [os.path.split(e)[1].split('.')[0] for e in ex_f_bz]
 
 # flux of coil
 def make_fl():
     for e in zip(f_c, c_name):
         rf, cn = e
-        wf = os.path.join(dir_fl, f"{cn}.npy")
-        if wf in ex_f_fl:
+        if cn in ex_f_fl:
             continue
+        wf = os.path.join(dir_fl, f"{cn}.npy")
         print(f'making {wf}')
         
         df = pd.read_csv(rf)
@@ -53,9 +54,9 @@ def make_fl():
 def make_br():
     for e in zip(f_c, c_name):
         rf, cn = e
-        wf = os.path.join(dir_br, f"{cn}.npy")
-        if wf in ex_f_br:
+        if cn in ex_f_br:
             continue
+        wf = os.path.join(dir_br, f"{cn}.npy")
         print(f'making {wf}')
         
         df = pd.read_csv(rf)
@@ -70,9 +71,9 @@ def make_br():
 def make_bz():
     for e in zip(f_c, c_name):
         rf, cn = e
-        wf = os.path.join(dir_bz, f"{cn}.npy")
-        if wf in ex_f_bz:
+        if cn in ex_f_bz:
             continue
+        wf = os.path.join(dir_bz, f"{cn}.npy")
         print(f'making {wf}')
         
         df = pd.read_csv(rf)
@@ -84,6 +85,14 @@ def make_bz():
         np.save(wf, mat)
 
 def combine(dir):
+    try: # 変数の存在有無の確認
+        inf = gl.connection_pf
+    except:
+        return
+    
+    # 接続するコイルの情報
+    inf = gl.connection_pf
+
     ex_f = glob.glob(os.path.join(dir, '*.npy'))
     for e in inf.keys():
         wf = os.path.join(dir, f"{e}.npy")

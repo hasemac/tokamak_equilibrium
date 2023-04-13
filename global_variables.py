@@ -1,4 +1,4 @@
-device_name = "quest"
+device_name = "plato"
 root_dir = "."
 #root_dir = "c:\\home\\code\\tokamak_equilibirum\\"
 
@@ -14,6 +14,7 @@ class gparam(equi_params):
     
     device_name = device_name
     root_dir = root_dir
+    path_dev = path
     
     nr, nz = None, None
     r_pos, z_pos = [], []
@@ -84,7 +85,7 @@ class gparam(equi_params):
             dict(type='line', x0=xl, y0=yb, x1=xl, y1=yt),
         ]
         if self.image_type == 'lines':
-            df = pd.read_csv(self.image_path)
+            df = pd.read_csv(self.image_path, comment='#')
             fr2 = [dict(type='line', x0=e[0], y0=e[1], x1=e[2], y1=e[3]) for e in df.values]
             self.image_frame = fr + fr2
         else:
@@ -114,6 +115,10 @@ class gparam(equi_params):
         p0 = ((self.r_max+self.r_min)/2.0, (self.z_max+self.z_min)/2.0)
         self.vessel = ssf.draw_paint(d_mat, p0)
         np.save(file, self.vessel)
-                
+
+    def read_cal_cond(self, file_name):
+        fipa = os.path.join(self.path_dev, file_name)
+        a = eval(open(fipa, 'r', newline='').read())
+        return a
 # import sys
 # sys.modules["equilibrium_global"]=_const()
