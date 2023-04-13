@@ -51,6 +51,14 @@ This repository provide equilibrium calculation code applicable to general tokam
    - Be aware of whether or not you use a virtual environment.  
    - When using it, execute the above command under a virtual environment.
 
+1. Check the device name to calculate.  
+   The first line of global_variable.py in the root directory.
+
+   ```python
+   device_name = "quest"
+   root_dir = "."
+   ```
+
 1. Copy the matrix data to to your repository.  
    Matrix data can be downloaded from the link below.  
    Copy them to ./device/(device_name)  
@@ -58,6 +66,7 @@ This repository provide equilibrium calculation code applicable to general tokam
    If you cannot download them, proceed to the next step.  
    Although it takes time, it creates the matrix data in the next step.  
    The calculation may take an hour or more.  
+
 1. Execute 'equalibrium.ipynb' in the root directory in order from the top as an example.  
 
 ## Edit and execute your file
