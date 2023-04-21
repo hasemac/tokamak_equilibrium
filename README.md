@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository provide equilibrium calculation code applicable to general tokamak devices.
+This repository provides equilibrium calculation code applicable to general tokamak devices.
 
 ## New features
 

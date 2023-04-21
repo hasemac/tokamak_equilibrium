@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 path = os.path.join(root_dir, 'device', device_name)
 sys.path.append(path)
-from parameters import equi_params
+from dev_params import equi_params
 import sub.sub_func as ssf
 
 class gparam(equi_params):
