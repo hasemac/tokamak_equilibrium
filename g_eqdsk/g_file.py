@@ -286,7 +286,7 @@ def convert_to_g_parm(cond):
     pr['rleft'] = da.rmin
     pr['zmid'] = (da.zmax + da.zmin)/2.0
     pr['rmaxis'] = cond['axis_r']
-    pr['zmaxis'] = cond['axis__z']
+    pr['zmaxis'] = cond['axis_z']
     pr['simag'] = cond['f_axis']
     pr['sibry'] = cond['f_surf']
     pr['current'] = cond['cur_ip']['ip']
